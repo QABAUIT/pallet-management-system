@@ -1,122 +1,83 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './components/layout/MainLayout';
+
+// Hệ thống & Nhân sự
+import NhanVienPage from './pages/nhansu/NhanVienPage';
+import VaiTroPage from './pages/nhansu/VaiTroPage';
+import ThongBaoPage from './pages/nhansu/ThongBaoPage';
+import PheDuyetPage from './pages/nhansu/PheDuyetPage';
+import NhatKyHeThongPage from './pages/nhansu/NhatKyHeThongPage';
+import CauHinhHeThongPage from './pages/nhansu/CauHinhHeThongPage';
+
+// Đối tác & Mặt hàng
+import KhachHangPage from './pages/doitac/KhachHangPage';
+import NhaCungCapPage from './pages/doitac/NhaCungCapPage';
+import MatHangPage from './pages/doitac/MatHangPage';
+import BangGiaPage from './pages/doitac/BangGiaPage';
+
+// Kho vận
+import KhoPage from './pages/khovan/KhoPage';
+import TonKhoPage from './pages/khovan/TonKhoPage';
+import LoHangPage from './pages/khovan/LoHangPage';
+import PhieuKhoPage from './pages/khovan/PhieuKhoPage';
+import PhienKiemKePage from './pages/khovan/PhienKiemKePage';
+import SuaChuaPalletPage from './pages/khovan/SuaChuaPalletPage';
+import PhuongTienPage from './pages/khovan/PhuongTienPage';
+
+// Kinh doanh
+import BaoGiaPage from './pages/kinhdoanh/BaoGiaPage';
+import HopDongPage from './pages/kinhdoanh/HopDongPage';
+import HoaDonPage from './pages/kinhdoanh/HoaDonPage';
+import ThanhToanPage from './pages/kinhdoanh/ThanhToanPage';
+
+// Tài chính
+import ChiPhiVanHanhPage from './pages/taichinh/ChiPhiVanHanhPage';
+import MucTieuDoanhThuPage from './pages/taichinh/MucTieuDoanhThuPage';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Navigate to="/khach-hang" replace />} />
 
-      <div className="ticks"></div>
+          {/* Hệ thống & Nhân sự */}
+          <Route path="nhan-vien" element={<NhanVienPage />} />
+          <Route path="vai-tro" element={<VaiTroPage />} />
+          <Route path="thong-bao" element={<ThongBaoPage />} />
+          <Route path="phe-duyet" element={<PheDuyetPage />} />
+          <Route path="nhat-ky-he-thong" element={<NhatKyHeThongPage />} />
+          <Route path="cau-hinh-he-thong" element={<CauHinhHeThongPage />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* Đối tác & Mặt hàng */}
+          <Route path="khach-hang" element={<KhachHangPage />} />
+          <Route path="nha-cung-cap" element={<NhaCungCapPage />} />
+          <Route path="mat-hang" element={<MatHangPage />} />
+          <Route path="bang-gia" element={<BangGiaPage />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {/* Kho vận */}
+          <Route path="kho" element={<KhoPage />} />
+          <Route path="ton-kho" element={<TonKhoPage />} />
+          <Route path="lo-hang" element={<LoHangPage />} />
+          <Route path="phieu-kho" element={<PhieuKhoPage />} />
+          <Route path="kiem-ke" element={<PhienKiemKePage />} />
+          <Route path="sua-chua-pallet" element={<SuaChuaPalletPage />} />
+          <Route path="phuong-tien" element={<PhuongTienPage />} />
+
+          {/* Kinh doanh */}
+          <Route path="bao-gia" element={<BaoGiaPage />} />
+          <Route path="hop-dong" element={<HopDongPage />} />
+          <Route path="hoa-don" element={<HoaDonPage />} />
+          <Route path="thanh-toan" element={<ThanhToanPage />} />
+
+          {/* Tài chính */}
+          <Route path="chi-phi-van-hanh" element={<ChiPhiVanHanhPage />} />
+          <Route path="muc-tieu-doanh-thu" element={<MucTieuDoanhThuPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
