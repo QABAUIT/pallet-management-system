@@ -1,0 +1,14 @@
+# Bỏ qua thư viện Frontend & Build Backend
+node_modules/
+**/node_modules/
+target/
+**/target/
+
+# Bỏ qua dữ liệu PostgreSQL
+postgres_data/
+**/postgres_data/
+
+# Bỏ qua các file môi trường & IDE
+.env
+.idea/
+.vscode/

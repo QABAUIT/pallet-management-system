@@ -1,24 +1,21 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Java / Spring Boot (Backend)
+backend/target/
+backend/.mvn/
+backend/*.log
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/bin/
 
-node_modules
-dist
-dist-ssr
-*.local
+# Node / ReactJS (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-zip/
+frontend/*.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# IDEs & OS
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+Thumbs.db
