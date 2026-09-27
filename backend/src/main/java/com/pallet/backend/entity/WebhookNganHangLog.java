@@ -1,11 +1,12 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "webhook_ngan_hang_log")
@@ -28,21 +29,17 @@ public class WebhookNganHangLog {
     @JoinColumn(name = "thanh_toan_id")
     private ThanhToan thanhToan;
 
-    // Cột JSONB - dùng JdbcTypeCode(JSON) của Hibernate 6, map String thô.
-    // Nếu cần thao tác như object, đổi type sang com.fasterxml.jackson.databind.JsonNode
-    // hoặc dùng thư viện hypersistence-utils.
+    @Column(name = "payload_tho", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload_tho", nullable = false, columnDefinition = "jsonb")
     private String payloadTho;
 
     @Column(name = "da_xu_ly", nullable = false)
-    @Builder.Default
-    private Boolean daXuLy = false;
+    private Boolean daXuLy;
 
     @Column(name = "loi_xu_ly", length = 255)
     private String loiXuLy;
 
-    @Column(name = "thoi_gian_nhan", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime thoiGianNhan = LocalDateTime.now();
+    @Column(name = "thoi_gian_nhan", nullable = false)
+    private LocalDateTime thoiGianNhan;
+
 }

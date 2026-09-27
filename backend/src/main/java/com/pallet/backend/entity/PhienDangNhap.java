@@ -1,9 +1,8 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "phien_dang_nhap")
@@ -26,8 +25,7 @@ public class PhienDangNhap {
     private String refreshToken;
 
     @Column(name = "ghi_nho_dang_nhap", nullable = false)
-    @Builder.Default
-    private Boolean ghiNhoDangNhap = false;
+    private Boolean ghiNhoDangNhap;
 
     @Column(name = "thiet_bi", length = 255)
     private String thietBi;
@@ -35,10 +33,10 @@ public class PhienDangNhap {
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
-    @Column(name = "thoi_gian_tao", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime thoiGianTao = LocalDateTime.now();
+    @Column(name = "thoi_gian_tao", nullable = false)
+    private LocalDateTime thoiGianTao;
 
     @Column(name = "thoi_gian_het_han", nullable = false)
     private LocalDateTime thoiGianHetHan;
+
 }

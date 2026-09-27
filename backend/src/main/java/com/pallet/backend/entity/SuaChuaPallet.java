@@ -1,10 +1,9 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
 @Table(name = "sua_chua_pallet")
@@ -27,16 +26,6 @@ public class SuaChuaPallet {
     @JoinColumn(name = "kho_id", nullable = false)
     private Kho kho;
 
-    @Column(name = "so_luong", nullable = false)
-    private Integer soLuong;
-
-    @Column(name = "mo_ta_cong_viec", length = 255)
-    private String moTaCongViec;
-
-    @Column(name = "chi_phi", nullable = false, precision = 18, scale = 2)
-    @Builder.Default
-    private BigDecimal chiPhi = BigDecimal.ZERO;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nhan_vien_thuc_hien_id")
     private NhanVien nhanVienThucHien;
@@ -45,6 +34,16 @@ public class SuaChuaPallet {
     @JoinColumn(name = "hoa_don_id")
     private HoaDon hoaDon;
 
+    @Column(name = "so_luong", nullable = false)
+    private Integer soLuong;
+
+    @Column(name = "mo_ta_cong_viec", length = 255)
+    private String moTaCongViec;
+
+    @Column(name = "chi_phi", nullable = false)
+    private BigDecimal chiPhi;
+
     @Column(name = "ngay", nullable = false)
     private LocalDate ngay;
+
 }

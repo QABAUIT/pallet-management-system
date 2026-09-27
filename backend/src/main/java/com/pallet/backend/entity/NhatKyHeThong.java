@@ -1,9 +1,8 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "nhat_ky_he_thong")
@@ -34,7 +33,7 @@ public class NhatKyHeThong {
     @Column(name = "doi_tuong_id")
     private Long doiTuongId;
 
-    @Column(name = "thoi_gian", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime thoiGian = LocalDateTime.now();
+    @Column(name = "thoi_gian", nullable = false)
+    private LocalDateTime thoiGian;
+
 }

@@ -1,14 +1,9 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import lombok.*;
 
-import java.math.BigDecimal;
-
-/**
- * Bảng singleton - DB có CHECK (id = 1), chỉ nên tồn tại đúng 1 dòng
- * (thông tin công ty sở hữu hệ thống).
- */
 @Entity
 @Table(name = "company")
 @Getter
@@ -55,7 +50,7 @@ public class Company {
     @Column(name = "nguoi_dai_dien_phap_ly", length = 150)
     private String nguoiDaiDienPhapLy;
 
-    @Column(name = "ty_le_vat_mac_dinh", nullable = false, precision = 5, scale = 4)
-    @Builder.Default
-    private BigDecimal tyLeVatMacDinh = new BigDecimal("0.08");
+    @Column(name = "ty_le_vat_mac_dinh", nullable = false)
+    private BigDecimal tyLeVatMacDinh;
+
 }

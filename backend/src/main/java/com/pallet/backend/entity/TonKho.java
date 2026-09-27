@@ -1,13 +1,11 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "ton_kho",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"mat_hang_id", "kho_id"}))
+@Table(name = "ton_kho", uniqueConstraints = {@UniqueConstraint(columnNames = {"mat_hang_id", "kho_id"})})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,17 +30,15 @@ public class TonKho {
     private ViTriLuuTru viTri;
 
     @Column(name = "so_luong_ton_kho", nullable = false)
-    @Builder.Default
-    private Integer soLuongTonKho = 0;
+    private Integer soLuongTonKho;
 
     @Column(name = "so_luong_da_giu_cho", nullable = false)
-    @Builder.Default
-    private Integer soLuongDaGiuCho = 0;
+    private Integer soLuongDaGiuCho;
 
     @Column(name = "so_luong_toi_thieu", nullable = false)
-    @Builder.Default
-    private Integer soLuongToiThieu = 0;
+    private Integer soLuongToiThieu;
 
-    @Column(name = "updated_at", nullable = false, insertable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
 }

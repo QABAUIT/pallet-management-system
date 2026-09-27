@@ -33,4 +33,5 @@ public class ChiTietPhieuKho {
 
     @Column(name = "ghi_chu", length = 255)
     private String ghiChu;
+
 }

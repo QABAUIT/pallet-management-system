@@ -1,9 +1,8 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalTime;
+import lombok.*;
 
 @Entity
 @Table(name = "ca_lam_viec")
@@ -26,4 +25,5 @@ public class CaLamViec {
 
     @Column(name = "gio_ket_thuc", nullable = false)
     private LocalTime gioKetThuc;
+
 }

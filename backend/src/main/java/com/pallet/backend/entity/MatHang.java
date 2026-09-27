@@ -1,16 +1,23 @@
 package com.pallet.backend.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * loai_mat_hang: pallet | linh_kien
- * chat_lieu: go | nhua | sat | khac
- * trang_thai: dang_kinh_doanh | ngung_kinh_doanh
- */
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
 @Table(name = "mat_hang")
 @Getter
@@ -24,6 +31,14 @@ public class MatHang {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ncc_mac_dinh_id")
+    private NhaCungCap nccMacDinh;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private NhanVien createdBy;
+
     @Column(name = "ma_mat_hang", nullable = false, unique = true, length = 20)
     private String maMatHang;
 
@@ -31,8 +46,7 @@ public class MatHang {
     private String tenMatHang;
 
     @Column(name = "loai_mat_hang", nullable = false, length = 20)
-    @Builder.Default
-    private String loaiMatHang = "pallet";
+    private String loaiMatHang;
 
     @Column(name = "chat_lieu", length = 20)
     private String chatLieu;
@@ -46,41 +60,31 @@ public class MatHang {
     @Column(name = "kich_thuoc_cao")
     private Integer kichThuocCao;
 
-    @Column(name = "tai_trong_tinh", precision = 10, scale = 2)
+    @Column(name = "tai_trong_tinh")
     private BigDecimal taiTrongTinh;
 
-    @Column(name = "tai_trong_dong", precision = 10, scale = 2)
+    @Column(name = "tai_trong_dong")
     private BigDecimal taiTrongDong;
 
     @Column(name = "tieu_chuan", length = 150)
     private String tieuChuan;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ncc_mac_dinh_id")
-    private NhaCungCap nccMacDinh;
-
-    @Column(name = "don_gia_ban", nullable = false, precision = 18, scale = 2)
-    @Builder.Default
-    private BigDecimal donGiaBan = BigDecimal.ZERO;
+    @Column(name = "don_gia_ban", nullable = false)
+    private BigDecimal donGiaBan;
 
     @Column(name = "hinh_anh", length = 255)
     private String hinhAnh;
 
-    @Column(name = "mo_ta", columnDefinition = "TEXT")
+    @Column(name = "mo_ta", columnDefinition = "text")
     private String moTa;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
-    @Builder.Default
-    private String trangThai = "dang_kinh_doanh";
+    private String trangThai;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private NhanVien createdBy;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "updated_at", nullable = false, insertable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
 }

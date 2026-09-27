@@ -21,7 +21,8 @@ public class TonKhoSpecifications {
     /** Chỉ lấy các dòng tồn khả dụng (tồn - giữ chỗ) < mức tối thiểu. */
     public static Specification<TonKho> duoiMucToiThieu() {
         return (root, query, cb) -> cb.lessThan(
-                cb.diff(root.get("soLuongTonKho"), root.get("soLuongDaGiuCho")),
-                root.get("soLuongToiThieu"));
+                cb.diff(root.<Integer>get("soLuongTonKho"), root.<Integer>get("soLuongDaGiuCho")),
+                root.<Integer>get("soLuongToiThieu")
+        );
     }
 }

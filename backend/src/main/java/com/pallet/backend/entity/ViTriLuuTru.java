@@ -31,4 +31,5 @@ public class ViTriLuuTru {
 
     @Column(name = "ma_vi_tri", nullable = false, unique = true, length = 30)
     private String maViTri;
+
 }

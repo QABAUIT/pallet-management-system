@@ -1,23 +1,22 @@
 package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.PhieuKho;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long>, JpaSpecificationExecutor<PhieuKho> {
+@Repository
+public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long> {
 
     Optional<PhieuKho> findByMaPhieu(String maPhieu);
-
-    boolean existsByMaPhieu(String maPhieu);
-
-    Page<PhieuKho> findByKhoIdAndTrangThai(Long khoId, String trangThai, Pageable pageable);
-
-    List<PhieuKho> findByHoaDonId(Long hoaDonId);
-
-    List<PhieuKho> findByLoaiPhieuAndTrangThai(String loaiPhieu, String trangThai);
+    List<PhieuKho> findByTrangThai(String trangThai);
+    List<PhieuKho> findByKho_Id(Long khoId);
+    List<PhieuKho> findByKhoDoiUng_Id(Long khoDoiUngId);
+    List<PhieuKho> findByViTri_Id(Long viTriId);
+    List<PhieuKho> findByHoaDon_Id(Long hoaDonId);
+    List<PhieuKho> findByNhanVienGiaoNhan_Id(Long nhanVienGiaoNhanId);
+    List<PhieuKho> findByNguoiDuyet_Id(Long nguoiDuyetId);
+    List<PhieuKho> findByPhuongTien_Id(Long phuongTienId);
 }

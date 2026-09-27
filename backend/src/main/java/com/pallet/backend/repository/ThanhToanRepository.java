@@ -2,15 +2,15 @@ package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.ThanhToan;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface ThanhToanRepository extends JpaRepository<ThanhToan, Long>, JpaSpecificationExecutor<ThanhToan> {
-
-    List<ThanhToan> findByHoaDonId(Long hoaDonId);
+@Repository
+public interface ThanhToanRepository extends JpaRepository<ThanhToan, Long> {
 
     List<ThanhToan> findByTrangThai(String trangThai);
-
-    List<ThanhToan> findByHoaDonIdAndTrangThai(Long hoaDonId, String trangThai);
+    List<ThanhToan> findByHoaDon_Id(Long hoaDonId);
+    List<ThanhToan> findByNguoiXuLy_Id(Long nguoiXuLyId);
 }

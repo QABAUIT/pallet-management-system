@@ -1,15 +1,10 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.*;
 
-/**
- * gioi_tinh: Nam | Nu | Khac
- * trang_thai: dang_lam_viec | cong_tac | da_nghi_viec
- */
 @Entity
 @Table(name = "nhan_vien")
 @Getter
@@ -22,6 +17,18 @@ public class NhanVien {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vai_tro_id", nullable = false)
+    private VaiTro vaiTro;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "kho_id")
+    private Kho kho;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bo_phan_id")
+    private BoPhan boPhan;
 
     @Column(name = "ma_nv", nullable = false, unique = true, length = 20)
     private String maNv;
@@ -47,18 +54,6 @@ public class NhanVien {
     @Column(name = "anh_dai_dien", length = 255)
     private String anhDaiDien;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vai_tro_id", nullable = false)
-    private VaiTro vaiTro;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "kho_id")
-    private Kho kho;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bo_phan_id")
-    private BoPhan boPhan;
-
     @Column(name = "chuc_vu", length = 150)
     private String chucVu;
 
@@ -81,13 +76,12 @@ public class NhanVien {
     private LocalDate ngayNghiViec;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
-    @Builder.Default
-    private String trangThai = "dang_lam_viec";
+    private String trangThai;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false, insertable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
 }

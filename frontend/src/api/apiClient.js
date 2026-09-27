@@ -1,34 +1,75 @@
-import axios from 'axios';
-
-// Lấy từ file .env (Vite) - KHÔNG hardcode URL trong code để mỗi người
-// chạy backend port khác nhau vẫn dùng chung 1 file .env riêng của máy mình.
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+import axios from 'axios'
+import { tokenStore } from '../store/tokenStore'
 
 const apiClient = axios.create({
-  baseURL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
-// Nếu sau này có đăng nhập (JWT), gắn token vào mọi request tại đây -
-// chỉ cần sửa 1 chỗ này, không ai phải tự thêm header ở từng service.
+// Gắn access token vào mọi request
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  const token = tokenStore.getAccessToken()
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
-  return config;
-});
+  return config
+})
 
-// Toàn bộ response BE đều bọc trong ApiResponse<T> = { status, message, data, timestamp }.
-// Interceptor này tự "bóc vỏ", nơi gọi chỉ nhận thẳng phần `data`.
+let dangLamMoiToken = false
+let hangDoiSauKhiRefresh = []
+
+function chayLaiCacRequestDangCho(tokenMoi) {
+  hangDoiSauKhiRefresh.forEach((cb) => cb(tokenMoi))
+  hangDoiSauKhiRefresh = []
+}
+
+// Tự giải nén dữ liệu từ ApiResponse + tự refresh token khi accessToken hết hạn (401)
 apiClient.interceptors.response.use(
-  (response) => response.data.data ?? response.data,
-  (error) => {
-    const message = error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại!';
-    return Promise.reject(new Error(message));
-  }
-);
+  (response) => response.data,
+  async (error) => {
+    const originalRequest = error.config
+    const status = error.response?.status
 
-export default apiClient;
+    if (status === 401 && !originalRequest._daThuLai && tokenStore.getRefreshToken()) {
+      if (dangLamMoiToken) {
+        // Đã có 1 request khác đang refresh - xếp hàng chờ, không gọi refresh 2 lần cùng lúc
+        return new Promise((resolve) => {
+          hangDoiSauKhiRefresh.push((tokenMoi) => {
+            originalRequest.headers.Authorization = `Bearer ${tokenMoi}`
+            originalRequest._daThuLai = true
+            resolve(apiClient(originalRequest))
+          })
+        })
+      }
+
+      originalRequest._daThuLai = true
+      dangLamMoiToken = true
+      try {
+        const res = await axios.post(
+          `${apiClient.defaults.baseURL}/auth/refresh`,
+          { refreshToken: tokenStore.getRefreshToken() },
+        )
+        const moi = res.data.data
+        tokenStore.setSession({ ...tokenStore.getUserInfo(), ...moi })
+        chayLaiCacRequestDangCho(moi.accessToken)
+        originalRequest.headers.Authorization = `Bearer ${moi.accessToken}`
+        return apiClient(originalRequest)
+      } catch (refreshError) {
+        tokenStore.clear()
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      } finally {
+        dangLamMoiToken = false
+      }
+    }
+
+    const message = error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại!'
+    // Với lỗi 400 kèm chi tiết từng field (từ MethodArgumentNotValidException ở backend),
+    // trả cả object lỗi để form hiển thị đúng field - xem cách dùng trong LoginPage.jsx.
+    return Promise.reject({ message, fieldErrors: error.response?.data?.data, status })
+  },
+)
+
+export default apiClient

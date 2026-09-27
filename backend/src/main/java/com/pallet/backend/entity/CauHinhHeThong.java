@@ -1,9 +1,8 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "cau_hinh_he_thong")
@@ -18,6 +17,10 @@ public class CauHinhHeThong {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nguoi_cap_nhat_id")
+    private NhanVien nguoiCapNhat;
+
     @Column(name = "khoa", nullable = false, unique = true, length = 100)
     private String khoa;
 
@@ -27,10 +30,7 @@ public class CauHinhHeThong {
     @Column(name = "mo_ta", length = 255)
     private String moTa;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "nguoi_cap_nhat_id")
-    private NhanVien nguoiCapNhat;
-
-    @Column(name = "updated_at", nullable = false, insertable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
 }

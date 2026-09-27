@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "vai_tro_quyen",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"vai_tro_id", "module_code"}))
+@Table(name = "vai_tro_quyen", uniqueConstraints = {@UniqueConstraint(columnNames = {"vai_tro_id", "module_code"})})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,22 +24,18 @@ public class VaiTroQuyen {
     private String moduleCode;
 
     @Column(name = "duoc_xem", nullable = false)
-    @Builder.Default
-    private Boolean duocXem = false;
+    private Boolean duocXem;
 
     @Column(name = "duoc_them", nullable = false)
-    @Builder.Default
-    private Boolean duocThem = false;
+    private Boolean duocThem;
 
     @Column(name = "duoc_sua", nullable = false)
-    @Builder.Default
-    private Boolean duocSua = false;
+    private Boolean duocSua;
 
     @Column(name = "duoc_xoa", nullable = false)
-    @Builder.Default
-    private Boolean duocXoa = false;
+    private Boolean duocXoa;
 
     @Column(name = "duoc_duyet", nullable = false)
-    @Builder.Default
-    private Boolean duocDuyet = false;
+    private Boolean duocDuyet;
+
 }

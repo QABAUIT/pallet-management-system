@@ -2,15 +2,15 @@ package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.ChiTietPhieuKho;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface ChiTietPhieuKhoRepository extends JpaRepository<ChiTietPhieuKho, Long>, JpaSpecificationExecutor<ChiTietPhieuKho> {
+@Repository
+public interface ChiTietPhieuKhoRepository extends JpaRepository<ChiTietPhieuKho, Long> {
 
-    List<ChiTietPhieuKho> findByPhieuKhoId(Long phieuKhoId);
-
-    List<ChiTietPhieuKho> findByLoId(Long loId);
-
-    void deleteByPhieuKhoId(Long phieuKhoId);
+    List<ChiTietPhieuKho> findByPhieuKho_Id(Long phieuKhoId);
+    List<ChiTietPhieuKho> findByMatHang_Id(Long matHangId);
+    List<ChiTietPhieuKho> findByLo_Id(Long loId);
 }

@@ -2,15 +2,15 @@ package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.PheDuyet;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface PheDuyetRepository extends JpaRepository<PheDuyet, Long>, JpaSpecificationExecutor<PheDuyet> {
+@Repository
+public interface PheDuyetRepository extends JpaRepository<PheDuyet, Long> {
 
     List<PheDuyet> findByTrangThai(String trangThai);
-
-    List<PheDuyet> findByNguoiYeuCauId(Long nguoiYeuCauId);
-
-    List<PheDuyet> findByDoiTuongLoaiAndDoiTuongId(String doiTuongLoai, Long doiTuongId);
+    List<PheDuyet> findByNguoiYeuCau_Id(Long nguoiYeuCauId);
+    List<PheDuyet> findByNguoiDuyet_Id(Long nguoiDuyetId);
 }

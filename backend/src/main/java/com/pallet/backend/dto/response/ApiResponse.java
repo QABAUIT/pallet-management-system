@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    
+
     @Builder.Default
     private int status = 200;
-    
+
     private String message;
     private T data;
-    
+
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
 

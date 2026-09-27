@@ -1,26 +1,15 @@
 package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.ThongBao;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface ThongBaoRepository extends JpaRepository<ThongBao, Long>, JpaSpecificationExecutor<ThongBao> {
+@Repository
+public interface ThongBaoRepository extends JpaRepository<ThongBao, Long> {
 
-    Page<ThongBao> findByNguoiNhanIdOrderByThoiGianTaoDesc(Long nguoiNhanId, Pageable pageable);
-
-    List<ThongBao> findByNguoiNhanIdAndDaDocFalse(Long nguoiNhanId);
-
-    List<ThongBao> findByVaiTroNhanId(Long vaiTroNhanId);
-
-    long countByNguoiNhanIdAndDaDocFalse(Long nguoiNhanId);
-
-    @Modifying
-    @Query("UPDATE ThongBao t SET t.daDoc = true WHERE t.id = :id")
-    void danhDauDaDoc(Long id);
+    List<ThongBao> findByNguoiNhan_Id(Long nguoiNhanId);
+    List<ThongBao> findByVaiTroNhan_Id(Long vaiTroNhanId);
 }

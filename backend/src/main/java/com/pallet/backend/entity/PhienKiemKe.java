@@ -1,13 +1,9 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import lombok.*;
 
-import java.time.LocalDate;
-
-/**
- * trang_thai: dang_dien_ra | da_hoan_tat
- */
 @Entity
 @Table(name = "phien_kiem_ke")
 @Getter
@@ -21,9 +17,6 @@ public class PhienKiemKe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ma_phien", nullable = false, unique = true, length = 20)
-    private String maPhien;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kho_id", nullable = false)
     private Kho kho;
@@ -36,6 +29,9 @@ public class PhienKiemKe {
     @JoinColumn(name = "nguoi_chot_id")
     private NhanVien nguoiChot;
 
+    @Column(name = "ma_phien", nullable = false, unique = true, length = 20)
+    private String maPhien;
+
     @Column(name = "ngay_bat_dau", nullable = false)
     private LocalDate ngayBatDau;
 
@@ -43,9 +39,9 @@ public class PhienKiemKe {
     private LocalDate ngayHoanTat;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
-    @Builder.Default
-    private String trangThai = "dang_dien_ra";
+    private String trangThai;
 
     @Column(name = "ghi_chu", length = 255)
     private String ghiChu;
+
 }

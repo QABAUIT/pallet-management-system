@@ -2,20 +2,17 @@ package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.HopDong;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface HopDongRepository extends JpaRepository<HopDong, Long>, JpaSpecificationExecutor<HopDong> {
+@Repository
+public interface HopDongRepository extends JpaRepository<HopDong, Long> {
 
     Optional<HopDong> findByMaHopDong(String maHopDong);
-
-    boolean existsByMaHopDong(String maHopDong);
-
-    List<HopDong> findByKhachHangId(Long khachHangId);
-
-    List<HopDong> findByNccId(Long nccId);
-
     List<HopDong> findByTrangThai(String trangThai);
+    List<HopDong> findByKhachHang_Id(Long khachHangId);
+    List<HopDong> findByNcc_Id(Long nccId);
+    List<HopDong> findByNguoiTao_Id(Long nguoiTaoId);
 }

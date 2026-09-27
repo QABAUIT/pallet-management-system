@@ -1,14 +1,9 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
-/**
- * loai_kh: ca_nhan | doanh_nghiep
- * trang_thai: dang_hop_tac | ngung_hop_tac
- */
 @Entity
 @Table(name = "khach_hang")
 @Getter
@@ -22,6 +17,10 @@ public class KhachHang {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private NhanVien createdBy;
+
     @Column(name = "ma_kh", nullable = false, unique = true, length = 20)
     private String maKh;
 
@@ -29,8 +28,7 @@ public class KhachHang {
     private String tenKh;
 
     @Column(name = "loai_kh", length = 20)
-    @Builder.Default
-    private String loaiKh = "doanh_nghiep";
+    private String loaiKh;
 
     @Column(name = "mst", length = 20)
     private String mst;
@@ -48,14 +46,9 @@ public class KhachHang {
     private String nguoiDaiDien;
 
     @Column(name = "trang_thai", nullable = false, length = 20)
-    @Builder.Default
-    private String trangThai = "dang_hop_tac";
+    private String trangThai;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private NhanVien createdBy;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

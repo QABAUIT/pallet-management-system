@@ -1,10 +1,22 @@
 package com.pallet.backend.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "bang_gia")
@@ -27,7 +39,7 @@ public class BangGia {
     @JoinColumn(name = "khach_hang_id")
     private KhachHang khachHang;
 
-    @Column(name = "don_gia", nullable = false, precision = 18, scale = 2)
+    @Column(name = "don_gia", nullable = false)
     private BigDecimal donGia;
 
     @Column(name = "ngay_bat_dau_hieu_luc", nullable = false)
@@ -35,4 +47,5 @@ public class BangGia {
 
     @Column(name = "ngay_ket_thuc_hieu_luc")
     private LocalDate ngayKetThucHieuLuc;
+
 }

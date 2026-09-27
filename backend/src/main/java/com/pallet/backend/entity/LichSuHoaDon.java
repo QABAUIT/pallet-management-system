@@ -1,13 +1,9 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
-/**
- * hanh_dong: tao_moi | cap_nhat | duyet | huy | xoa_dong_hang
- */
 @Entity
 @Table(name = "lich_su_hoa_don")
 @Getter
@@ -30,8 +26,7 @@ public class LichSuHoaDon {
     private NhanVien nguoiSua;
 
     @Column(name = "thoi_gian", nullable = false)
-    @Builder.Default
-    private LocalDateTime thoiGian = LocalDateTime.now();
+    private LocalDateTime thoiGian;
 
     @Column(name = "hanh_dong", nullable = false, length = 30)
     private String hanhDong;
@@ -39,12 +34,13 @@ public class LichSuHoaDon {
     @Column(name = "truong_thay_doi", length = 100)
     private String truongThayDoi;
 
-    @Column(name = "gia_tri_cu", columnDefinition = "TEXT")
+    @Column(name = "gia_tri_cu", columnDefinition = "text")
     private String giaTriCu;
 
-    @Column(name = "gia_tri_moi", columnDefinition = "TEXT")
+    @Column(name = "gia_tri_moi", columnDefinition = "text")
     private String giaTriMoi;
 
     @Column(name = "ly_do", length = 255)
     private String lyDo;
+
 }

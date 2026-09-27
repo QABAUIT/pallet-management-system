@@ -24,4 +24,5 @@ public class VaiTro {
 
     @Column(name = "cap_duyet", nullable = false)
     private Short capDuyet;
+
 }

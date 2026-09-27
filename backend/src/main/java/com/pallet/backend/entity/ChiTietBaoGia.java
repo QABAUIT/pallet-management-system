@@ -1,15 +1,9 @@
 package com.pallet.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
-
 import java.math.BigDecimal;
+import lombok.*;
 
-/**
- * tien_chiet_khau và thanh_tien là GENERATED COLUMN ở DB, không set từ Java.
- */
 @Entity
 @Table(name = "chi_tiet_bao_gia")
 @Getter
@@ -34,18 +28,16 @@ public class ChiTietBaoGia {
     @Column(name = "so_luong", nullable = false)
     private Integer soLuong;
 
-    @Column(name = "don_gia", nullable = false, precision = 18, scale = 2)
+    @Column(name = "don_gia", nullable = false)
     private BigDecimal donGia;
 
-    @Column(name = "ty_le_chiet_khau", nullable = false, precision = 5, scale = 2)
-    @Builder.Default
-    private BigDecimal tyLeChietKhau = BigDecimal.ZERO;
+    @Column(name = "ty_le_chiet_khau", nullable = false)
+    private BigDecimal tyLeChietKhau;
 
-    @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "tien_chiet_khau", insertable = false, updatable = false, precision = 18, scale = 2)
+    @Column(name = "tien_chiet_khau", nullable = false)
     private BigDecimal tienChietKhau;
 
-    @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "thanh_tien", insertable = false, updatable = false, precision = 18, scale = 2)
+    @Column(name = "thanh_tien", nullable = false)
     private BigDecimal thanhTien;
+
 }
