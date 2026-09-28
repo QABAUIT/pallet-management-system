@@ -1,67 +1,84 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import MainLayout from '../components/MainLayout'
-import ProtectedRoute from './ProtectedRoute'
+import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../components/layout/Layout";
 
-import LoginPage from '../features/auth/LoginPage'
-import MatHangPage from '../features/mathang/MatHangPage'
-import HoaDonLichSuPage from '../features/hoadon/HoaDonLichSuPage'
-import HoaDonTaoMoiPage from '../features/hoadon/HoaDonTaoMoiPage'
-import NhanVienPage from '../features/nhanvien/NhanVienPage'
-import KhachHangPage from '../features/khachhang/KhachHangPage'
-import NhaCungCapPage from '../features/nhacungcap/NhaCungCapPage'
-import KhoLichSuNhapPage from '../features/kho/KhoLichSuNhapPage'
-import KhoTaoPhieuNhapPage from '../features/kho/KhoTaoPhieuNhapPage'
-import KhoLichSuXuatPage from '../features/kho/KhoLichSuXuatPage'
-import KhoKiemKePage from '../features/kho/KhoKiemKePage'
-import KhoBaoCaoTonPage from '../features/kho/KhoBaoCaoTonPage'
-import TaiChinhDoanhThuPage from '../features/taichinh/TaiChinhDoanhThuPage'
-import TaiChinhThuePage from '../features/taichinh/TaiChinhThuePage'
-import TaiChinhLoiNhuanPage from '../features/taichinh/TaiChinhLoiNhuanPage'
-import ThongTinCongTyPage from '../features/company/ThongTinCongTyPage'
-import ThongTinNhanVienPage from '../features/company/ThongTinNhanVienPage'
+import AboutUs from "../pages/AboutUs";
 
+// Hoá đơn
+import ReceiptDetail from "../pages/Receipt/ReceiptDetail";
+import ReceiptCreate from "../pages/Receipt/ReceiptCreate";
+import TransactionHistory from "../pages/Receipt/TransactionHistory";
+
+// Pallet - chỉ có 1 trang duy nhất
+import PalletManagement from "../pages/PalletManagement";
+
+// Đối tác / nhân sự / khách hàng
+import SupplierMangagement from "../pages/SupplierMangagement"; // TODO: sửa chính tả tên file -> SupplierManagement rồi đổi lại import này
+import EmployeeManagement from "../pages/EmployeeManagement";
+import CustomerManagement from "../pages/CustomerManagement";
+
+// Kho vận
+import ImportInventory from "../pages/Inventory/ImportInventory";
+import ImportInventoryDetail from "../pages/Inventory/ImportInventoryDetail";
+import ExportInventory from "../pages/Inventory/ExportInventory";
+import ExportInventoryDetail from "../pages/Inventory/ExportInventoryDetail";
+import Stocktaking from "../pages/Inventory/Stocktaking";
+import StocktakingReport from "../pages/Inventory/StocktakingReport";
+
+// Tài chính
+import Revenue from "../pages/Finance/Revenue";
+import Tax from "../pages/Finance/Tax";
+import Profit from "../pages/Finance/Profit";
+
+// import LoginPage from "../pages/Login"; // TODO: tạo file này cho màn hình đăng nhập
+
+/**
+ * AppRoutes - khai báo URL path <-> component trang.
+ * Nhóm Hoá đơn / Kho / Tài chính giờ có nhiều trang con, nên mỗi nhóm có
+ * nhiều <Route> thay vì 1 route như trước.
+ */
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      {/* <Route path="/login" element={<LoginPage />} /> */}
 
       <Route
-        path="/"
         element={
           <ProtectedRoute>
             <MainLayout />
           </ProtectedRoute>
         }
       >
-        {/* Vào "/" thì mặc định chuyển tới màn Pallet */}
-        <Route index element={<Navigate to="/pallet" replace />} />
+        <Route path="/" element={<AboutUs />} />
 
-        <Route path="pallet" element={<MatHangPage />} />
-        <Route path="pallet/them-moi" element={<MatHangPage />} />
+        {/* Hoá đơn */}
+        <Route path="/hoa-don" element={<ReceiptDetail />} />
+        <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
+        <Route path="/hoa-don/lich-su" element={<TransactionHistory />} />
 
-        <Route path="hoa-don/lich-su" element={<HoaDonLichSuPage />} />
-        <Route path="hoa-don/tao-moi" element={<HoaDonTaoMoiPage />} />
+        {/* Pallet */}
+        <Route path="/pallet" element={<PalletManagement />} />
 
-        <Route path="nhan-vien" element={<NhanVienPage />} />
-        <Route path="khach-hang" element={<KhachHangPage />} />
-        <Route path="nha-cung-cap" element={<NhaCungCapPage />} />
+        {/* Đối tác / nhân sự / khách hàng */}
+        <Route path="/nha-cung-cap" element={<SupplierMangagement />} />
+        <Route path="/nhan-vien" element={<EmployeeManagement />} />
+        <Route path="/khach-hang" element={<CustomerManagement />} />
 
-        <Route path="kho/lich-su-nhap" element={<KhoLichSuNhapPage />} />
-        <Route path="kho/tao-phieu-nhap" element={<KhoTaoPhieuNhapPage />} />
-        <Route path="kho/lich-su-xuat" element={<KhoLichSuXuatPage />} />
-        <Route path="kho/kiem-ke" element={<KhoKiemKePage />} />
-        <Route path="kho/bao-cao-ton" element={<KhoBaoCaoTonPage />} />
+        {/* Kho vận - menu "Quản lí kho" mặc định vào Báo cáo kiểm kê */}
+        <Route path="/kho" element={<StocktakingReport />} />
+        <Route path="/kho/nhap-kho" element={<ImportInventory />} />
+        <Route path="/kho/nhap-kho/:id" element={<ImportInventoryDetail />} />
+        <Route path="/kho/xuat-kho" element={<ExportInventory />} />
+        <Route path="/kho/xuat-kho/:id" element={<ExportInventoryDetail />} />
+        <Route path="/kho/kiem-ke" element={<Stocktaking />} />
 
-        <Route path="tai-chinh/doanh-thu" element={<TaiChinhDoanhThuPage />} />
-        <Route path="tai-chinh/thue" element={<TaiChinhThuePage />} />
-        <Route path="tai-chinh/loi-nhuan" element={<TaiChinhLoiNhuanPage />} />
-
-        <Route path="thong-tin/cong-ty" element={<ThongTinCongTyPage />} />
-        <Route path="thong-tin/nhan-vien" element={<ThongTinNhanVienPage />} />
+        {/* Tài chính - menu "Quản lí tài chính" mặc định vào Doanh thu */}
+        <Route path="/tai-chinh" element={<Revenue />} />
+        <Route path="/tai-chinh/thue" element={<Tax />} />
+        <Route path="/tai-chinh/loi-nhuan" element={<Profit />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* TODO: /notifications, trang 404 */}
     </Routes>
-  )
+  );
 }
