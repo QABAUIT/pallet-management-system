@@ -11,10 +11,18 @@ import java.util.Optional;
 public interface NhanVienRepository extends JpaRepository<NhanVien, Long> {
 
     Optional<NhanVien> findByMaNv(String maNv);
+
     Optional<NhanVien> findByEmail(String email);
+
     Optional<NhanVien> findByTenDangNhap(String tenDangNhap);
+
+    boolean existsByTenDangNhap(String tenDangNhap);
+
     List<NhanVien> findByTrangThai(String trangThai);
+
     List<NhanVien> findByVaiTro_Id(Long vaiTroId);
+
     List<NhanVien> findByKho_Id(Long khoId);
+
     List<NhanVien> findByBoPhan_Id(Long boPhanId);
 }
