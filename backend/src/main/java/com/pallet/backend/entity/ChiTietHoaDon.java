@@ -34,10 +34,16 @@ public class ChiTietHoaDon {
     @Column(name = "ty_le_chiet_khau", nullable = false)
     private BigDecimal tyLeChietKhau;
 
-    @Column(name = "tien_chiet_khau", nullable = false)
+    // GENERATED COLUMN ở DB (V1 mới) - Postgres tự tính = so_luong * don_gia * ty_le_chiet_khau / 100,
+    // KHÔNG được phép ghi giá trị vào đây, nếu không sẽ lỗi khi INSERT/UPDATE.
+    // nullable=true vì cột generated trong V1 không khai NOT NULL.
+    @Column(name = "tien_chiet_khau", insertable = false, updatable = false)
     private BigDecimal tienChietKhau;
 
-    @Column(name = "thanh_tien", nullable = false)
+    // GENERATED COLUMN ở DB (V1 mới) - Postgres tự tính = so_luong*don_gia - tien_chiet_khau.
+    // Đọc được bình thường sau khi save() (gọi lại repository.findById/refresh để lấy giá trị DB vừa tính),
+    // nhưng tuyệt đối không set() giá trị này trước khi save.
+    @Column(name = "thanh_tien", insertable = false, updatable = false)
     private BigDecimal thanhTien;
 
 }
