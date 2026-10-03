@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../components/layout/Layout";
 
+import Login from "../pages/Login";
+
 import AboutUs from "../pages/AboutUs";
 
 // Hoá đơn
@@ -30,7 +32,6 @@ import Revenue from "../pages/Finance/Revenue";
 import Tax from "../pages/Finance/Tax";
 import Profit from "../pages/Finance/Profit";
 
-// import LoginPage from "../pages/Login"; // TODO: tạo file này cho màn hình đăng nhập
 
 /**
  * AppRoutes - khai báo URL path <-> component trang.
@@ -40,8 +41,11 @@ import Profit from "../pages/Finance/Profit";
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* <Route path="/login" element={<LoginPage />} /> */}
 
+      {/* Không cần đăng nhập */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Cần đăng nhập */}
       <Route
         element={
           <ProtectedRoute>
@@ -56,7 +60,6 @@ export default function AppRoutes() {
         <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
         <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
 
-
         {/* Pallet */}
         <Route path="/pallet" element={<PalletManagement />} />
 
@@ -65,7 +68,7 @@ export default function AppRoutes() {
         <Route path="/nhan-vien" element={<EmployeeManagement />} />
         <Route path="/khach-hang" element={<CustomerManagement />} />
 
-        {/* Kho vận - menu "Quản lí kho" mặc định vào Báo cáo kiểm kê */}
+        {/* Kho vận */}
         <Route path="/kho" element={<StocktakingReport />} />
         <Route path="/kho/nhap-kho" element={<ImportInventory />} />
         <Route path="/kho/nhap-kho/:id" element={<ImportInventoryDetail />} />
@@ -73,13 +76,12 @@ export default function AppRoutes() {
         <Route path="/kho/xuat-kho/:id" element={<ExportInventoryDetail />} />
         <Route path="/kho/kiem-ke" element={<Stocktaking />} />
 
-        {/* Tài chính - menu "Quản lí tài chính" mặc định vào Doanh thu */}
+        {/* Tài chính */}
         <Route path="/tai-chinh" element={<Revenue />} />
         <Route path="/tai-chinh/thue" element={<Tax />} />
         <Route path="/tai-chinh/loi-nhuan" element={<Profit />} />
       </Route>
 
-      {/* TODO: /notifications, trang 404 */}
     </Routes>
   );
-}
+} 

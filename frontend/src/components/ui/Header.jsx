@@ -1,13 +1,9 @@
-import { ArrowLeft, Bell, ChevronDown } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "../layout/style.css";
+import { useAuth } from "../../store/AuthContext";
 
-/**
- * Header - thanh trên cùng.
- * Trái: title + subtitle (hoặc link quay lại) tự đổi theo URL.
- * Phải: chuông thông báo + tài khoản (cố định).
- * Key của titles/subtitles là ĐƯỜNG DẪN THẬT khai báo trong AppRoutes.jsx.
- */
 
 const titles = {
   "/": "Hồ sơ doanh nghiệp và năng lực vận hành",
@@ -117,15 +113,21 @@ export default function Header({
     avatarUrl: "",
   },
   notificationCount = 0,
-  onAvatarClick,
   notificationPath = "/notifications",
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
 
   const title = getPageTitle(location.pathname);
   const subtitle = getPageSubtitle(location.pathname);
   const backLink = getBackLink(location.pathname, location.search);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="header">
@@ -154,18 +156,45 @@ export default function Header({
 
         <div className="divider" />
 
-        <button type="button" onClick={onAvatarClick} className="user-btn">
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt={user.name} className="avatar" />
-          ) : (
-            <div className="avatar-fallback">{user.name?.charAt(0)}</div>
+        <div className="user-menu">
+          <button
+            type="button"
+            onClick={() => setShowMenu(!showMenu)}
+            className="user-btn"
+          >
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="avatar"
+              />
+            ) : (
+              <div className="avatar-fallback">
+                {user.name?.charAt(0)}
+              </div>
+            )}
+
+            <div className="user-info">
+              <p className="user-name">{user.name}</p>
+              <p className="user-role">{user.role}</p>
+            </div>
+
+            <ChevronDown size={16} className="chevron" />
+          </button>
+
+          {showMenu && (
+            <div className="user-dropdown">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="logout-btn"
+              >
+                <LogOut size={16} />
+                <span>Đăng xuất</span>
+              </button>
+            </div>
           )}
-          <div className="user-info">
-            <p className="user-name">{user.name}</p>
-            <p className="user-role">{user.role}</p>
-          </div>
-          <ChevronDown size={16} className="chevron" />
-        </button>
+        </div>
       </div>
     </header>
   );

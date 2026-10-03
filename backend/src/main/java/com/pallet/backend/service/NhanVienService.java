@@ -1,7 +1,9 @@
 package com.pallet.backend.service;
 
 import com.pallet.backend.dto.request.NhanVienRequest;
+import com.pallet.backend.dto.request.TaoTaiKhoanRequest;
 import com.pallet.backend.dto.response.NhanVienResponse;
+import com.pallet.backend.dto.response.TaoTaiKhoanResponse;
 
 import java.util.List;
 
@@ -10,9 +12,9 @@ public interface NhanVienService {
 
     NhanVienResponse layChiTiet(Long id);
 
-    NhanVienResponse taoMoi(NhanVienRequest request);
-
     NhanVienResponse capNhat(Long id, NhanVienRequest request);
 
     void choNghiViec(Long id);
+
+    TaoTaiKhoanResponse taoTaiKhoan(TaoTaiKhoanRequest req);
 }

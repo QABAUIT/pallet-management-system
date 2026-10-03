@@ -13,4 +13,6 @@ public interface PhienDangNhapRepository extends JpaRepository<PhienDangNhap, Lo
     List<PhienDangNhap> findByNhanVien_Id(Long nhanVienId);
 
     Optional<PhienDangNhap> findByRefreshToken(String refreshToken);
+
+    void deleteByNhanVien_Id(Long nhanVienId);
 }

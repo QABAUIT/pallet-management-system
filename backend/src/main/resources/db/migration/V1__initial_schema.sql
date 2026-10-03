@@ -816,3 +816,6 @@ BEGIN
     RETURN p_tien_to || v_nam::text || LPAD(v_so::text, 5, '0');
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============ 18. SEQUENCE SINH MÃ NHÂN VIÊN (NV0001, NV0002...) ============
+CREATE SEQUENCE ma_nv_seq START 1;

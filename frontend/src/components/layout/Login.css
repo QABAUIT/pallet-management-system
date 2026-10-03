@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@700&display=swap');
+
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background:
+    linear-gradient(to top, rgba(15, 41, 66, 0.8) 0%, rgba(15, 41, 66, 0) 50%),
+    var(--login-bg) center / cover no-repeat,
+    #0f2942;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 448px;
+  box-sizing: border-box;
+  padding: 32px 32px 72px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  box-shadow:
+    0 20px 25px -5px rgba(226, 232, 240, 0.5),
+    0 8px 10px -6px rgba(226, 232, 240, 0.5);
+}
+
+.login-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  color: #0f2942;
+  text-align: center;
+}
+
+.login-subtitle {
+  margin: 8px 0 32px;
+  font-size: 16px;
+  line-height: 24px;
+  color: #64748b;
+  text-align: center;
+}
+
+/* ---- Form ---- */
+.login-form .ant-form-item {
+  margin-bottom: 0;
+}
+.login-form .login-field-user {
+  margin-bottom: 19px;
+}
+.login-form .login-field-pass {
+  margin-bottom: 21px;
+}
+.login-form .login-field-remember {
+  margin-bottom: 18px;
+}
+
+.login-form .ant-form-item-label {
+  padding: 0 0 4px;
+}
+.login-form .ant-form-item-label > label {
+  width: 100%;
+  height: 20px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.login-label-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.login-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 400;
+  color: #0f2942;
+}
+.login-link:hover {
+  text-decoration: underline;
+}
+
+/* Ô nhập: cao 41px, viền #cbd5e1, bo 6px */
+.login-form .ant-input,
+.login-form .ant-input-affix-wrapper {
+  height: 41px;
+  padding: 0 13px;
+  font-size: 14px;
+  border-color: #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+.login-form .ant-input-affix-wrapper > input.ant-input {
+  height: auto;
+  padding: 0;
+  border: 0;
+}
+.login-form .ant-input::placeholder,
+.login-form .ant-input-affix-wrapper input::placeholder {
+  color: #808080;
+}
+.login-form .ant-input:hover,
+.login-form .ant-input-affix-wrapper:hover,
+.login-form .ant-input:focus,
+.login-form .ant-input-affix-wrapper-focused {
+  border-color: #0f2942;
+}
+.login-form .ant-input:focus,
+.login-form .ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(15, 41, 66, 0.12);
+}
+
+/* Checkbox */
+.login-form .ant-checkbox-wrapper {
+  font-size: 14px;
+  line-height: 20px;
+  color: #475569;
+}
+.login-form .ant-checkbox-inner {
+  border-radius: 5px;
+}
+
+.login-alert {
+  margin-bottom: 16px;
+}
+
+/* Nút: gradient navy -> cam */
+.login-form .login-btn.ant-btn {
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(to right, #001428 0%, #0f2942 48%, #fe932c 100%) !important;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.login-form .login-btn.ant-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+/* Chữ thương hiệu góc dưới trái */
+.login-brand {
+  position: absolute;
+  left: 32px;
+  bottom: 25px;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: rgba(252, 249, 77, 0.34);
+}

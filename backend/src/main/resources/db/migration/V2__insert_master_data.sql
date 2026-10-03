@@ -1,9 +1,4 @@
--- =====================================================================
--- PALLETTRACK PRO - SEED DATA MẪU
--- Mật khẩu mẫu cho mọi tài khoản demo: "Password@123"
--- Hash bcrypt bên dưới là ví dụ minh họa (10 rounds) - hãy tự sinh lại
--- bằng BCryptPasswordEncoder khi triển khai thật, đừng dùng hash mẫu này ở production.
--- =====================================================================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- 1. Vai trò
 INSERT INTO vai_tro (id, ma_vai_tro, ten_vai_tro, cap_duyet) VALUES
@@ -67,22 +62,22 @@ INSERT INTO nhan_vien (id, ma_nv, ho_ten, email, sdt, ngay_sinh, gioi_tinh, dia_
  (1,'NV-GD-001','Âu Hoàng Hải','auhoanghai@hoangphatpallet.vn','0909832981','1978-05-10','Nam',
    'S23 KP2, Tôn Thất Thuyết, P.Xóm Chiếu, TP.HCM',
    1,1,1,'Giám đốc','Không xác định thời hạn','HDLD-2020-001',
-   'au.hoanghai', '$2a$10$7EqJtq98hPqEX7fNZaFWoO6L1LqXlOMbXjF3RLXFPuKmb2G.9LhCK',
+   'au.hoanghai', crypt('Password@123', gen_salt('bf', 10)),
    '2020-01-01', NULL, 'dang_lam_viec'),
  (2,'NV-KHO-042','Nguyễn Văn Hùng','hung.nv@hoangphatpallet.vn','0938123456','1990-03-15','Nam',
    'Q.Tân Bình, TP.HCM',
    3,1,2,'Tổ trưởng kho ca sáng','Xác định thời hạn 2 năm','HDLD-2023-042',
-   'hung.kho', '$2a$10$7EqJtq98hPqEX7fNZaFWoO6L1LqXlOMbXjF3RLXFPuKmb2G.9LhCK',
+   'hung.kho', crypt('Password@123', gen_salt('bf', 10)),
    '2023-06-01', NULL, 'dang_lam_viec'),
  (3,'NV-BH-015','Trần Hải Nam','nam.tran@hoangphatpallet.vn','0977888999','1995-07-20','Nam',
    'Q.4, TP.HCM',
    4,1,3,'Nhân viên kinh doanh','Xác định thời hạn 1 năm','HDLD-2024-015',
-   'nam.tran', '$2a$10$7EqJtq98hPqEX7fNZaFWoO6L1LqXlOMbXjF3RLXFPuKmb2G.9LhCK',
+   'nam.tran', crypt('Password@123', gen_salt('bf', 10)),
    '2024-02-01', NULL, 'dang_lam_viec'),
  (4,'NV-KHO-007','Lê Thị Mai','mai.le@hoangphatpallet.vn','0912345678','1992-11-02','Nu',
    'Q.Bình Tân, TP.HCM',
    3,1,2,'Nhân viên kho','Thời vụ','HDLD-2022-007',
-   'mai.le', '$2a$10$7EqJtq98hPqEX7fNZaFWoO6L1LqXlOMbXjF3RLXFPuKmb2G.9LhCK',
+   'mai.le', crypt('Password@123', gen_salt('bf', 10)),
    '2022-03-10', '2026-01-15', 'da_nghi_viec');
 SELECT setval('nhan_vien_id_seq', 4);
 

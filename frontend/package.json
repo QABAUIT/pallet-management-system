@@ -14,10 +14,11 @@
     "antd": "^6.6.5",
     "axios": "^1.20.0",
     "chart.js": "^4.5.1",
+    "date-fns": "^4.4.0",
     "lucide-react": "^1.48.0",
     "react": "^19.2.8",
     "react-chartjs-2": "^5.3.1",
-    "react-day-picker": "^10.0.1",
+    "react-day-picker": "^10.0.2",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4"
   },

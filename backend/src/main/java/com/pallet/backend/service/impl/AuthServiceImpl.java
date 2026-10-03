@@ -77,17 +77,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
-    public LoginResponse refreshToken(String refreshToken) {
+        @Transactional(noRollbackFor = BusinessException.class)
+        public LoginResponse refreshToken(String refreshToken) {
         PhienDangNhap phien = phienDangNhapRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new BusinessException("Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại"));
 
         if (phien.getThoiGianHetHan().isBefore(LocalDateTime.now())) {
-            phienDangNhapRepository.delete(phien);
-            throw new BusinessException("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+                phienDangNhapRepository.delete(phien);
+                throw new BusinessException("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
         }
 
         NhanVien nv = phien.getNhanVien();
+
+        if ("da_nghi_viec".equals(nv.getTrangThai())) {
+                phienDangNhapRepository.delete(phien);
+                throw new BusinessException("Tài khoản đã nghỉ việc, không thể đăng nhập");
+        }
         String newAccessToken = jwtUtil.generateAccessToken(
                 nv.getTenDangNhap(), nv.getId(), nv.getVaiTro().getMaVaiTro());
 

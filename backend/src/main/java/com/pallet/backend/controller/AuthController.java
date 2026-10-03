@@ -1,13 +1,12 @@
 package com.pallet.backend.controller;
 
-import java.util.Map;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pallet.backend.dto.request.LoginRequest;
+import com.pallet.backend.dto.request.RefreshTokenRequest;
 import com.pallet.backend.dto.response.ApiResponse;
 import com.pallet.backend.dto.response.LoginResponse;
 import com.pallet.backend.service.AuthService;
@@ -38,22 +37,15 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<LoginResponse> refresh(
-            @RequestBody Map<String, String> body) {
+        public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest body) {
+            return ApiResponse.success(
+                    authService.refreshToken(body.getRefreshToken()),
+                    "Làm mới token thành công");
+        }
 
-        String refreshToken = body.get("refreshToken");
-
-        return ApiResponse.success(
-                authService.refreshToken(refreshToken),
-                "Làm mới token thành công");
-    }
-
-    @PostMapping("/logout")
-    public ApiResponse<Void> logout(
-            @RequestBody Map<String, String> body) {
-
-        authService.logout(body.get("refreshToken"));
-
-        return ApiResponse.success(null, "Đăng xuất thành công");
-    }
+        @PostMapping("/logout")
+        public ApiResponse<Void> logout(@Valid @RequestBody RefreshTokenRequest body) {
+            authService.logout(body.getRefreshToken());
+            return ApiResponse.success(null, "Đăng xuất thành công");
+        }
 }
