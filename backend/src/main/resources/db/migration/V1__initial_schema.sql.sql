@@ -1,3 +1,8 @@
+-- =====================================================================
+-- PALLETTRACK PRO - INIT SCHEMA (PostgreSQL)
+-- Công ty TNHH TM SX Pallet Hoàng Phát
+-- =====================================================================
+
 -- ============ 1. NGƯỜI DÙNG & PHÂN QUYỀN ============
 
 CREATE TABLE vai_tro (
@@ -29,8 +34,6 @@ CREATE TABLE ca_lam_viec (
     ten_ca          VARCHAR(100) NOT NULL,
     gio_bat_dau     TIME NOT NULL,
     gio_ket_thuc    TIME NOT NULL
-    -- Không thêm CHECK gio_ket_thuc > gio_bat_dau vì ca làm việc có thể
-    -- qua đêm (ví dụ 22:00 -> 06:00).
 );
 
 CREATE TABLE kho (
@@ -41,7 +44,7 @@ CREATE TABLE kho (
     loai_dia_diem   VARCHAR(20) NOT NULL DEFAULT 'kho'
                     CHECK (loai_dia_diem IN ('tru_so','kho','cang','khac')),
     dien_tich_m2    NUMERIC(12,2) CHECK (dien_tich_m2 IS NULL OR dien_tich_m2 >= 0),
-    quan_ly_id      BIGINT,             -- FK -> nhan_vien, thêm constraint sau khi tạo bảng nhan_vien
+    quan_ly_id      BIGINT,
     trang_thai      VARCHAR(20) NOT NULL DEFAULT 'hoat_dong'
                     CHECK (trang_thai IN ('hoat_dong','ngung_hoat_dong'))
 );
@@ -168,9 +171,6 @@ CREATE TABLE khach_hang (
 );
 
 -- ============ 4. THÔNG TIN CÔNG TY ============
--- Bảng này chỉ nên có đúng 1 dòng (thông tin công ty sở hữu hệ thống).
--- Bản gốc không có gì chặn việc lỡ tay INSERT thêm dòng thứ 2. Thêm CHECK
--- (id = 1) để biến đây thành bảng "singleton" thật sự.
 
 CREATE TABLE company (
     id                      BIGSERIAL PRIMARY KEY CHECK (id = 1),
@@ -190,19 +190,21 @@ CREATE TABLE company (
 );
 
 -- ============ 5. MẶT HÀNG & TỒN KHO ============
+-- loai_mat_hang có 'cho_tai_che' (pallet cũ chờ tháo dỡ) TÁCH RIÊNG khỏi 'pallet'
+-- (thành phẩm bán được), để không làm phình tồn kho bán được bằng hàng chưa xử lý.
 
 CREATE TABLE mat_hang (
     id                  BIGSERIAL PRIMARY KEY,
     ma_mat_hang         VARCHAR(20)  NOT NULL UNIQUE,
     ten_mat_hang        VARCHAR(200) NOT NULL,
     loai_mat_hang       VARCHAR(20) NOT NULL DEFAULT 'pallet'
-                        CHECK (loai_mat_hang IN ('pallet','linh_kien')),
+                        CHECK (loai_mat_hang IN ('pallet','linh_kien','cho_tai_che')),
     chat_lieu           VARCHAR(20) CHECK (chat_lieu IN ('go','nhua','sat','khac')),
-    kich_thuoc_dai      INTEGER CHECK (kich_thuoc_dai IS NULL OR kich_thuoc_dai > 0),   -- mm
-    kich_thuoc_rong     INTEGER CHECK (kich_thuoc_rong IS NULL OR kich_thuoc_rong > 0), -- mm
-    kich_thuoc_cao      INTEGER CHECK (kich_thuoc_cao IS NULL OR kich_thuoc_cao > 0),   -- mm
-    tai_trong_tinh      NUMERIC(10,2) CHECK (tai_trong_tinh IS NULL OR tai_trong_tinh >= 0),  -- kg
-    tai_trong_dong      NUMERIC(10,2) CHECK (tai_trong_dong IS NULL OR tai_trong_dong >= 0),  -- kg
+    kich_thuoc_dai      INTEGER CHECK (kich_thuoc_dai IS NULL OR kich_thuoc_dai > 0),
+    kich_thuoc_rong     INTEGER CHECK (kich_thuoc_rong IS NULL OR kich_thuoc_rong > 0),
+    kich_thuoc_cao      INTEGER CHECK (kich_thuoc_cao IS NULL OR kich_thuoc_cao > 0),
+    tai_trong_tinh      NUMERIC(10,2) CHECK (tai_trong_tinh IS NULL OR tai_trong_tinh >= 0),
+    tai_trong_dong      NUMERIC(10,2) CHECK (tai_trong_dong IS NULL OR tai_trong_dong >= 0),
     tieu_chuan          VARCHAR(150),
     ncc_mac_dinh_id     BIGINT REFERENCES nha_cung_cap(id) ON DELETE SET NULL,
     don_gia_ban         NUMERIC(18,2) NOT NULL DEFAULT 0 CHECK (don_gia_ban >= 0),
@@ -215,8 +217,6 @@ CREATE TABLE mat_hang (
     updated_at          TIMESTAMP NOT NULL DEFAULT now()
 );
 
--- [FIX #1] so_luong_ton_kho phải luôn >= so_luong_da_giu_cho, nếu không
--- tồn khả dụng (ton_kho - giu_cho) sẽ bị âm.
 CREATE TABLE ton_kho (
     id                      BIGSERIAL PRIMARY KEY,
     mat_hang_id             BIGINT NOT NULL REFERENCES mat_hang(id) ON DELETE CASCADE,
@@ -230,8 +230,9 @@ CREATE TABLE ton_kho (
     CONSTRAINT chk_tonkho_khadung CHECK (so_luong_ton_kho >= so_luong_da_giu_cho)
 );
 
--- [FIX] Thêm ràng buộc số lượng cho lô hàng: nhập > 0, còn lại nằm trong
--- khoảng [0, số lượng nhập] (bản gốc không chặn nên có thể xuất vượt tồn lô).
+-- muc_dich_nhap: 'ban_thanh_pham' (mặc định) hoặc 'cho_tai_che' - quyết định lô này
+-- có hiện ở tab "Tái chế" không. Đây là thuộc tính của LÔ (không phải của phiếu kho),
+-- vì 1 lô có thể được tháo dỡ dần qua nhiều đợt khác nhau.
 CREATE TABLE lo_hang (
     id                  BIGSERIAL PRIMARY KEY,
     ma_lo               VARCHAR(30) NOT NULL UNIQUE,
@@ -243,10 +244,42 @@ CREATE TABLE lo_hang (
     ncc_id              BIGINT REFERENCES nha_cung_cap(id) ON DELETE SET NULL,
     trang_thai          VARCHAR(20) NOT NULL DEFAULT 'con_hang'
                         CHECK (trang_thai IN ('con_hang','da_het')),
+    muc_dich_nhap       VARCHAR(20) NOT NULL DEFAULT 'ban_thanh_pham'
+                        CHECK (muc_dich_nhap IN ('ban_thanh_pham','cho_tai_che')),
     CONSTRAINT chk_lohang_conlai CHECK (so_luong_con_lai <= so_luong_nhap)
 );
 
--- ============ 6. HÓA ĐƠN (khai báo trước vì phieu_kho tham chiếu tới) ============
+-- ============ 6. TÁI CHẾ PALLET ============
+-- Mỗi "phiếu tái chế" = 1 đợt tháo dỡ thật, gắn với 1 lô nguồn (lo_hang.muc_dich_nhap
+-- = 'cho_tai_che'). Ra nhiều loại vật liệu khác nhau -> cần bảng chi tiết riêng.
+-- Khi hoàn tất, backend phải: (1) trừ lo_hang.so_luong_con_lai + ton_kho của pallet cũ,
+-- (2) cộng ton_kho cho từng vật liệu trong chi_tiet_tai_che, (3) tự sinh 1 phiếu xuất +
+-- 1 phiếu nhập kho tương ứng (xem phieu_kho.phieu_tai_che_id ở mục 8) để giữ đúng
+-- nguyên tắc "mọi biến động tồn kho đều có phiếu kho tương ứng".
+
+CREATE TABLE phieu_tai_che (
+    id                      BIGSERIAL PRIMARY KEY,
+    ma_phieu                VARCHAR(20) NOT NULL UNIQUE,
+    lo_hang_id              BIGINT NOT NULL REFERENCES lo_hang(id) ON DELETE RESTRICT,
+    kho_id                  BIGINT NOT NULL REFERENCES kho(id) ON DELETE RESTRICT,
+    nhan_vien_thuc_hien_id  BIGINT NOT NULL REFERENCES nhan_vien(id) ON DELETE RESTRICT,
+    so_luong_da_xu_ly       INTEGER NOT NULL CHECK (so_luong_da_xu_ly > 0),
+    ngay_thuc_hien          DATE NOT NULL DEFAULT CURRENT_DATE,
+    trang_thai              VARCHAR(20) NOT NULL DEFAULT 'nhap'
+                            CHECK (trang_thai IN ('nhap','da_hoan_tat','da_huy')),
+    ghi_chu                 VARCHAR(255),
+    created_at              TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE chi_tiet_tai_che (
+    id                  BIGSERIAL PRIMARY KEY,
+    phieu_tai_che_id    BIGINT NOT NULL REFERENCES phieu_tai_che(id) ON DELETE CASCADE,
+    mat_hang_id         BIGINT NOT NULL REFERENCES mat_hang(id) ON DELETE RESTRICT,
+    so_luong            INTEGER NOT NULL CHECK (so_luong > 0),
+    ghi_chu             VARCHAR(255)
+);
+
+-- ============ 7. HÓA ĐƠN ============
 
 CREATE TABLE hoa_don (
     id                      BIGSERIAL PRIMARY KEY,
@@ -284,10 +317,6 @@ CREATE TABLE hoa_don (
     file_pdf                VARCHAR(255),
     created_at              TIMESTAMP NOT NULL DEFAULT now(),
     updated_at              TIMESTAMP NOT NULL DEFAULT now(),
-    -- [FIX] Bản gốc chỉ chặn "có cả khach_hang_id lẫn ncc_id cùng lúc",
-    -- nhưng không ép đúng loại đối tác theo từng loai_giao_dich (ví dụ vẫn
-    -- có thể tạo hoá đơn 'thu_ban_pallet' mà không gắn khách hàng nào).
-    -- Viết lại theo từng nhóm giao dịch cho chặt chẽ hơn.
     CONSTRAINT chk_hoadon_doi_tuong CHECK (
         CASE
             WHEN loai_giao_dich IN ('thu_ban_pallet','thu_ban_linh_kien')
@@ -295,17 +324,13 @@ CREATE TABLE hoa_don (
             WHEN loai_giao_dich = 'chi_mua_pallet_cu'
                 THEN ncc_id IS NOT NULL AND khach_hang_id IS NULL
             WHEN loai_giao_dich IN ('chi_nguyen_lieu_phu_tro','chi_sua_chua','chi_van_chuyen')
-                THEN khach_hang_id IS NULL          -- ncc_id có hoặc không đều được
-            ELSE  -- 'thu_khac','chi_khac'
+                THEN khach_hang_id IS NULL
+            ELSE
                 khach_hang_id IS NULL AND ncc_id IS NULL
         END
     )
 );
 
--- [FIX] don_gia/ty_le_chiet_khau cần ràng buộc hợp lệ. Đồng thời chuyển
--- tien_chiet_khau và thanh_tien thành GENERATED COLUMN để không thể lệch
--- công thức do tính sai/thiếu đồng bộ ở tầng ứng dụng (bản gốc để 2 cột này
--- do backend tự tính và ghi tay -> dễ sai).
 CREATE TABLE chi_tiet_hoa_don (
     id                  BIGSERIAL PRIMARY KEY,
     hoa_don_id          BIGINT NOT NULL REFERENCES hoa_don(id) ON DELETE CASCADE,
@@ -319,11 +344,8 @@ CREATE TABLE chi_tiet_hoa_don (
         GENERATED ALWAYS AS (so_luong * don_gia - ROUND(so_luong * don_gia * ty_le_chiet_khau / 100, 2)) STORED
 );
 
--- ============ 7. PHIẾU KHO ============
+-- ============ 8. PHIẾU KHO ============
 
--- [FIX] loai_phieu = 'chuyen_kho' bắt buộc phải có kho đích và khác kho
--- nguồn; các loại phiếu khác (nhập/xuất/điều chỉnh) không nên có
--- kho_doi_ung_id (bản gốc để tự do, dễ nhập sai/thiếu).
 CREATE TABLE phieu_kho (
     id                      BIGSERIAL PRIMARY KEY,
     ma_phieu                VARCHAR(20) NOT NULL UNIQUE,
@@ -333,6 +355,7 @@ CREATE TABLE phieu_kho (
     kho_doi_ung_id          BIGINT REFERENCES kho(id) ON DELETE RESTRICT,
     vi_tri_id               BIGINT REFERENCES vi_tri_luu_tru(id) ON DELETE SET NULL,
     hoa_don_id              BIGINT REFERENCES hoa_don(id) ON DELETE SET NULL,
+    phieu_tai_che_id        BIGINT REFERENCES phieu_tai_che(id) ON DELETE SET NULL,
     nhan_vien_giao_nhan_id  BIGINT REFERENCES nhan_vien(id) ON DELETE SET NULL,
     nguoi_duyet_id          BIGINT REFERENCES nhan_vien(id) ON DELETE SET NULL,
     bien_so_xe_doi_tac      VARCHAR(20),
@@ -370,10 +393,6 @@ CREATE TABLE sua_chua_pallet (
     ngay                    DATE NOT NULL
 );
 
--- [FIX] Thêm CHECK ngày hiệu lực hợp lệ, don_gia >= 0. Đồng thời thêm
--- unique index (bên dưới, mục 13) chống 2 bảng giá "đang mở" trùng nhau
--- cho cùng mặt hàng + khách hàng (bản gốc không có gì chặn -> có thể áp
--- 2 đơn giá khác nhau cùng lúc cho cùng 1 mặt hàng/khách hàng).
 CREATE TABLE bang_gia (
     id                          BIGSERIAL PRIMARY KEY,
     mat_hang_id                 BIGINT NOT NULL REFERENCES mat_hang(id) ON DELETE CASCADE,
@@ -386,7 +405,7 @@ CREATE TABLE bang_gia (
     )
 );
 
--- ============ 8. KIỂM KÊ ============
+-- ============ 9. KIỂM KÊ ============
 
 CREATE TABLE phien_kiem_ke (
     id              BIGSERIAL PRIMARY KEY,
@@ -402,11 +421,6 @@ CREATE TABLE phien_kiem_ke (
     CONSTRAINT chk_phienkiemke_ngay CHECK (ngay_hoan_tat IS NULL OR ngay_hoan_tat >= ngay_bat_dau)
 );
 
--- [FIX #2] chenh_lech chuyển thành GENERATED COLUMN (không cho nhập tay,
--- luôn = ton_thuc_te - ton_he_thong, có thể âm khi thiếu hụt -> điều này
--- là hợp lệ về nghiệp vụ, không cần chặn âm). Thêm CHECK để trang_thai_kiem_ke
--- luôn khớp với kết quả đếm thực tế (bản gốc cho phép ghi trang_thai tuỳ ý,
--- có thể "khop" dù số liệu lệch nhau).
 CREATE TABLE chi_tiet_kiem_ke (
     id                      BIGSERIAL PRIMARY KEY,
     phien_kiem_ke_id        BIGINT NOT NULL REFERENCES phien_kiem_ke(id) ON DELETE CASCADE,
@@ -426,7 +440,7 @@ CREATE TABLE chi_tiet_kiem_ke (
     )
 );
 
--- ============ 9. THANH TOÁN ============
+-- ============ 10. THANH TOÁN ============
 
 CREATE TABLE thanh_toan (
     id                      BIGSERIAL PRIMARY KEY,
@@ -479,7 +493,7 @@ CREATE TABLE lich_su_hoa_don (
     ly_do               VARCHAR(255)
 );
 
--- ============ 10. HỢP ĐỒNG & BÁO GIÁ ============
+-- ============ 11. HỢP ĐỒNG & BÁO GIÁ ============
 
 CREATE TABLE hop_dong (
     id              BIGSERIAL PRIMARY KEY,
@@ -519,7 +533,6 @@ CREATE TABLE bao_gia (
     ghi_chu             VARCHAR(255)
 );
 
--- [FIX] Đồng bộ với chi_tiet_hoa_don: generated column cho tien_chiet_khau/thanh_tien.
 CREATE TABLE chi_tiet_bao_gia (
     id                  BIGSERIAL PRIMARY KEY,
     bao_gia_id          BIGINT NOT NULL REFERENCES bao_gia(id) ON DELETE CASCADE,
@@ -533,7 +546,7 @@ CREATE TABLE chi_tiet_bao_gia (
         GENERATED ALWAYS AS (so_luong * don_gia - ROUND(so_luong * don_gia * ty_le_chiet_khau / 100, 2)) STORED
 );
 
--- ============ 11. TÀI CHÍNH ============
+-- ============ 12. TÀI CHÍNH ============
 
 CREATE TABLE chi_phi_van_hanh (
     id              BIGSERIAL PRIMARY KEY,
@@ -549,9 +562,6 @@ CREATE TABLE chi_phi_van_hanh (
     ghi_chu         VARCHAR(255)
 );
 
--- [FIX] thang_ky phải có giá trị hợp lệ (1-12) khi ky = 'thang', và phải
--- NULL khi ky là 'quy'/'nam' (bản gốc không ràng buộc gì, có thể lưu
--- thang_ky = 15 hoặc để trống dù ky = 'thang').
 CREATE TABLE muc_tieu_doanh_thu (
     id                  BIGSERIAL PRIMARY KEY,
     kho_id              BIGINT REFERENCES kho(id) ON DELETE CASCADE,
@@ -567,7 +577,7 @@ CREATE TABLE muc_tieu_doanh_thu (
     )
 );
 
--- ============ 12. THÔNG BÁO, PHÊ DUYỆT, HỆ THỐNG ============
+-- ============ 13. THÔNG BÁO, PHÊ DUYỆT, HỆ THỐNG ============
 
 CREATE TABLE thong_bao (
     id              BIGSERIAL PRIMARY KEY,
@@ -627,9 +637,11 @@ CREATE TABLE bo_dem_chung_tu (
     PRIMARY KEY (loai_chung_tu, nam)
 );
 
--- ============ 13. INDEXES ============
--- Giữ lại toàn bộ index gốc, bổ sung thêm các index còn thiếu trên cột FK
--- hay dùng để JOIN/lọc (PostgreSQL KHÔNG tự tạo index cho cột FK).
+-- Khởi tạo bộ đếm cho mã phiếu tái chế (PTC) của năm hiện tại
+INSERT INTO bo_dem_chung_tu (loai_chung_tu, nam, so_hien_tai)
+VALUES ('PTC', EXTRACT(YEAR FROM now())::int, 0);
+
+-- ============ 14. INDEXES ============
 
 CREATE INDEX idx_nhanvien_vaitro        ON nhan_vien(vai_tro_id);
 CREATE INDEX idx_nhanvien_trangthai     ON nhan_vien(trang_thai);
@@ -644,6 +656,10 @@ CREATE INDEX idx_tonkho_kho             ON ton_kho(kho_id);
 CREATE INDEX idx_lohang_mathang         ON lo_hang(mat_hang_id);
 CREATE INDEX idx_lohang_kho             ON lo_hang(kho_id);
 CREATE INDEX idx_lohang_ncc             ON lo_hang(ncc_id);
+CREATE INDEX idx_lohang_mucdich         ON lo_hang(muc_dich_nhap) WHERE muc_dich_nhap = 'cho_tai_che';
+CREATE INDEX idx_phieutaiche_lohang     ON phieu_tai_che(lo_hang_id);
+CREATE INDEX idx_phieutaiche_kho        ON phieu_tai_che(kho_id);
+CREATE INDEX idx_chitiettaiche_phieu    ON chi_tiet_tai_che(phieu_tai_che_id);
 CREATE INDEX idx_hoadon_khachhang       ON hoa_don(khach_hang_id);
 CREATE INDEX idx_hoadon_ncc             ON hoa_don(ncc_id);
 CREATE INDEX idx_hoadon_trangthai       ON hoa_don(trang_thai);
@@ -652,6 +668,7 @@ CREATE INDEX idx_chitiethoadon_hoadon   ON chi_tiet_hoa_don(hoa_don_id);
 CREATE INDEX idx_chitiethoadon_mathang  ON chi_tiet_hoa_don(mat_hang_id);
 CREATE INDEX idx_phieukho_kho           ON phieu_kho(kho_id);
 CREATE INDEX idx_phieukho_hoadon        ON phieu_kho(hoa_don_id);
+CREATE INDEX idx_phieukho_phieutaiche   ON phieu_kho(phieu_tai_che_id);
 CREATE INDEX idx_chitietphieukho_phieu  ON chi_tiet_phieu_kho(phieu_kho_id);
 CREATE INDEX idx_chitietphieukho_mathang ON chi_tiet_phieu_kho(mat_hang_id);
 CREATE INDEX idx_chitietphieukho_lo     ON chi_tiet_phieu_kho(lo_id);
@@ -677,21 +694,11 @@ CREATE INDEX idx_thongbao_vaitronhan    ON thong_bao(vai_tro_nhan_id, da_doc);
 CREATE INDEX idx_pheduyet_doituong      ON phe_duyet(doi_tuong_loai, doi_tuong_id);
 CREATE INDEX idx_nhatky_doituong        ON nhat_ky_he_thong(doi_tuong_loai, doi_tuong_id);
 
--- [FIX] Chống 2 bảng giá "đang mở" (chưa có ngày kết thúc) trùng nhau cho
--- cùng 1 mặt hàng + khách hàng. Dùng COALESCE(khach_hang_id, 0) vì NULL
--- trong unique index được coi là "khác nhau" -> nếu không dùng COALESCE
--- thì nhiều dòng NULL vẫn lọt qua được.
 CREATE UNIQUE INDEX uq_banggia_dangmo
     ON bang_gia (mat_hang_id, COALESCE(khach_hang_id, 0))
     WHERE ngay_ket_thuc_hieu_luc IS NULL;
 
--- =====================================================================
--- CHẶN HARD DELETE Ở TẦNG DATABASE cho các bảng theo nguyên tắc "xóa mềm"
--- (nhan_vien, nha_cung_cap, khach_hang, mat_hang, kho). Ứng dụng chỉ được
--- phép UPDATE trang_thai, không được DELETE - kể cả khi FK chưa có ràng buộc
--- RESTRICT trực tiếp (ví dụ mat_hang.ncc_mac_dinh_id dùng SET NULL) thì
--- trigger này vẫn chặn được, tránh lỗ hổng xóa nhầm dữ liệu gốc.
--- =====================================================================
+-- ============ 15. CHẶN HARD DELETE ============
 
 CREATE OR REPLACE FUNCTION fn_block_hard_delete() RETURNS trigger AS $$
 BEGIN
@@ -722,10 +729,6 @@ CREATE TRIGGER trg_block_delete_kho
     BEFORE DELETE ON kho
     FOR EACH ROW EXECUTE FUNCTION fn_block_hard_delete();
 
--- Hóa đơn đã chốt sổ (da_chot_so = true) cũng không được sửa/xóa qua luồng bình thường.
--- Trường hợp cần mở khóa thủ công (Giám đốc phê duyệt ngoài quy trình), backend chạy
--- SET LOCAL pallettrack.allow_edit_locked = 'on'; ngay trong transaction đó trước khi UPDATE,
--- và phải tự ghi lại lý do vào nhat_ky_he_thong - trigger sẽ không tự ghi log giúp.
 CREATE OR REPLACE FUNCTION fn_block_edit_hoadon_chotso() RETURNS trigger AS $$
 BEGIN
     IF current_setting('pallettrack.allow_edit_locked', true) = 'on' THEN
@@ -744,14 +747,28 @@ CREATE TRIGGER trg_block_edit_hoadon_chotso
     BEFORE UPDATE OR DELETE ON hoa_don
     FOR EACH ROW EXECUTE FUNCTION fn_block_edit_hoadon_chotso();
 
--- =====================================================================
--- [FIX #3] TỰ ĐỘNG CẬP NHẬT updated_at KHI UPDATE
--- Lưu ý thứ tự trigger: trg_block_edit_hoadon_chotso (tên bắt đầu bằng
--- "b") sẽ chạy TRƯỚC trg_set_updated_at_hoa_don (tên bắt đầu bằng "s")
--- vì PostgreSQL thực thi các trigger BEFORE cùng loại theo thứ tự tên -
--- nên nếu hóa đơn đã chốt sổ, việc chặn sửa vẫn xảy ra trước khi
--- updated_at kịp bị đổi.
--- =====================================================================
+-- Cùng cơ chế khóa như hóa đơn chốt sổ: phiếu tái chế đã hoàn tất (đã đụng vào
+-- tồn kho thật) không được sửa/xóa qua luồng thường, dùng chung session var
+-- pallettrack.allow_edit_locked để mở khóa thủ công khi thật sự cần.
+CREATE OR REPLACE FUNCTION fn_block_edit_phieutaiche_hoantat() RETURNS trigger AS $$
+BEGIN
+    IF current_setting('pallettrack.allow_edit_locked', true) = 'on' THEN
+        RETURN COALESCE(NEW, OLD);
+    END IF;
+    IF (TG_OP = 'DELETE' AND OLD.trang_thai = 'da_hoan_tat') THEN
+        RAISE EXCEPTION 'Phiếu tái chế % đã hoàn tất, không được xóa.', OLD.ma_phieu;
+    ELSIF (TG_OP = 'UPDATE' AND OLD.trang_thai = 'da_hoan_tat') THEN
+        RAISE EXCEPTION 'Phiếu tái chế % đã hoàn tất, không được sửa (cần mở khóa thủ công).', OLD.ma_phieu;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_block_edit_phieutaiche_hoantat
+    BEFORE UPDATE OR DELETE ON phieu_tai_che
+    FOR EACH ROW EXECUTE FUNCTION fn_block_edit_phieutaiche_hoantat();
+
+-- ============ 16. TỰ ĐỘNG CẬP NHẬT updated_at ============
 
 CREATE OR REPLACE FUNCTION fn_set_updated_at() RETURNS trigger AS $$
 BEGIN
@@ -780,21 +797,7 @@ CREATE TRIGGER trg_set_updated_at_cau_hinh_he_thong
     BEFORE UPDATE ON cau_hinh_he_thong
     FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
--- =====================================================================
--- [FIX #4] SINH MÃ CHỨNG TỪ TỰ ĐỘNG, AN TOÀN VỚI ĐỒNG THỜI (CONCURRENCY)
---
--- Dùng INSERT ... ON CONFLICT DO UPDATE ... RETURNING trong 1 câu lệnh
--- duy nhất: PostgreSQL sẽ khóa đúng dòng (loai_chung_tu, nam) đang được
--- cập nhật cho tới khi transaction hiện tại kết thúc, nên 2 giao dịch
--- chạy song song xin mã cho cùng loại chứng từ/năm sẽ tự động xếp hàng
--- (serialize) chứ không bao giờ nhận trùng số - không cần SELECT ... FOR
--- UPDATE hay LOCK TABLE thủ công.
---
--- Cách dùng:
---   SELECT fn_lay_ma_chung_tu('hoa_don', 'HD');      -- -> 'HD202600001'
---   SELECT fn_lay_ma_chung_tu('phieu_kho', 'PK');     -- -> 'PK202600001'
---   SELECT fn_lay_ma_chung_tu('bao_gia', 'BG');       -- -> 'BG202600001'
--- =====================================================================
+-- ============ 17. SINH MÃ CHỨNG TỪ AN TOÀN ĐỒNG THỜI ============
 
 CREATE OR REPLACE FUNCTION fn_lay_ma_chung_tu(
     p_loai_chung_tu VARCHAR,
