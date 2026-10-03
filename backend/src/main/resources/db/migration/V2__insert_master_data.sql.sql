@@ -164,11 +164,11 @@ INSERT INTO hoa_don (id, ma_hoa_don, loai_giao_dich, khach_hang_id, kho_id, nhan
    TRUE,'invoices/2026/HD-2026-0001.pdf');
 SELECT setval('hoa_don_id_seq', 1);
 
-INSERT INTO chi_tiet_hoa_don
-    (hoa_don_id, mat_hang_id, so_luong, don_gia)
-VALUES
-    (1,1,100,150000),
-    (1,2,50,260000);
+-- thanh_tien/tien_chiet_khau giờ là GENERATED COLUMN (V1 mới) - Postgres tự tính,
+-- không được liệt kê 2 cột này trong câu INSERT nữa (trước đây có thanh_tien, đã bỏ).
+INSERT INTO chi_tiet_hoa_don (hoa_don_id, mat_hang_id, so_luong, don_gia) VALUES
+ (1,1,100,150000),
+ (1,2,50,260000);
 
 -- 14. Phiếu nhập kho mẫu
 INSERT INTO phieu_kho (id, ma_phieu, loai_phieu, kho_id, vi_tri_id, nhan_vien_giao_nhan_id,
@@ -214,13 +214,12 @@ INSERT INTO bao_gia (id, ma_bao_gia, khach_hang_id, nguoi_tao_id, ngay_tao, tran
    'quotes/2026/BG-2026-0014.xlsx','Giá chưa bao gồm VAT 8%');
 SELECT setval('bao_gia_id_seq', 1);
 
-INSERT INTO chi_tiet_bao_gia
-(bao_gia_id, mat_hang_id, so_luong, don_gia)
-VALUES
-(1,1,200,150000),
-(1,2,100,260000),
-(1,3,50,260000),
-(1,4,300,80000);
+-- thanh_tien giờ là GENERATED COLUMN (V1 mới) - không liệt kê trong INSERT nữa.
+INSERT INTO chi_tiet_bao_gia (bao_gia_id, mat_hang_id, so_luong, don_gia) VALUES
+ (1,1,200,150000),
+ (1,2,100,260000),
+ (1,3,50,260000),
+ (1,4,300,80000);
 
 -- 17. Chi phí vận hành & mục tiêu doanh thu
 INSERT INTO chi_phi_van_hanh (id, ma_chi_phi, loai_chi_phi, kho_id, mo_ta, so_tien, ky, ngay_chi, nguoi_tao_id) VALUES

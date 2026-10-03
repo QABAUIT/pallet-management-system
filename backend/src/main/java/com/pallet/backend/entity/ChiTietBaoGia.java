@@ -34,10 +34,12 @@ public class ChiTietBaoGia {
     @Column(name = "ty_le_chiet_khau", nullable = false)
     private BigDecimal tyLeChietKhau;
 
-    @Column(name = "tien_chiet_khau", nullable = false)
+    // GENERATED COLUMN ở DB (V1 mới) - Postgres tự tính, không được ghi giá trị vào đây.
+    @Column(name = "tien_chiet_khau", insertable = false, updatable = false)
     private BigDecimal tienChietKhau;
 
-    @Column(name = "thanh_tien", nullable = false)
+    // GENERATED COLUMN ở DB (V1 mới) - Postgres tự tính, không được ghi giá trị vào đây.
+    @Column(name = "thanh_tien", insertable = false, updatable = false)
     private BigDecimal thanhTien;
 
 }

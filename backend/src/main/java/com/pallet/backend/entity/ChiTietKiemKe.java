@@ -38,7 +38,10 @@ public class ChiTietKiemKe {
     @Column(name = "ton_thuc_te")
     private Integer tonThucTe;
 
-    @Column(name = "chenh_lech")
+    // GENERATED COLUMN ở DB (V1 mới) - Postgres tự tính = ton_thuc_te - ton_he_thong,
+    // không được ghi giá trị vào đây. Khi tạo/sửa dòng kiểm kê chỉ cần set tonThucTe,
+    // chenhLech sẽ tự có sau khi save() + load lại từ DB (gọi findById hoặc refresh entity).
+    @Column(name = "chenh_lech", insertable = false, updatable = false)
     private Integer chenhLech;
 
     @Column(name = "trang_thai_kiem_ke", nullable = false, length = 20)
