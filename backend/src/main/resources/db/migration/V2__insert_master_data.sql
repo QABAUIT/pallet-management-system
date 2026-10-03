@@ -62,7 +62,7 @@ INSERT INTO nhan_vien (id, ma_nv, ho_ten, email, sdt, ngay_sinh, gioi_tinh, dia_
  (1,'NV-GD-001','Âu Hoàng Hải','auhoanghai@hoangphatpallet.vn','0909832981','1978-05-10','Nam',
    'S23 KP2, Tôn Thất Thuyết, P.Xóm Chiếu, TP.HCM',
    1,1,1,'Giám đốc','Không xác định thời hạn','HDLD-2020-001',
-   'au.hoanghai', crypt('Password@123', gen_salt('bf', 10)),
+   'admin', crypt('admin', gen_salt('bf', 10)),
    '2020-01-01', NULL, 'dang_lam_viec'),
  (2,'NV-KHO-042','Nguyễn Văn Hùng','hung.nv@hoangphatpallet.vn','0938123456','1990-03-15','Nam',
    'Q.Tân Bình, TP.HCM',
