@@ -52,9 +52,10 @@ export default function AppRoutes() {
         <Route path="/" element={<AboutUs />} />
 
         {/* Hoá đơn */}
-        <Route path="/hoa-don" element={<ReceiptDetail />} />
+        <Route path="/hoa-don" element={<TransactionHistory />} />
         <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
-        <Route path="/hoa-don/lich-su" element={<TransactionHistory />} />
+        <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
+
 
         {/* Pallet */}
         <Route path="/pallet" element={<PalletManagement />} />
