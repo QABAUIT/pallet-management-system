@@ -1,46 +1,45 @@
 import React from 'react';
-import { Space, Typography, Avatar, Tag, Button, Popconfirm } from 'antd';
-import { UserOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Space, Typography, Avatar, Tag, Button } from 'antd';
+import { UserOutlined, EditOutlined } from '@ant-design/icons';
+import ConfirmDeleteButton from '../common/ConfirmDeleteButton';
 
 const { Text } = Typography;
 
 export const getEmployeeColumns = (handleEdit, handleDelete) => [
   {
-    title: 'MÃ NHÂN VIÊN',
-    dataIndex: 'maNv',
     key: 'maNv',
-    render: (text, record) => (
+    header: 'MÃ NHÂN VIÊN',
+    render: (record) => (
       <div>
-        <div style={{ fontWeight: 600 }}>{text || 'N/A'}</div>
+        <div style={{ fontWeight: 600 }}>{record.maNv || 'N/A'}</div>
         <Text type="secondary" style={{ fontSize: 12 }}>{record.chucVu || ''}</Text>
       </div>
     ),
   },
   {
-    title: 'HỌ VÀ TÊN',
-    dataIndex: 'hoTen',
     key: 'hoTen',
-    render: (text, record) => (
+    header: 'HỌ VÀ TÊN',
+    render: (record) => (
       <Space>
         <Avatar src={record.anhDaiDien} icon={!record.anhDaiDien && <UserOutlined />} />
         <div>
-          <div style={{ fontWeight: 600 }}>{text}</div>
+          <div style={{ fontWeight: 600 }}>{record.hoTen}</div>
           <Text type="secondary" style={{ fontSize: 12 }}>{record.tenBoPhan || record.chucVu}</Text>
         </div>
       </Space>
     ),
   },
   {
-    title: 'VAI TRÒ',
-    dataIndex: 'tenVaiTro',
     key: 'tenVaiTro',
-    render: (role) => {
+    header: 'VAI TRÒ',
+    render: (record) => {
+      const role = record.tenVaiTro;
       let color = 'default';
       let bg = '#f5f5f5';
       let borderColor = '#d9d9d9';
 
       if (role === 'Quản lí kho' || role === 'Nhân viên kho') { color = '#1d39c4'; bg = '#f0f5ff'; borderColor = '#adc6ff'; }
-      else if (role === 'Admin' || role === 'Giám đốc') { color = '#531dab'; bg = '#f9f0ff'; borderColor = '#d3adf7'; }
+      else if (role === 'Admin' || role === 'Giám đốc' || role === 'Phó giám đốc') { color = '#531dab'; bg = '#f9f0ff'; borderColor = '#d3adf7'; }
       else if (role === 'Bán hàng' || role === 'Nhân viên bán hàng' || role === 'Sales') { color = '#08979c'; bg = '#e6fffb'; borderColor = '#87e8de'; }
       else if (role) { color = '#d46b08'; bg = '#fff7e6'; borderColor = '#ffd591'; }
 
@@ -48,32 +47,29 @@ export const getEmployeeColumns = (handleEdit, handleDelete) => [
     },
   },
   {
-    title: 'SỐ ĐIỆN THOẠI',
-    dataIndex: 'sdt',
     key: 'sdt',
-    render: (text) => <Text>{text}</Text>
+    header: 'SỐ ĐIỆN THOẠI',
+    render: (record) => <Text>{record.sdt}</Text>
   },
   {
-    title: 'EMAIL CÔNG VIỆC',
-    dataIndex: 'email',
     key: 'email',
-    render: (text) => <Text>{text}</Text>
+    header: 'EMAIL CÔNG VIỆC',
+    render: (record) => <Text>{record.email}</Text>
   },
   {
-    title: 'NGÀY VÀO LÀM',
-    dataIndex: 'ngayVaoLam',
     key: 'ngayVaoLam',
-    render: (text) => {
-      if (!text) return null;
-      const date = new Date(text);
+    header: 'NGÀY VÀO LÀM',
+    render: (record) => {
+      if (!record.ngayVaoLam) return null;
+      const date = new Date(record.ngayVaoLam);
       return <Text>{date.toLocaleDateString('vi-VN')}</Text>;
     }
   },
   {
-    title: 'TRẠNG THÁI',
-    dataIndex: 'trangThai',
     key: 'trangThai',
-    render: (status) => {
+    header: 'TRẠNG THÁI',
+    render: (record) => {
+      let status = record.trangThai;
       let color = '#595959';
       let bg = '#fafafa';
       let borderColor = '#d9d9d9';
@@ -92,14 +88,13 @@ export const getEmployeeColumns = (handleEdit, handleDelete) => [
     },
   },
   {
-    title: 'THAO TÁC',
     key: 'action',
-    render: (_, record) => (
+    header: 'THAO TÁC',
+    align: 'center',
+    render: (record) => (
       <Space size="middle">
         <Button type="text" icon={<EditOutlined />} style={{ color: '#8c8c8c' }} onClick={() => handleEdit(record)} />
-        <Popconfirm title="Bạn có chắc muốn xóa nhân viên này?" onConfirm={() => handleDelete(record.id)}>
-          <Button type="text" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
+        <ConfirmDeleteButton onConfirm={() => handleDelete(record.id)} />
       </Space>
     ),
   },

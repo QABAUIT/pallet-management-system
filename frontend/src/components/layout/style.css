@@ -764,9 +764,11 @@
 .stat-card.tone-green { border-top-color: #16a34a; }
 .stat-card.tone-red   { border-top-color: #dc2626; }
 .stat-card.tone-amber { border-top-color: #b45309; }
+.stat-card.tone-purple { border-top-color: #8c09b4; }
 
 .stat-badge.tone-amber { background: #fef3c7; color: #b45309; }
 .stat-badge.tone-blue  { background: #dbeafe; color: #1d4ed8; }
+.stat-badge.tone-purple { background: #ffe3ff; color: #8c09b4; }
 
 .stat-value {
   margin: 10px 0 0;
