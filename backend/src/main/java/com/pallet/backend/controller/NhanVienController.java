@@ -36,7 +36,7 @@ public class NhanVienController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('GD','PGD')")
-    public ApiResponse<TaoTaiKhoanResponse> taoTaiKhoan(@Valid @RequestBody TaoTaiKhoanRequest req) {
+    public ApiResponse<TaoTaiKhoanResponse> taoTaiKhoan(@Valid @RequestBody NhanVienRequest req) {
         return ApiResponse.success(nhanVienService.taoTaiKhoan(req), "Tạo tài khoản thành công");
     }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Form, Input, Select, Upload, Button, Avatar, Tag, Space, Typography, Row, Col, DatePicker } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Upload, Button, Avatar, Tag, Space, Typography, Row, Col, DatePicker } from 'antd';
 import { UserOutlined, CloudUploadOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -48,15 +48,19 @@ export default function EmployeeModal({
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="NGÀY SINH" name="ngaySinh">
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày sinh" />
+              <Form.Item label="GIỚI TÍNH" name="gioiTinh">
+                <Select placeholder="Chọn giới tính">
+                  <Option value="Nam">Nam</Option>
+                  <Option value="Nu">Nữ</Option>
+                  <Option value="Khac">Khác</Option>
+                </Select>
               </Form.Item>
             </Col>
 
-            {/* Hàng 2: Giấy tờ & Liên hệ */}
+            {/* Hàng 2: Liên hệ */}
             <Col span={8}>
-              <Form.Item label={<span>CCCD</span>} name="cccd" rules={[{ message: 'Vui lòng nhập CCCD' }]}>
-                <Input placeholder="027306001423" />
+              <Form.Item label="NGÀY SINH" name="ngaySinh">
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày sinh" />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -72,13 +76,13 @@ export default function EmployeeModal({
 
             {/* Hàng 3: Công việc 1 */}
             <Col span={8}>
-              <Form.Item label={<span>ĐỊA CHỈ </span>} name="diaChi" rules={[{ message: 'Vui lòng nhập địa chỉ' }]}>
-                <Input placeholder="79e, đường Võ Thị Sáu, tỉnh Đồng Nai" />
+              <Form.Item label={<span>ĐỊA CHỈ </span>} name="diaChi">
+                <Input placeholder="79e, đường Võ Thị Sáu..." />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item label={<span>VAI TRÒ <span style={{ color: 'red' }}>*</span></span>} name="vaiTroId" rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}>
-                <Select placeholder="NHÂN VIÊN KHO">
+                <Select placeholder="Chọn vai trò">
                   <Option value={1}>Giám đốc</Option>
                   <Option value={2}>Phó giám đốc</Option>
                   <Option value={3}>Nhân viên kho</Option>
@@ -92,21 +96,56 @@ export default function EmployeeModal({
               </Form.Item>
             </Col>
 
-            {/* Hàng 4: Công việc 2 & Hệ thống */}
+            {/* Hàng 4: Bộ phận, Kho */}
             <Col span={8}>
-              <Form.Item label="NGÀY VÀO LÀM" name="ngayVaoLam">
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày vào làm" />
+              <Form.Item label="BỘ PHẬN (ID)" name="boPhanId">
+                <InputNumber style={{ width: '100%' }} placeholder="Nhập ID Bộ phận" />
               </Form.Item>
             </Col>
+            <Col span={8}>
+              <Form.Item label="KHO (ID)" name="khoId">
+                <InputNumber style={{ width: '100%' }} placeholder="Nhập ID Kho" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="LOẠI HỢP ĐỒNG" name="loaiHopDong">
+                <Input placeholder="VD: Có thời hạn" />
+              </Form.Item>
+            </Col>
+            
+            {/* Hàng 5: Hợp đồng & Thời gian */}
+            <Col span={8}>
+              <Form.Item label="SỐ HỢP ĐỒNG" name="soHopDong">
+                <Input placeholder="VD: HD-001" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="NGÀY VÀO LÀM" name="ngayVaoLam">
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="NGÀY NGHỈ VIỆC" name="ngayNghiViec">
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày" />
+              </Form.Item>
+            </Col>
+
+            {/* Hàng 6: Hệ thống */}
             <Col span={8}>
               <Form.Item label={<span>TÊN ĐĂNG NHẬP <span style={{ color: 'red' }}>*</span></span>} name="tenDangNhap" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}>
                 <Input placeholder="Ví dụ: nguyenvana" />
               </Form.Item>
             </Col>
             <Col span={8}>
+              <Form.Item label={<span>MẬT KHẨU {modalMode === 'add' && <span style={{ color: 'red' }}>*</span>}</span>} name="matKhau" rules={[{ required: modalMode === 'add', message: 'Vui lòng nhập mật khẩu' }]}>
+                <Input.Password placeholder={modalMode === 'add' ? 'Nhập mật khẩu' : 'Nhập để đổi MK mới'} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
               <Form.Item label="TRẠNG THÁI LÀM VIỆC" name="trangThai">
                 <Select placeholder="Chọn trạng thái">
                   <Option value="dang_lam_viec">Đang làm việc</Option>
+                  <Option value="cong_tac">Công tác</Option>
                   <Option value="da_nghi_viec">Đã nghỉ việc</Option>
                 </Select>
               </Form.Item>
@@ -118,16 +157,9 @@ export default function EmployeeModal({
               <Avatar shape="square" size={64} icon={<UserOutlined />} style={{ backgroundColor: '#f5f5f5', color: '#bfbfbf' }} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Text strong>anh_the.jpg</Text>
-                  <Tag color="success">Đã tải lên</Tag>
+                  <Text type="secondary">Chưa hỗ trợ Upload trực tiếp. Nhập URL hình ảnh:</Text>
                 </div>
-                <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginBottom: '8px' }}>Định dạng PNG, JPG, tối đa 5MB</Text>
-                <Space>
-                  <Upload showUploadList={false}>
-                    <Button icon={<CloudUploadOutlined />}>Tải ảnh lên / Đổi ảnh</Button>
-                  </Upload>
-                  <Button type="text" danger icon={<DeleteOutlined />} />
-                </Space>
+                <Input placeholder="https://domain.com/avatar.jpg" onChange={(e) => form.setFieldsValue({anhDaiDien: e.target.value})} />
               </div>
             </div>
           </Form.Item>
