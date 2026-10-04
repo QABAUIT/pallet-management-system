@@ -19,4 +19,7 @@ public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long> {
     List<PhieuKho> findByNhanVienGiaoNhan_Id(Long nhanVienGiaoNhanId);
     List<PhieuKho> findByNguoiDuyet_Id(Long nguoiDuyetId);
     List<PhieuKho> findByPhuongTien_Id(Long phuongTienId);
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT fn_lay_ma_chung_tu(:loaiChungTu, :tienTo)", nativeQuery = true)
+    String getMaChungTu(@org.springframework.data.repository.query.Param("loaiChungTu") String loaiChungTu, @org.springframework.data.repository.query.Param("tienTo") String tienTo);
 }
