@@ -44,16 +44,23 @@ export function useEmployees() {
     form.setFieldsValue({
       maNv: record.maNv,
       hoTen: record.hoTen,
-      vaiTroId: record.vaiTroId,
-      sdt: record.sdt,
-      diaChi: record.diaChi,
-      cccd: record.cccd || '',
-      email: record.email || '',
-      tenDangNhap: record.tenDangNhap,
-      chucVu: record.chucVu,
-      ngayVaoLam: record.ngayVaoLam ? dayjs(record.ngayVaoLam) : null,
+      gioiTinh: record.gioiTinh,
       ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null,
-      trangThai: record.trangThai || 'dang_lam_viec'
+      sdt: record.sdt,
+      email: record.email || '',
+      diaChi: record.diaChi,
+      vaiTroId: record.vaiTroId,
+      chucVu: record.chucVu,
+      boPhanId: record.boPhanId,
+      khoId: record.khoId,
+      loaiHopDong: record.loaiHopDong,
+      soHopDong: record.soHopDong,
+      ngayVaoLam: record.ngayVaoLam ? dayjs(record.ngayVaoLam) : null,
+      ngayNghiViec: record.ngayNghiViec ? dayjs(record.ngayNghiViec) : null,
+      tenDangNhap: record.tenDangNhap,
+      matKhau: undefined, // Dont show password on edit
+      trangThai: record.trangThai || 'dang_lam_viec',
+      anhDaiDien: record.anhDaiDien || ''
     });
     setIsModalVisible(true);
   };
@@ -74,8 +81,8 @@ export function useEmployees() {
         ...values,
         ngayVaoLam: values.ngayVaoLam ? values.ngayVaoLam.format('YYYY-MM-DD') : null,
         ngaySinh: values.ngaySinh ? values.ngaySinh.format('YYYY-MM-DD') : null,
-        tenDangNhap: values.tenDangNhap || form.getFieldValue('tenDangNhap') || (values.sdt ? values.sdt : `nv${Math.floor(Math.random() * 100000)}`),
-        matKhau: modalMode === 'add' ? 'Password@123' : undefined,
+        ngayNghiViec: values.ngayNghiViec ? values.ngayNghiViec.format('YYYY-MM-DD') : null,
+        tenDangNhap: values.tenDangNhap || form.getFieldValue('tenDangNhap') || (values.sdt ? values.sdt : `nv${Math.floor(Math.random() * 100000)}`)
       };
 
       if (modalMode === 'add') {

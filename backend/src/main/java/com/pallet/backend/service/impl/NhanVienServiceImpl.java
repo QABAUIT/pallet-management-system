@@ -52,7 +52,7 @@ public class NhanVienServiceImpl implements NhanVienService {
 
     @Override
     @Transactional
-    public TaoTaiKhoanResponse taoTaiKhoan(TaoTaiKhoanRequest req) {
+    public TaoTaiKhoanResponse taoTaiKhoan(NhanVienRequest req) {
         if (nhanVienRepository.existsByTenDangNhap(req.getTenDangNhap())) {
             throw new BusinessException("Tên đăng nhập đã tồn tại");
         }
@@ -60,22 +60,18 @@ public class NhanVienServiceImpl implements NhanVienService {
         if (email != null && nhanVienRepository.existsByEmail(email)) {
             throw new BusinessException("Email đã được sử dụng");
         }
-        VaiTro vaiTro = vaiTroRepository.findByMaVaiTro(req.getMaVaiTro())
-                .orElseThrow(() -> new BusinessException("Vai trò không tồn tại"));
-
+        
         String maNv = String.format("NV%04d", nhanVienRepository.nextMaNvSeq());
 
         NhanVien nv = NhanVien.builder()
                 .maNv(maNv)
                 .tenDangNhap(req.getTenDangNhap())
                 .matKhauHash(passwordEncoder.encode(req.getMatKhau()))
-                .hoTen(req.getHoTen())
-                .email(email)
-                .sdt(req.getSdt())
-                .ngayVaoLam(req.getNgayVaoLam())
-                .vaiTro(vaiTro)
-                .trangThai("dang_lam_viec")
+                .trangThai(req.getTrangThai() != null ? req.getTrangThai() : "dang_lam_viec")
                 .build();
+                
+        gan(nv, req);
+        nv.setEmail(email); // Override email to normalized
 
         nv = nhanVienRepository.save(nv);
         return new TaoTaiKhoanResponse(nv.getId(), nv.getMaNv());

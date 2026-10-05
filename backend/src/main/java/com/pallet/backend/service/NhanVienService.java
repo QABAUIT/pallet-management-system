@@ -16,5 +16,5 @@ public interface NhanVienService {
 
     void choNghiViec(Long id);
 
-    TaoTaiKhoanResponse taoTaiKhoan(TaoTaiKhoanRequest req);
+    TaoTaiKhoanResponse taoTaiKhoan(NhanVienRequest req);
 }
