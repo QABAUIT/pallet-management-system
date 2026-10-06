@@ -4,8 +4,10 @@
    ========================================================== */
 
 :root {
-  --navy: #101a33;   /* màu logo + màu thẻ menu đang chọn - SỬA Ở ĐÂY để đổi đồng bộ cả 2 */
-  --accent: #f5a623;  /* màu vàng cho viền trái mục đang chọn */
+  --navy: #101a33;
+  /* màu logo + màu thẻ menu đang chọn - SỬA Ở ĐÂY để đổi đồng bộ cả 2 */
+  --accent: #f5a623;
+  /* màu vàng cho viền trái mục đang chọn */
 }
 
 /* ---------- Khung tổng thể (thay cho flex/ml-56 của Tailwind) ---------- */
@@ -43,6 +45,7 @@
   padding: 0 24px;
   flex-shrink: 0;
 }
+
 /* ---------- Header: phần trái (title/subtitle) ---------- */
 .header-left {
   min-width: 0;
@@ -50,7 +53,8 @@
 
 .header-title {
   position: relative;
-  top: -5px;   /* đẩy title lên 3px, không ảnh hưởng vị trí subtitle */
+  top: -5px;
+  /* đẩy title lên 3px, không ảnh hưởng vị trí subtitle */
   margin: 0;
   font-size: 20px;
   font-weight: 700;
@@ -427,8 +431,13 @@
   overflow: hidden;
 }
 
-.ft-panel.left { left: 0; }
-.ft-panel.right { right: 0; }
+.ft-panel.left {
+  left: 0;
+}
+
+.ft-panel.right {
+  right: 0;
+}
 
 .ft-head {
   display: flex;
@@ -471,7 +480,7 @@
   padding: 4px 0;
 }
 
-.ft-group + .ft-group {
+.ft-group+.ft-group {
   margin-top: 6px;
   padding-top: 10px;
   border-top: 1px solid #f0f0f0;
@@ -485,7 +494,7 @@
   color: #111827;
 }
 
-.ft-opt { 
+.ft-opt {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -723,7 +732,8 @@
   position: relative;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-top: 5px solid #9ca3af; /* mặc định xám nếu tone không khớp cái nào bên dưới */
+  border-top: 5px solid #9ca3af;
+  /* mặc định xám nếu tone không khớp cái nào bên dưới */
   border-radius: 5px;
   padding: 16px;
   min-width: 220px;
@@ -755,18 +765,60 @@
   border-radius: 5px;
 }
 
-.stat-icon.tone-blue   { background: #dbeafe; color: #1d4ed8;}
-.stat-icon.tone-green  { background: #dcfce7; color: #16a34a;}
-.stat-icon.tone-red    { background: #fee2e2; color: #dc2626;}
-.stat-icon.tone-purple  { background: #ffe3ff; color: #8c09b4;}
+.stat-icon.tone-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
 
-.stat-card.tone-blue  { border-top-color: #1d4ed8; }
-.stat-card.tone-green { border-top-color: #16a34a; }
-.stat-card.tone-red   { border-top-color: #dc2626; }
-.stat-card.tone-amber { border-top-color: #b45309; }
+.stat-icon.tone-green {
+  background: #dcfce7;
+  color: #16a34a;
+}
 
-.stat-badge.tone-amber { background: #fef3c7; color: #b45309; }
-.stat-badge.tone-blue  { background: #dbeafe; color: #1d4ed8; }
+.stat-icon.tone-red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.stat-icon.tone-purple {
+  background: #ffe3ff;
+  color: #8c09b4;
+}
+
+.stat-card.tone-blue {
+  border-top-color: #1d4ed8;
+}
+
+.stat-card.tone-green {
+  border-top-color: #16a34a;
+}
+
+.stat-card.tone-red {
+  border-top-color: #dc2626;
+}
+
+.stat-card.tone-amber {
+  border-top-color: #b45309;
+}
+
+.stat-card.tone-purple {
+  border-top-color: #8c09b4;
+}
+
+.stat-badge.tone-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.stat-badge.tone-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.stat-badge.tone-purple {
+  background: #ffe3ff;
+  color: #8c09b4;
+}
 
 .stat-value {
   margin: 10px 0 0;
@@ -778,11 +830,13 @@
 .stat-foot {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* badge bên trái, caption dạt sang phải */
+  justify-content: space-between;
+  /* badge bên trái, caption dạt sang phải */
   gap: 8px;
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid #e5e7eb; /* đường line trước footer */
+  border-top: 1px solid #e5e7eb;
+  /* đường line trước footer */
   flex-wrap: wrap;
 }
 
@@ -796,8 +850,15 @@
   border-radius: 5px;
 }
 
-.stat-badge.tone-green { background: #dcfce7; color: #16a34a; }
-.stat-badge.tone-red   { background: #fee2e2; color: #dc2626; }
+.stat-badge.tone-green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-badge.tone-red {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 .stat-caption {
   font-size: 12px;
@@ -886,7 +947,8 @@
   background: #ffffff;
   border: 1px solid #C3C6CE;
   border-radius: 5px;
-  overflow-x: auto; /* bảng nhiều cột trên màn hình hẹp thì cuộn ngang, không vỡ layout */
+  overflow-x: auto;
+  /* bảng nhiều cột trên màn hình hẹp thì cuộn ngang, không vỡ layout */
 }
 
 .tbl {
@@ -1029,7 +1091,8 @@
 .card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px; /* giảm bo góc so với bản cũ (14px) */
+  border-radius: 8px;
+  /* giảm bo góc so với bản cũ (14px) */
   padding: 20px;
 }
 
@@ -1088,9 +1151,20 @@
   white-space: nowrap;
 }
 
-.pill-amber { color: #b45309; background: #fef3c7; }
-.pill-blue  { color: #1d4ed8; background: #dbeafe; }
-.pill-navy  { color: #ffffff; background: var(--navy); }
+.pill-amber {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.pill-blue {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.pill-navy {
+  color: #ffffff;
+  background: var(--navy);
+}
 
 /* ================== Thẻ: Hồ sơ công ty ================== */
 
@@ -1188,7 +1262,8 @@
 .info-box {
   padding: 12px 14px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb; /* THÊM viền xám theo yêu cầu */
+  border: 1px solid #e5e7eb;
+  /* THÊM viền xám theo yêu cầu */
   border-radius: 6px;
 }
 
@@ -1223,7 +1298,8 @@
   gap: 10px;
   padding: 12px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb; /* THÊM viền xám */
+  border: 1px solid #e5e7eb;
+  /* THÊM viền xám */
   border-radius: 6px;
 }
 
@@ -1272,7 +1348,8 @@
   gap: 10px;
   padding: 10px 12px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb; /* THÊM viền xám */
+  border: 1px solid #e5e7eb;
+  /* THÊM viền xám */
   border-radius: 6px;
 }
 
@@ -1408,6 +1485,7 @@
 
 /* Màn hình hẹp: dồn về 1 cột */
 @media (max-width: 1024px) {
+
   .two-col-layout,
   .info-box-grid,
   .leader-grid,

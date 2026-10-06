@@ -6,6 +6,8 @@ import com.pallet.backend.entity.MatHang;
 import com.pallet.backend.entity.NhaCungCap;
 import com.pallet.backend.entity.NhanVien;
 import com.pallet.backend.entity.TonKho;
+import com.pallet.backend.entity.PhieuKho;
+import com.pallet.backend.entity.ChiTietPhieuKho;
 import com.pallet.backend.exception.BusinessException;
 import com.pallet.backend.exception.ResourceNotFoundException;
 import com.pallet.backend.repository.KhoRepository;
@@ -13,6 +15,8 @@ import com.pallet.backend.repository.MatHangRepository;
 import com.pallet.backend.repository.NhaCungCapRepository;
 import com.pallet.backend.repository.NhanVienRepository;
 import com.pallet.backend.repository.TonKhoRepository;
+import com.pallet.backend.repository.PhieuKhoRepository;
+import com.pallet.backend.repository.ChiTietPhieuKhoRepository;
 import com.pallet.backend.service.MatHangService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +35,8 @@ public class MatHangServiceImpl implements MatHangService {
     private final NhaCungCapRepository nhaCungCapRepository;
     private final KhoRepository khoRepository;
     private final NhanVienRepository nhanVienRepository;
+    private final PhieuKhoRepository phieuKhoRepository;
+    private final ChiTietPhieuKhoRepository chiTietPhieuKhoRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,7 +66,6 @@ public class MatHangServiceImpl implements MatHangService {
         mh.setCreatedBy(nhanVienDangDangNhap());
         mh = matHangRepository.save(mh);
 
-        // Theo đúng luồng UI "Thêm pallet mới": nhập số lượng ban đầu -> tạo luôn dòng ton_kho.
         if (request.getSoLuongBanDau() != null) {
             if (request.getKhoId() == null) {
                 throw new BusinessException("Phải chọn kho để nhập số lượng ban đầu");
@@ -76,9 +81,28 @@ public class MatHangServiceImpl implements MatHangService {
                     .updatedAt(LocalDateTime.now())
                     .build();
             tonKhoRepository.save(tonKho);
-            // LƯU Ý: bước này CHỈ khởi tạo tồn kho, KHÔNG tự tạo phieu_kho/lo_hang tương ứng.
-            // Nếu cần đầy đủ vết nhập kho (ai nhập, từ NCC nào), hãy tạo thêm PhieuKho +
-            // ChiTietPhieuKho ở đây trong CÙNG transaction này.
+
+            // Tạo PhieuKho để lưu vết theo đúng cấu trúc database với fn_lay_ma_chung_tu
+            String maPhieuKho = phieuKhoRepository.getMaChungTu("nhap_kho", "PNK");
+            
+            PhieuKho phieuKho = PhieuKho.builder()
+                    .maPhieu(maPhieuKho)
+                    .loaiPhieu("nhap_kho")
+                    .kho(kho)
+                    .nguoiDuyet(nhanVienDangDangNhap())
+                    .ngayGio(LocalDateTime.now())
+                    .trangThai("da_hoan_thanh")
+                    .ghiChu("Nhập kho khởi tạo ban đầu cho " + mh.getMaMatHang())
+                    .build();
+            phieuKhoRepository.save(phieuKho);
+
+            ChiTietPhieuKho chiTiet = ChiTietPhieuKho.builder()
+                    .phieuKho(phieuKho)
+                    .matHang(mh)
+                    .soLuong(request.getSoLuongBanDau())
+                    .ghiChu("Số lượng ban đầu")
+                    .build();
+            chiTietPhieuKhoRepository.save(chiTiet);
         }
 
         return toResponse(mh);
