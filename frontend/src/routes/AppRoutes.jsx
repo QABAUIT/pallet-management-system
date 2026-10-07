@@ -15,7 +15,7 @@ import TransactionHistory from "../pages/Receipt/TransactionHistory";
 import PalletManagement from "../pages/PalletManagement";
 
 // Đối tác / nhân sự / khách hàng
-import SupplierMangagement from "../pages/SupplierMangagement"; // TODO: sửa chính tả tên file -> SupplierManagement rồi đổi lại import này
+import SupplierManagement from "../pages/SupplierManagement";
 import EmployeeManagement from "../pages/EmployeeManagement";
 import CustomerManagement from "../pages/CustomerManagement";
 
@@ -32,7 +32,6 @@ import Revenue from "../pages/Finance/Revenue";
 import Tax from "../pages/Finance/Tax";
 import Profit from "../pages/Finance/Profit";
 
-
 /**
  * AppRoutes - khai báo URL path <-> component trang.
  * Nhóm Hoá đơn / Kho / Tài chính giờ có nhiều trang con, nên mỗi nhóm có
@@ -41,7 +40,6 @@ import Profit from "../pages/Finance/Profit";
 export default function AppRoutes() {
   return (
     <Routes>
-
       {/* Không cần đăng nhập */}
       <Route path="/login" element={<Login />} />
 
@@ -64,7 +62,7 @@ export default function AppRoutes() {
         <Route path="/pallet" element={<PalletManagement />} />
 
         {/* Đối tác / nhân sự / khách hàng */}
-        <Route path="/nha-cung-cap" element={<SupplierMangagement />} />
+        <Route path="/nha-cung-cap" element={<SupplierManagement />} />
         <Route path="/nhan-vien" element={<EmployeeManagement />} />
         <Route path="/khach-hang" element={<CustomerManagement />} />
 
@@ -81,7 +79,6 @@ export default function AppRoutes() {
         <Route path="/tai-chinh/thue" element={<Tax />} />
         <Route path="/tai-chinh/loi-nhuan" element={<Profit />} />
       </Route>
-
     </Routes>
   );
-} 
+}
