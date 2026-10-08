@@ -48,7 +48,15 @@ export default function PalletDetailDrawer({ selectedPallet, onClose, onEdit, on
                 </Flex>
              ) : (
                <>
-                <img src={selectedPallet.image} alt={selectedPallet.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img 
+                  src={selectedPallet.image} 
+                  alt={selectedPallet.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                  onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = 'https://placehold.co/300x200?text=No+Image';
+                  }}
+                />
                 <Button icon={<ExpandOutlined />} style={{ position: 'absolute', top: 12, right: 12, border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} shape="circle" />
                 <Flex gap="small" style={{ position: 'absolute', bottom: 12, left: 12 }}>
                   <Tag color="rgba(0,0,0,0.7)" style={{ border: 'none', margin: 0 }}><BoxPlotOutlined style={{ marginRight: 4 }}/> RFID: {selectedPallet.rfid}</Tag>

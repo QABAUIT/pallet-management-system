@@ -41,8 +41,8 @@ export function usePallets(itemsPerPage = 8) {
     setModalMode('add');
     setEditingId(null);
     form.resetFields();
-    form.setFieldsValue({ 
-      loaiMatHang: 'pallet', 
+    form.setFieldsValue({
+      loaiMatHang: 'pallet',
       chatLieu: 'go',
       soLuongBanDau: null,
       khoId: 1
@@ -107,33 +107,27 @@ export function usePallets(itemsPerPage = 8) {
   const filteredPallets = useMemo(() => {
     return pallets.filter(p => {
       // 1. Text Search
-      const matchSearch = p.name.toLowerCase().includes(searchText.toLowerCase()) || 
-                          (p.code || '').toLowerCase().includes(searchText.toLowerCase());
-      
-      // 2. Tab Filter (Radio)
+      const matchSearch = p.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        (p.code || '').toLowerCase().includes(searchText.toLowerCase());
+
+      // 2. Tab Filter (Radio) maps to loaiMatHang
       let matchTab = true;
-      if (filterTab === 'standard') matchTab = (p.code || '').includes('TC') || p.name.toLowerCase().includes('tiêu chuẩn');
-      else if (filterTab === 'euro') matchTab = (p.code || '').includes('EPAL') || p.name.toLowerCase().includes('euro');
-      else if (filterTab === 'heavy') matchTab = (p.code || '').includes('TN') || p.name.toLowerCase().includes('nặng');
-      else if (filterTab === 'plastic') matchTab = p.material === 'Nhựa' || (p.code || '').includes('NH');
-      
-      // 3. Checkbox Filter (loaiMatHang & chatLieu) mapped from DB
-      let matchLoai = true;
-      if (filter.loaiMatHang && filter.loaiMatHang.length > 0) {
-        matchLoai = filter.loaiMatHang.includes(p.rawLoaiMatHang);
+      if (filterTab !== 'all') {
+        matchTab = p.rawLoaiMatHang === filterTab;
       }
 
+      // 3. Checkbox Filter (chatLieu) mapped from DB
       let matchChatLieu = true;
       if (filter.chatLieu && filter.chatLieu.length > 0) {
         matchChatLieu = filter.chatLieu.includes(p.rawChatLieu);
       }
 
-      return matchSearch && matchTab && matchLoai && matchChatLieu;
+      return matchSearch && matchTab && matchChatLieu;
     });
   }, [pallets, searchText, filterTab, filter]);
 
   const paginatedPallets = filteredPallets.slice(
-    (currentPage - 1) * itemsPerPage, 
+    (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
@@ -152,6 +146,7 @@ export function usePallets(itemsPerPage = 8) {
     currentPage,
     setCurrentPage,
     paginatedPallets,
+    filteredPallets,
     totalItems: filteredPallets.length,
     selectedPallet,
     setSelectedPallet,
