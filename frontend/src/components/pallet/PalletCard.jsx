@@ -24,7 +24,15 @@ export default function PalletCard({ pallet, isSelected, onClick }) {
               <Text type="secondary">Tùy chỉnh</Text>
             </div>
           ) : (
-            <img src={pallet.image} alt={pallet.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img 
+              src={pallet.image} 
+              alt={pallet.name} 
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = 'https://placehold.co/300x200?text=No+Image';
+              }}
+            />
           )}
           <div style={{ position: 'absolute', top: 16, right: 16, background: 'white', padding: '4px 12px', borderRadius: 16, fontWeight: 600, fontSize: 13, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             {pallet.code}
