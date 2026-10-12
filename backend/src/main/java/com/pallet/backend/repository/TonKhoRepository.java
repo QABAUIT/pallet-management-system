@@ -2,6 +2,7 @@ package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.TonKho;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TonKhoRepository extends JpaRepository<TonKho, Long>, JpaSpecificationExecutor<TonKho> { 
+public interface TonKhoRepository extends JpaRepository<TonKho, Long>, JpaSpecificationExecutor<TonKho> {
 
     List<TonKho> findByMatHang_Id(Long matHangId);
 
@@ -24,15 +25,14 @@ public interface TonKhoRepository extends JpaRepository<TonKho, Long>, JpaSpecif
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-        SELECT t
-        FROM TonKho t
-        WHERE t.matHang.id = :matHangId
-          AND t.kho.id = :khoId
-    """)
+                SELECT t
+                FROM TonKho t
+                WHERE t.matHang.id = :matHangId
+                  AND t.kho.id = :khoId
+            """)
     Optional<TonKho> findForUpdate(
             @Param("matHangId") Long matHangId,
-            @Param("khoId") Long khoId
-    );
+            @Param("khoId") Long khoId);
 
     @Query("SELECT COALESCE(SUM(t.soLuongTonKho), 0) FROM TonKho t WHERE t.matHang.id = :matHangId")
     Integer sumSoLuongTonKho(@Param("matHangId") Long matHangId);
