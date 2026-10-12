@@ -60,24 +60,7 @@ export default function EmployeeManagement() {
 
   return (
     <div style={{ padding: '24px', backgroundColor: '#fcfcfc', minHeight: '100vh', textAlign: 'left' }}>
-      <PageHeader 
-        title="Quản lí nhân viên"
-        actions={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            style={{ backgroundColor: '#d46b08', borderColor: '#d46b08', borderRadius: '6px', fontWeight: 500 }}
-            onClick={handleAdd}
-          >
-            Thêm nhân viên mới
-          </Button>
-        }
-      />
-      <p style={{ color: '#6b7280', marginBottom: '24px', marginTop: '-12px' }}>
-        Danh sách nhân sự, phân quyền vai trò vận hành và thông tin liên hệ
-      </p>
-
+      
       <EmployeeStats data={data} />
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', alignItems: 'center' }}>
@@ -117,6 +100,15 @@ export default function EmployeeManagement() {
             setFilterRole(val.role);
           }}
         />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            style={{ backgroundColor: '#d46b08', borderColor: '#d46b08', borderRadius: '6px', fontWeight: 500 }}
+            onClick={handleAdd}
+          >
+            Thêm nhân viên mới
+          </Button>
       </div>
 
       <AppTable
