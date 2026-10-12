@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { message } from 'antd';
-import { hoaDonApi } from '../api/hoaDonApi';
-import { notifyError } from '../utils/notify';
+import { hoaDonService } from '../services/hoaDonService';
+import { notifyError, notifySuccess } from '../utils/notify';
 
 export function useReceiptDetail(id) {
   const [hd, setHd] = useState(null);
@@ -11,7 +10,7 @@ export function useReceiptDetail(id) {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await hoaDonApi.chiTiet(id);
+      const res = await hoaDonService.getById(id);
       setHd(res.data);
     } catch (err) {
       notifyError(err);
@@ -24,12 +23,12 @@ export function useReceiptDetail(id) {
     reload();
   }, [reload]);
 
-  // Chạy 1 thao tác ghi, trả true nếu thành công để trang đóng modal
+  // Chạy 1 thao tác ghi; trả true nếu thành công để trang đóng modal
   const run = async (fn, okMsg) => {
     setSaving(true);
     try {
       await fn();
-      message.success(okMsg);
+      notifySuccess(okMsg);
       await reload();
       return true;
     } catch (err) {
@@ -44,8 +43,8 @@ export function useReceiptDetail(id) {
     hd,
     loading,
     saving,
-    capNhat: (data) => run(() => hoaDonApi.capNhat(id, data), 'Đã cập nhật hóa đơn'),
-    thanhToan: (data) => run(() => hoaDonApi.thanhToan(id, data), 'Thanh toán thành công'),
-    huy: (lyDo) => run(() => hoaDonApi.huy(id, lyDo), 'Đã hủy hóa đơn'),
+    capNhat: (data) => run(() => hoaDonService.update(id, data), 'Đã cập nhật hóa đơn'),
+    thanhToan: (data) => run(() => hoaDonService.thanhToan(id, data), 'Thanh toán thành công'),
+    xoa: (lyDo) => run(() => hoaDonService.xoa(id, lyDo), 'Đã xóa hóa đơn'),
   };
 }

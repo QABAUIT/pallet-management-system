@@ -1,31 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { message } from 'antd';
-import { hoaDonApi } from '../api/hoaDonApi';
-import { notifyError } from '../utils/notify';
+import { useMemo, useState } from 'react';
+import { hoaDonService } from '../services/hoaDonService';
+import { notifyError, notifySuccess, notifyWarning } from '../utils/notify';
+import { useSalesCatalog } from './useSalesCatalog';
 
 export const VAT_RATE = 8; // %
 
 /** Toàn bộ trạng thái + tính tiền của form "Tạo hóa đơn bán pallet". */
 export function useReceiptCreate(onCreated) {
-  const [dm, setDm] = useState({ khachHang: [], matHang: [], tenKho: '' });
+  const { dm, reload: reloadCatalog } = useSalesCatalog();
   const [khachHangId, setKhachHangId] = useState(null);
   const [items, setItems] = useState([]); // [{ matHangId, soLuong }]
   const [phuongThuc, setPhuongThuc] = useState('tien_mat');
   const [tienKhachDua, setTienKhachDua] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const loadCatalog = useCallback(async () => {
-    try {
-      const res = await hoaDonApi.danhMucBanHang();
-      setDm(res.data);
-    } catch (err) {
-      notifyError(err);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCatalog();
-  }, [loadCatalog]);
 
   const mhMap = useMemo(() => new Map(dm.matHang.map((m) => [m.id, m])), [dm.matHang]);
   const khach = dm.khachHang.find((k) => k.id === khachHangId);
@@ -46,15 +33,23 @@ export function useReceiptCreate(onCreated) {
     setItems((cur) => cur.map((i) => (i.matHangId === matHangId ? { ...i, soLuong: soLuong || 1 } : i)));
   const removeItem = (matHangId) => setItems((cur) => cur.filter((i) => i.matHangId !== matHangId));
 
+  // Nhập lại: xóa khách hàng + các dòng đang nhập
+  const reset = () => {
+    setItems([]);
+    setKhachHangId(null);
+    setTienKhachDua(null);
+    setPhuongThuc('tien_mat');
+  };
+
   const submit = async (thanhToanNgay) => {
-    if (!khachHangId) return message.warning('Vui lòng chọn khách hàng');
-    if (items.length === 0) return message.warning('Vui lòng thêm ít nhất 1 loại pallet');
+    if (!khachHangId) return notifyWarning('Vui lòng chọn khách hàng');
+    if (items.length === 0) return notifyWarning('Vui lòng thêm ít nhất 1 loại pallet');
     if (thanhToanNgay && phuongThuc === 'tien_mat' && (tienKhachDua || 0) < tong) {
-      return message.warning('Số tiền khách đưa chưa đủ để thanh toán');
+      return notifyWarning('Số tiền khách đưa chưa đủ để thanh toán');
     }
     setSubmitting(true);
     try {
-      const res = await hoaDonApi.taoMoi({
+      const res = await hoaDonService.create({
         khachHangId,
         chiTiet: items.map(({ matHangId, soLuong }) => ({ matHangId, soLuong })),
         tyLeVat: VAT_RATE,
@@ -62,11 +57,9 @@ export function useReceiptCreate(onCreated) {
         phuongThucThanhToan: thanhToanNgay ? phuongThuc : null,
         tienKhachDua: thanhToanNgay && phuongThuc === 'tien_mat' ? tienKhachDua : null,
       });
-      message.success(`${res.message}: ${res.data.maHoaDon}`);
-      setItems([]);
-      setKhachHangId(null);
-      setTienKhachDua(null);
-      await loadCatalog();
+      notifySuccess(`${res.message}: ${res.data.maHoaDon}`);
+      reset();
+      await reloadCatalog();
       onCreated?.(res.data, thanhToanNgay);
     } catch (err) {
       notifyError(err);
@@ -77,7 +70,7 @@ export function useReceiptCreate(onCreated) {
 
   return {
     dm, khach, khachHangId, setKhachHangId,
-    items, lines, addItem, setQty, removeItem,
+    items, lines, addItem, setQty, removeItem, reset,
     phuongThuc, setPhuongThuc, tienKhachDua, setTienKhachDua,
     tongHang, vat, tong, thoiLai,
     submitting, submit,

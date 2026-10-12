@@ -1504,7 +1504,6 @@
 .rc-in { color: #16a34a; font-weight: 700; white-space: nowrap; }
 .rc-out { color: #dc2626; font-weight: 700; white-space: nowrap; }
 .rc-btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
-.stat-badge.tone-gray { background: #f3f4f6; color: #4b5563; }
 
 /* Chi tiết hóa đơn */
 .rc-actions { display: flex; gap: 8px; flex-wrap: wrap; }

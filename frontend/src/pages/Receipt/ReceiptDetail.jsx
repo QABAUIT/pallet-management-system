@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { DatePicker, Input, InputNumber, Modal, Select } from "antd";
-import dayjs from "dayjs";
-import { FileSpreadsheet, Pencil, Printer } from "lucide-react";
+import { InputNumber, Modal, Select } from "antd";
+import { FileSpreadsheet, Pencil, Printer, Trash2 } from "lucide-react";
 import AppTable from "../../components/common/AppTable";
 import ReceiptTabs from "../../components/receipt/ReceiptTabs";
 import ReceiptStatusBadge from "../../components/receipt/ReceiptStatusBadge";
+import ReceiptEditModal from "../../components/receipt/ReceiptEditModal";
+import ReceiptCancelModal from "../../components/receipt/ReceiptCancelModal";
 import { useAuth } from "../../store/AuthContext";
 import { useReceiptDetail } from "../../hooks/useReceiptDetail";
 import { PHUONG_THUC, docTienBangChu, formatDate, formatDateTime, formatMoney, xuatCsv } from "../../utils/receiptFormat";
@@ -36,24 +37,15 @@ export default function ReceiptDetail() {
   const location = useLocation();
   const { user } = useAuth();
   const laQuanLy = ["GD", "PGD"].includes(user?.maVaiTro);
-  const { hd, loading, saving, capNhat, thanhToan, huy } = useReceiptDetail(id);
+  const { hd, loading, saving, capNhat, thanhToan, xoa } = useReceiptDetail(id);
 
-  const [modal, setModal] = useState(null); // 'sua' | 'tra' | 'huy'
-  const [ghiChu, setGhiChu] = useState("");
-  const [han, setHan] = useState(null);
+  const [modal, setModal] = useState(null); // 'sua' | 'tra' | 'xoa'
   const [phuongThuc, setPhuongThuc] = useState("tien_mat");
   const [tienKhachDua, setTienKhachDua] = useState(null);
-  const [lyDo, setLyDo] = useState("");
-
-  const moSua = () => {
-    setGhiChu(hd.ghiChu || "");
-    setHan(hd.hanThanhToan ? dayjs(hd.hanThanhToan) : null);
-    setModal("sua");
-  };
 
   // Bấm bút chì ở lịch sử -> mở thẳng modal sửa
   useEffect(() => {
-    if (hd && location.state?.moSua) moSua();
+    if (hd && location.state?.moSua) setModal("sua");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hd?.id]);
 
@@ -124,7 +116,7 @@ export default function ReceiptDetail() {
         <div className="card-top-row">
           <p className="section-label" style={{ margin: 0 }}>DANH MỤC PALLET TRONG HÓA ĐƠN</p>
           {!khoaSua && (
-            <button className="btn-outline rc-btn-sm rc-no-print" onClick={moSua}>
+            <button className="btn-outline rc-btn-sm rc-no-print" onClick={() => setModal("sua")}>
               <Pencil size={13} /> Chỉnh sửa
             </button>
           )}
@@ -172,8 +164,8 @@ export default function ReceiptDetail() {
         {!khoaSua && dangCho && (
           <div className="rc-foot rc-no-print">
             {laQuanLy && (
-              <button className="btn-danger" onClick={() => { setLyDo(""); setModal("huy"); }}>
-                Hủy hóa đơn
+              <button className="btn-danger" onClick={() => setModal("xoa")}>
+                <Trash2 size={16} /> Xóa hóa đơn
               </button>
             )}
             <button
@@ -190,29 +182,25 @@ export default function ReceiptDetail() {
         )}
       </div>
 
-      <Modal
-        title="Chỉnh sửa hóa đơn"
+      <ReceiptEditModal
         open={modal === "sua"}
+        hd={hd}
+        saving={saving}
         onCancel={() => setModal(null)}
-        confirmLoading={saving}
-        okText="Lưu"
-        cancelText="Đóng"
-        onOk={async () => {
-          if (await capNhat({ ghiChu, hanThanhToan: han ? han.format("YYYY-MM-DD") : null })) setModal(null);
+        onSubmit={async (payload) => {
+          if (await capNhat(payload)) setModal(null);
         }}
-      >
-        <div style={{ display: "grid", gap: 12 }}>
-          <div>
-            <span className="rc-label">Hạn thanh toán</span>
-            <DatePicker value={han} onChange={setHan} format="DD/MM/YYYY" style={{ width: "100%" }} />
-          </div>
-          <div>
-            <span className="rc-label">Ghi chú</span>
-            <Input.TextArea rows={4} value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} maxLength={2000} />
-          </div>
-          <p className="muted-text">Muốn đổi mặt hàng hoặc số lượng: hủy hóa đơn này và tạo hóa đơn mới.</p>
-        </div>
-      </Modal>
+      />
+
+      <ReceiptCancelModal
+        open={modal === "xoa"}
+        ma={hd.maHoaDon}
+        loading={saving}
+        onCancel={() => setModal(null)}
+        onOk={async (lyDo) => {
+          if (await xoa(lyDo)) setModal(null);
+        }}
+      />
 
       <Modal
         title={`Thanh toán ${hd.maHoaDon}`}
@@ -255,22 +243,6 @@ export default function ReceiptDetail() {
             </>
           )}
         </div>
-      </Modal>
-
-      <Modal
-        title={`Hủy ${hd.maHoaDon}`}
-        open={modal === "huy"}
-        onCancel={() => setModal(null)}
-        confirmLoading={saving}
-        okText="Xác nhận hủy"
-        cancelText="Đóng"
-        okButtonProps={{ danger: true, disabled: !lyDo.trim() }}
-        onOk={async () => {
-          if (await huy(lyDo)) setModal(null);
-        }}
-      >
-        <span className="rc-label">Lý do hủy</span>
-        <Input.TextArea rows={3} value={lyDo} onChange={(e) => setLyDo(e.target.value)} maxLength={255} />
       </Modal>
     </div>
   );

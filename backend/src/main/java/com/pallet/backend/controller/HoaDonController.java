@@ -1,7 +1,6 @@
 package com.pallet.backend.controller;
 
 import com.pallet.backend.dto.request.CapNhatHoaDonRequest;
-import com.pallet.backend.dto.request.HuyHoaDonRequest;
 import com.pallet.backend.dto.request.TaoHoaDonRequest;
 import com.pallet.backend.dto.request.ThanhToanHoaDonRequest;
 import com.pallet.backend.dto.response.ApiResponse;
@@ -46,13 +45,6 @@ public class HoaDonController {
         return ApiResponse.success(hoaDonService.taoMoi(req, principal.getName()), "Tạo hóa đơn thành công");
     }
 
-    @PostMapping("/{id}/thanh-toan")
-    public ApiResponse<Void> thanhToan(@PathVariable Long id,
-                                       @Valid @RequestBody ThanhToanHoaDonRequest req, Principal principal) {
-        hoaDonService.thanhToan(id, req, principal.getName());
-        return ApiResponse.success(null, "Thanh toán thành công");
-    }
-
     @PutMapping("/{id}")
     public ApiResponse<Void> capNhat(@PathVariable Long id,
                                      @Valid @RequestBody CapNhatHoaDonRequest req, Principal principal) {
@@ -60,11 +52,19 @@ public class HoaDonController {
         return ApiResponse.success(null, "Cập nhật hóa đơn thành công");
     }
 
-    @PostMapping("/{id}/huy")
+    @PostMapping("/{id}/thanh-toan")
+    public ApiResponse<Void> thanhToan(@PathVariable Long id,
+                                       @Valid @RequestBody ThanhToanHoaDonRequest req, Principal principal) {
+        hoaDonService.thanhToan(id, req, principal.getName());
+        return ApiResponse.success(null, "Thanh toán thành công");
+    }
+
+    /** XÓA MỀM: chuyển hóa đơn sang "da_huy", nhả giữ chỗ tồn kho. Bắt buộc có lý do. */
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('GD','PGD')")
-    public ApiResponse<Void> huy(@PathVariable Long id,
-                                 @Valid @RequestBody HuyHoaDonRequest req, Principal principal) {
-        hoaDonService.huy(id, req.getLyDo(), principal.getName());
-        return ApiResponse.success(null, "Đã hủy hóa đơn");
+    public ApiResponse<Void> xoa(@PathVariable Long id,
+                                 @RequestParam(required = false) String lyDo, Principal principal) {
+        hoaDonService.huy(id, lyDo, principal.getName());
+        return ApiResponse.success(null, "Đã xóa hóa đơn");
     }
 }

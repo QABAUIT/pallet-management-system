@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Pencil, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Eye, FileSpreadsheet, Pencil, Plus, Trash2, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import TimeFilter from "../../components/common/TimeFilter";
 import AppTable from "../../components/common/AppTable";
 import Pagination from "../../components/common/Pagination";
@@ -9,21 +9,30 @@ import StatCard from "../../components/common/StatCard";
 import OtherTypeFilter from "../../components/common/OtherTypeFilter";
 import ReceiptTabs from "../../components/receipt/ReceiptTabs";
 import ReceiptStatusBadge from "../../components/receipt/ReceiptStatusBadge";
+import ReceiptCancelModal from "../../components/receipt/ReceiptCancelModal";
+import { useAuth } from "../../store/AuthContext";
 import { useReceipts } from "../../hooks/useReceipts";
 import { matchTime } from "../../utils/matchTime";
-import { LOAI_GD, PHUONG_THUC, formatDate, formatMoney, formatTime } from "../../utils/receiptFormat";
+import { HOA_DON_TRANG_THAI, resolveStatus } from "../../utils/statusTag";
+import { notifyWarning } from "../../utils/notify";
+import { LOAI_GD, PHUONG_THUC, formatDate, formatMoney, formatTime, xuatCsv } from "../../utils/receiptFormat";
 
 const DEFAULT_LOAI = { loai: null };
 const DEFAULT_TT = { trangThai: null, sort: "newest" };
+const TT_LOC = ["cho_thanh_toan", "da_thanh_toan", "qua_han", "da_huy"];
 
 export default function TransactionHistory() {
   const navigate = useNavigate();
-  const { data: rows, loading } = useReceipts();
+  const { user } = useAuth();
+  const laQuanLy = ["GD", "PGD"].includes(user?.maVaiTro);
+  const { data: rows, loading, deleting, xoa } = useReceipts();
+
   const [search, setSearch] = useState("");
   const [time, setTime] = useState({ preset: "month", from: null, to: null });
   const [loaiFilter, setLoaiFilter] = useState(DEFAULT_LOAI);
   const [ttFilter, setTtFilter] = useState(DEFAULT_TT);
   const [page, setPage] = useState(1);
+  const [xoaRow, setXoaRow] = useState(null);
   const perPage = 8;
 
   const apply = (setter) => (next) => {
@@ -61,11 +70,24 @@ export default function TransactionHistory() {
         (r) =>
           !q || [r.maHoaDon, r.tenDoiTac, r.sdtDoiTac, r.mstDoiTac].some((v) => v && v.toLowerCase().includes(q)),
       );
-    // API trả mới nhất trước
-    return ttFilter.sort === "oldest" ? [...list].reverse() : list;
+    return ttFilter.sort === "oldest" ? [...list].reverse() : list; // API trả mới nhất trước
   }, [trongKy, loaiFilter, ttFilter, search]);
 
   const pagedRows = filteredRows.slice((page - 1) * perPage, page * perPage);
+
+  const xuatDanhSach = () => {
+    if (filteredRows.length === 0) return notifyWarning("Không có giao dịch nào để xuất");
+    xuatCsv(`giao-dich-${new Date().toISOString().slice(0, 10)}.csv`, [
+      ["Mã GD", "Ngày", "Giờ", "Loại GD", "Đối tác", "MST", "SĐT", "Phương thức", "Số tiền", "Trạng thái"],
+      ...filteredRows.map((r) => [
+        r.maHoaDon, formatDate(r.ngayLap), formatTime(r.ngayLap),
+        LOAI_GD[r.loaiGiaoDich] || r.loaiGiaoDich, r.tenDoiTac, r.mstDoiTac, r.sdtDoiTac,
+        PHUONG_THUC[r.phuongThucThanhToan] || "",
+        `${r.laThu ? "" : "-"}${r.tongThanhToan}`,
+        resolveStatus(HOA_DON_TRANG_THAI, r.quaHan ? "qua_han" : r.trangThai).label,
+      ]),
+    ]);
+  };
 
   const columns = [
     { key: "maHoaDon", header: "Mã GD", width: "150px", render: (r) => <span className="rc-name">{r.maHoaDon}</span> },
@@ -120,34 +142,36 @@ export default function TransactionHistory() {
           </span>
         ),
     },
-    {
-      key: "trangThai",
-      header: "Trạng thái",
-      align: "center",
-      width: "140px",
-      render: (r) => <ReceiptStatusBadge hd={r} />,
-    },
+    { key: "trangThai", header: "Trạng thái", align: "center", width: "140px", render: (r) => <ReceiptStatusBadge hd={r} /> },
     {
       key: "thaoTac",
       header: "Thao tác",
       align: "center",
-      width: "100px",
-      render: (r) => (
-        <div style={{ display: "flex", justifyContent: "center", gap: 2 }}>
-          <button className="icon-btn" title="Xem chi tiết" onClick={() => navigate(`/hoa-don/${r.id}`)}>
-            <Eye size={16} />
-          </button>
-          {r.trangThai !== "da_huy" && !r.daChotSo && (
-            <button
-              className="icon-btn"
-              title="Chỉnh sửa"
-              onClick={() => navigate(`/hoa-don/${r.id}`, { state: { moSua: true } })}
-            >
-              <Pencil size={16} />
+      width: "120px",
+      render: (r) => {
+        const khoa = r.daChotSo || r.trangThai === "da_huy";
+        return (
+          <div style={{ display: "flex", justifyContent: "center", gap: 2 }}>
+            <button className="icon-btn" title="Xem chi tiết" onClick={() => navigate(`/hoa-don/${r.id}`)}>
+              <Eye size={16} />
             </button>
-          )}
-        </div>
-      ),
+            {!khoa && (
+              <button
+                className="icon-btn"
+                title="Chỉnh sửa"
+                onClick={() => navigate(`/hoa-don/${r.id}`, { state: { moSua: true } })}
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+            {!khoa && laQuanLy && r.trangThai === "cho_thanh_toan" && (
+              <button className="icon-btn" title="Xóa hóa đơn" onClick={() => setXoaRow(r)}>
+                <Trash2 size={16} color="#dc2626" />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -157,38 +181,23 @@ export default function TransactionHistory() {
 
       <div className="stat-row">
         <StatCard
-          label="TỔNG THU (KỲ NÀY)"
-          value={`${formatMoney(stats.tongThu)} đ`}
-          icon={TrendingUp}
-          tone="green"
-          badge={`${stats.soThu} giao dịch`}
-          caption="đã thu trong kỳ"
+          label="TỔNG THU (KỲ NÀY)" value={`${formatMoney(stats.tongThu)} đ`} icon={TrendingUp} tone="green"
+          badge={`${stats.soThu} giao dịch`} caption="đã thu trong kỳ"
         />
         <StatCard
-          label="TỔNG CHI (KỲ NÀY)"
-          value={`${formatMoney(stats.tongChi)} đ`}
-          icon={TrendingDown}
-          tone="red"
-          badge={`${stats.soChi} giao dịch`}
-          caption="đã chi trong kỳ"
+          label="TỔNG CHI (KỲ NÀY)" value={`${formatMoney(stats.tongChi)} đ`} icon={TrendingDown} tone="red"
+          badge={`${stats.soChi} giao dịch`} caption="đã chi trong kỳ"
         />
         <StatCard
-          label="SỐ DƯ RÒNG ĐỐI SOÁT"
-          value={`${stats.rong > 0 ? "+" : ""}${formatMoney(stats.rong)} đ`}
-          icon={Wallet}
-          tone="blue"
-          badge={`Biên độ ${stats.bienDo}%`}
-          caption="tỷ suất lợi nhuận ròng"
+          label="SỐ DƯ RÒNG ĐỐI SOÁT" value={`${stats.rong > 0 ? "+" : ""}${formatMoney(stats.rong)} đ`} icon={Wallet} tone="blue"
+          badge={`Biên độ ${stats.bienDo}%`} caption="tỷ suất lợi nhuận ròng"
         />
       </div>
 
       <div className="rc-toolbar">
         <SearchInput
           value={search}
-          onChange={(v) => {
-            setSearch(v);
-            setPage(1);
-          }}
+          onChange={(v) => { setSearch(v); setPage(1); }}
           placeholder="Tìm mã HD, đối tác, SĐT..."
         />
         <TimeFilter value={time} onChange={apply(setTime)} />
@@ -214,12 +223,7 @@ export default function TransactionHistory() {
             {
               key: "trangThai",
               type: "radio",
-              options: [
-                { value: "cho_thanh_toan", label: "Chờ thanh toán" },
-                { value: "da_thanh_toan", label: "Đã thanh toán" },
-                { value: "qua_han", label: "Quá hạn" },
-                { value: "da_huy", label: "Đã hủy" },
-              ],
+              options: TT_LOC.map((v) => ({ value: v, label: HOA_DON_TRANG_THAI[v].label })),
             },
           ]}
           sortOptions={[
@@ -230,6 +234,14 @@ export default function TransactionHistory() {
           defaultValue={DEFAULT_TT}
           onApply={apply(setTtFilter)}
         />
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          <button className="btn-outline" onClick={xuatDanhSach}>
+            <FileSpreadsheet size={16} /> Xuất Excel
+          </button>
+          <button className="btn-solid" onClick={() => navigate("/hoa-don/tao-moi")}>
+            <Plus size={16} /> Tạo hóa đơn mới
+          </button>
+        </div>
       </div>
 
       {loading ? <p className="muted-text">Đang tải dữ liệu...</p> : <AppTable columns={columns} data={pagedRows} />}
@@ -243,6 +255,16 @@ export default function TransactionHistory() {
           onPageChange={setPage}
         />
       </div>
+
+      <ReceiptCancelModal
+        open={!!xoaRow}
+        ma={xoaRow?.maHoaDon}
+        loading={deleting}
+        onCancel={() => setXoaRow(null)}
+        onOk={async (lyDo) => {
+          if (await xoa(xoaRow.id, lyDo)) setXoaRow(null);
+        }}
+      />
     </div>
   );
 }

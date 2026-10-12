@@ -21,18 +21,6 @@ export const PHUONG_THUC = {
   qr_code: 'Quét mã QR',
 }
 
-export const TRANG_THAI = {
-  nhap: { label: 'Nháp', tone: 'gray' },
-  cho_thanh_toan: { label: 'Chờ thanh toán', tone: 'amber' },
-  cho_duyet: { label: 'Chờ duyệt', tone: 'amber' },
-  da_thanh_toan: { label: 'Đã thanh toán', tone: 'green' },
-  qua_han: { label: 'Quá hạn', tone: 'red' },
-  da_huy: { label: 'Đã hủy', tone: 'gray' },
-}
-
-// Trạng thái hiển thị: quá hạn (tính từ hạn thanh toán) được ưu tiên hơn "chờ thanh toán"
-export const trangThaiHienThi = (hd) => TRANG_THAI[hd.quaHan ? 'qua_han' : hd.trangThai] || TRANG_THAI.nhap
-
 const CHU_SO = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín']
 const DON_VI = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ']
 

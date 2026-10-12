@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { InputNumber, Input, Select } from "antd";
-import { Plus, RefreshCw, X } from "lucide-react";
+import { Plus, RefreshCw, RotateCcw, X } from "lucide-react";
 import AppTable from "../../components/common/AppTable";
 import SearchInput from "../../components/common/SearchInput";
 import ReceiptTabs from "../../components/receipt/ReceiptTabs";
@@ -212,6 +212,9 @@ export default function ReceiptCreate() {
           </div>
 
           <div className="rc-foot">
+            <button className="btn-outline" disabled={f.submitting} onClick={f.reset}>
+              <RotateCcw size={15} /> Nhập lại
+            </button>
             <button className="btn-outline" disabled={f.submitting} onClick={() => f.submit(false)}>
               Xác nhận thêm hóa đơn (Chờ thanh toán)
             </button>

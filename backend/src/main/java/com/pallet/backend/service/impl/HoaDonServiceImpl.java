@@ -45,9 +45,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,6 +63,9 @@ public class HoaDonServiceImpl implements HoaDonService {
     private static final BigDecimal TRAM = BigDecimal.valueOf(100);
 
     private enum CheDoTon { GIU_CHO, XUAT, XUAT_TU_GIU_CHO, NHA_GIU_CHO }
+
+    /** Kết quả tính tiền các dòng hàng (chưa gắn hóa đơn, chưa lưu). */
+    private record KetQuaTinh(List<ChiTietHoaDon> dong, BigDecimal tongHang, BigDecimal tongCk, boolean coPallet) {}
 
     private final HoaDonRepository hoaDonRepository;
     private final ChiTietHoaDonRepository chiTietHoaDonRepository;
@@ -104,6 +107,7 @@ public class HoaDonServiceImpl implements HoaDonService {
             BigDecimal thanhTien = l.getThanhTien() != null ? l.getThanhTien() : gross.subtract(ck);
             dong.add(HoaDonChiTietResponse.Dong.builder()
                     .stt(stt++)
+                    .matHangId(mh.getId())
                     .maMatHang(mh.getMaMatHang())
                     .tenMatHang(mh.getTenMatHang())
                     .moTa(mh.getMoTa())
@@ -209,79 +213,26 @@ public class HoaDonServiceImpl implements HoaDonService {
     @Transactional
     public TaoHoaDonResponse taoMoi(TaoHoaDonRequest req, String tenDangNhap) {
         NhanVien nguoiLap = timNhanVien(tenDangNhap);
-        KhachHang kh = khachHangRepository.findById(req.getKhachHangId())
-                .orElseThrow(() -> ResourceNotFoundException.of("Khách hàng", req.getKhachHangId()));
-        if (!"dang_hop_tac".equals(kh.getTrangThai())) {
-            throw new BusinessException("Khách hàng đã ngừng hợp tác");
-        }
+        KhachHang kh = timKhachHangHopTac(req.getKhachHangId());
         Kho kho = xacDinhKho(req.getKhoId(), nguoiLap);
+        KetQuaTinh kq = tinhDong(req.getChiTiet());
 
-        // Gộp các dòng trùng mặt hàng, sắp theo id để khóa tồn kho theo thứ tự cố định (tránh deadlock)
-        Map<Long, TaoHoaDonRequest.DongHang> gop = new TreeMap<>();
-        for (TaoHoaDonRequest.DongHang d : req.getChiTiet()) {
-            gop.merge(d.getMatHangId(), d, (a, b) -> {
-                a.setSoLuong(a.getSoLuong() + b.getSoLuong());
-                return a;
-            });
-        }
-
-        BigDecimal tongHang = BigDecimal.ZERO;
-        BigDecimal tongCk = BigDecimal.ZERO;
-        boolean coPallet = false;
-        List<ChiTietHoaDon> dong = new ArrayList<>();
-
-        for (TaoHoaDonRequest.DongHang d : gop.values()) {
-            MatHang mh = matHangRepository.findById(d.getMatHangId())
-                    .orElseThrow(() -> ResourceNotFoundException.of("Mặt hàng", d.getMatHangId()));
-            if (!"dang_kinh_doanh".equals(mh.getTrangThai())) {
-                throw new BusinessException(mh.getTenMatHang() + " đã ngừng kinh doanh");
-            }
-            if ("cho_tai_che".equals(mh.getLoaiMatHang())) {
-                throw new BusinessException(mh.getTenMatHang() + " đang chờ tái chế, không thể bán");
-            }
-            if ("pallet".equals(mh.getLoaiMatHang())) coPallet = true;
-
-            BigDecimal rate = d.getTyLeChietKhau() == null ? BigDecimal.ZERO : d.getTyLeChietKhau();
-            BigDecimal gross = mh.getDonGiaBan().multiply(BigDecimal.valueOf(d.getSoLuong()));
-            BigDecimal ck = gross.multiply(rate).divide(TRAM, 2, RoundingMode.HALF_UP);
-            tongHang = tongHang.add(gross.subtract(ck));
-            tongCk = tongCk.add(ck);
-
-            dong.add(ChiTietHoaDon.builder()
-                    .matHang(mh).soLuong(d.getSoLuong())
-                    .donGia(mh.getDonGiaBan()).tyLeChietKhau(rate).build());
-        }
-
-        BigDecimal tyGiam = nz(req.getTyLeGiamGiaTong());
-        BigDecimal tienGiam = tongHang.multiply(tyGiam).divide(TRAM, 2, RoundingMode.HALF_UP);
-        BigDecimal phi = nz(req.getPhiGiaoHang());
-        BigDecimal truocThue = tongHang.subtract(tienGiam).add(phi);
-        BigDecimal tyVat = req.getTyLeVat() != null ? req.getTyLeVat() : VAT_MAC_DINH;
-        BigDecimal vat = truocThue.multiply(tyVat).divide(TRAM, 2, RoundingMode.HALF_UP);
-        BigDecimal tong = truocThue.add(vat);
-
-        LocalDateTime now = LocalDateTime.now();
-        HoaDon hd = hoaDonRepository.save(HoaDon.builder()
+        HoaDon hd = HoaDon.builder()
                 .maHoaDon(hoaDonRepository.layMaChungTu("HD", "HD-"))
-                .loaiGiaoDich(coPallet ? "thu_ban_pallet" : "thu_ban_linh_kien")
+                .loaiGiaoDich(kq.coPallet() ? "thu_ban_pallet" : "thu_ban_linh_kien")
                 .khachHang(kh).kho(kho).nhanVienLap(nguoiLap)
-                .ngayLap(now)
+                .ngayLap(LocalDateTime.now())
                 .trangThai(CHO_THANH_TOAN)
-                .tongTienHang(tongHang.setScale(2, RoundingMode.HALF_UP))
-                .tongTienChietKhau(tongCk)
-                .tyLeGiamGiaTong(tyGiam)
-                .tienGiamGiaTong(tienGiam)
-                .tienTruocThue(truocThue.setScale(2, RoundingMode.HALF_UP))
-                .phiGiaoHang(phi)
-                .tyLeVat(tyVat)
-                .tienVat(vat)
-                .tongThanhToan(tong.setScale(2, RoundingMode.HALF_UP))
                 .hanThanhToan(req.getHanThanhToan() != null ? req.getHanThanhToan()
                         : LocalDate.now().plusDays(SO_NGAY_HAN_MAC_DINH))
                 .daChotSo(false)
                 .ghiChu(req.getGhiChu())
-                .build());
+                .build();
+        ganTong(hd, kq, nz(req.getTyLeGiamGiaTong()), nz(req.getPhiGiaoHang()),
+                req.getTyLeVat() != null ? req.getTyLeVat() : VAT_MAC_DINH);
+        hd = hoaDonRepository.save(hd);
 
+        List<ChiTietHoaDon> dong = kq.dong();
         for (ChiTietHoaDon l : dong) l.setHoaDon(hd);
         chiTietHoaDonRepository.saveAll(dong);
 
@@ -320,40 +271,85 @@ public class HoaDonServiceImpl implements HoaDonService {
         ghiLichSu(hd, nv, "cap_nhat", "trang_thai", CHO_THANH_TOAN, DA_THANH_TOAN, "Ghi nhận thanh toán");
     }
 
+    /**
+     * Sửa hóa đơn.
+     * - Chờ thanh toán: sửa khách hàng, mặt hàng, hạn thanh toán, ghi chú (tính lại tiền, đổi giữ chỗ tồn kho).
+     * - Đã thanh toán: chỉ sửa ghi chú.
+     */
     @Override
     @Transactional
     public void capNhat(Long id, CapNhatHoaDonRequest req, String tenDangNhap) {
         NhanVien nv = timNhanVien(tenDangNhap);
         HoaDon hd = timHoaDon(id);
         kiemTraChoPhepSua(hd);
+        boolean choTT = CHO_THANH_TOAN.equals(hd.getTrangThai());
 
-        if (req.getHanThanhToan() != null && !req.getHanThanhToan().equals(hd.getHanThanhToan())) {
-            ghiLichSu(hd, nv, "cap_nhat", "han_thanh_toan", String.valueOf(hd.getHanThanhToan()),
-                    String.valueOf(req.getHanThanhToan()), null);
-            hd.setHanThanhToan(req.getHanThanhToan());
+        if (!choTT && (req.getChiTiet() != null || req.getKhachHangId() != null || req.getHanThanhToan() != null)) {
+            throw new BusinessException("Hóa đơn đã thanh toán, chỉ được sửa ghi chú");
         }
+
+        if (choTT) {
+            if (req.getKhachHangId() != null && !req.getKhachHangId().equals(hd.getKhachHang().getId())) {
+                KhachHang kh = timKhachHangHopTac(req.getKhachHangId());
+                ghiLichSu(hd, nv, "cap_nhat", "khach_hang", hd.getKhachHang().getTenKh(), kh.getTenKh(), null);
+                hd.setKhachHang(kh);
+            }
+            if (req.getHanThanhToan() != null && !req.getHanThanhToan().equals(hd.getHanThanhToan())) {
+                ghiLichSu(hd, nv, "cap_nhat", "han_thanh_toan", String.valueOf(hd.getHanThanhToan()),
+                        String.valueOf(req.getHanThanhToan()), null);
+                hd.setHanThanhToan(req.getHanThanhToan());
+            }
+            if (req.getChiTiet() != null) {
+                if (req.getChiTiet().isEmpty()) {
+                    throw new BusinessException("Hóa đơn phải có ít nhất 1 mặt hàng");
+                }
+                List<ChiTietHoaDon> cu = chiTietHoaDonRepository.findByHoaDon_Id(id);
+                String tomTatCu = cu.size() + " dòng / " + hd.getTongThanhToan();
+
+                apDungTonKho(hd, cu, CheDoTon.NHA_GIU_CHO);        // trả giữ chỗ của danh sách cũ
+                chiTietHoaDonRepository.deleteAll(cu);
+
+                KetQuaTinh kq = tinhDong(req.getChiTiet());
+                for (ChiTietHoaDon l : kq.dong()) l.setHoaDon(hd);
+                chiTietHoaDonRepository.saveAll(kq.dong());
+                ganTong(hd, kq,
+                        req.getTyLeGiamGiaTong() != null ? req.getTyLeGiamGiaTong() : hd.getTyLeGiamGiaTong(),
+                        req.getPhiGiaoHang() != null ? req.getPhiGiaoHang() : hd.getPhiGiaoHang(),
+                        req.getTyLeVat() != null ? req.getTyLeVat() : hd.getTyLeVat());
+                hd.setLoaiGiaoDich(kq.coPallet() ? "thu_ban_pallet" : "thu_ban_linh_kien");
+                apDungTonKho(hd, kq.dong(), CheDoTon.GIU_CHO);      // giữ chỗ danh sách mới
+
+                ghiLichSu(hd, nv, "cap_nhat", "chi_tiet", tomTatCu,
+                        kq.dong().size() + " dòng / " + hd.getTongThanhToan(), "Sửa danh sách mặt hàng");
+            }
+        }
+
         String ghiChuMoi = req.getGhiChu() == null || req.getGhiChu().isBlank() ? null : req.getGhiChu().trim();
-        if (!java.util.Objects.equals(ghiChuMoi, hd.getGhiChu())) {
+        if (!Objects.equals(ghiChuMoi, hd.getGhiChu())) {
             ghiLichSu(hd, nv, "cap_nhat", "ghi_chu", hd.getGhiChu(), ghiChuMoi, null);
             hd.setGhiChu(ghiChuMoi);
         }
         hoaDonRepository.save(hd);
     }
 
+    /** XÓA MỀM: chuyển hóa đơn chờ thanh toán sang "da_huy" và trả giữ chỗ tồn kho. Bắt buộc có lý do. */
     @Override
     @Transactional
     public void huy(Long id, String lyDo, String tenDangNhap) {
         NhanVien nv = timNhanVien(tenDangNhap);
+        if (lyDo == null || lyDo.isBlank()) {
+            throw new BusinessException("Vui lòng nhập lý do xóa hóa đơn");
+        }
         HoaDon hd = timHoaDon(id);
         kiemTraChoPhepSua(hd);
         if (!CHO_THANH_TOAN.equals(hd.getTrangThai())) {
-            throw new BusinessException("Chỉ hủy được hóa đơn đang chờ thanh toán");
+            throw new BusinessException("Chỉ xóa được hóa đơn đang chờ thanh toán");
         }
         apDungTonKho(hd, chiTietHoaDonRepository.findByHoaDon_Id(id), CheDoTon.NHA_GIU_CHO);
         String cu = hd.getTrangThai();
         hd.setTrangThai(DA_HUY);
         hoaDonRepository.save(hd);
-        ghiLichSu(hd, nv, "huy", "trang_thai", cu, DA_HUY, lyDo);
+        ghiLichSu(hd, nv, "huy", "trang_thai", cu, DA_HUY, lyDo.trim());
     }
 
     // ======================= HELPER =======================
@@ -365,6 +361,78 @@ public class HoaDonServiceImpl implements HoaDonService {
         if (DA_HUY.equals(hd.getTrangThai())) {
             throw new BusinessException("Hóa đơn đã bị hủy");
         }
+    }
+
+    /** Gộp dòng trùng mặt hàng, kiểm tra mặt hàng, tính tiền từng dòng (chưa gắn hóa đơn, chưa lưu). */
+    private KetQuaTinh tinhDong(List<TaoHoaDonRequest.DongHang> chiTiet) {
+        // TreeMap: sắp theo id mặt hàng để khóa tồn kho theo thứ tự cố định (tránh deadlock)
+        Map<Long, TaoHoaDonRequest.DongHang> gop = new TreeMap<>();
+        for (TaoHoaDonRequest.DongHang d : chiTiet) {
+            TaoHoaDonRequest.DongHang cur = gop.get(d.getMatHangId());
+            if (cur == null) {
+                TaoHoaDonRequest.DongHang copy = new TaoHoaDonRequest.DongHang();
+                copy.setMatHangId(d.getMatHangId());
+                copy.setSoLuong(d.getSoLuong());
+                copy.setTyLeChietKhau(d.getTyLeChietKhau());
+                gop.put(d.getMatHangId(), copy);
+            } else {
+                cur.setSoLuong(cur.getSoLuong() + d.getSoLuong());
+            }
+        }
+
+        BigDecimal tongHang = BigDecimal.ZERO;
+        BigDecimal tongCk = BigDecimal.ZERO;
+        boolean coPallet = false;
+        List<ChiTietHoaDon> dong = new ArrayList<>();
+
+        for (TaoHoaDonRequest.DongHang d : gop.values()) {
+            MatHang mh = matHangRepository.findById(d.getMatHangId())
+                    .orElseThrow(() -> ResourceNotFoundException.of("Mặt hàng", d.getMatHangId()));
+            if (!"dang_kinh_doanh".equals(mh.getTrangThai())) {
+                throw new BusinessException(mh.getTenMatHang() + " đã ngừng kinh doanh");
+            }
+            if ("cho_tai_che".equals(mh.getLoaiMatHang())) {
+                throw new BusinessException(mh.getTenMatHang() + " đang chờ tái chế, không thể bán");
+            }
+            if ("pallet".equals(mh.getLoaiMatHang())) coPallet = true;
+
+            BigDecimal rate = d.getTyLeChietKhau() == null ? BigDecimal.ZERO : d.getTyLeChietKhau();
+            BigDecimal gross = mh.getDonGiaBan().multiply(BigDecimal.valueOf(d.getSoLuong()));
+            BigDecimal ck = gross.multiply(rate).divide(TRAM, 2, RoundingMode.HALF_UP);
+            tongHang = tongHang.add(gross.subtract(ck));
+            tongCk = tongCk.add(ck);
+
+            dong.add(ChiTietHoaDon.builder()
+                    .matHang(mh).soLuong(d.getSoLuong())
+                    .donGia(mh.getDonGiaBan()).tyLeChietKhau(rate).build());
+        }
+        return new KetQuaTinh(dong, tongHang, tongCk, coPallet);
+    }
+
+    /** Tính và gán các cột tiền của hóa đơn từ kết quả tính dòng hàng. */
+    private void ganTong(HoaDon hd, KetQuaTinh kq, BigDecimal tyGiam, BigDecimal phi, BigDecimal tyVat) {
+        BigDecimal tienGiam = kq.tongHang().multiply(tyGiam).divide(TRAM, 2, RoundingMode.HALF_UP);
+        BigDecimal truocThue = kq.tongHang().subtract(tienGiam).add(phi);
+        BigDecimal vat = truocThue.multiply(tyVat).divide(TRAM, 2, RoundingMode.HALF_UP);
+
+        hd.setTongTienHang(kq.tongHang().setScale(2, RoundingMode.HALF_UP));
+        hd.setTongTienChietKhau(kq.tongCk());
+        hd.setTyLeGiamGiaTong(tyGiam);
+        hd.setTienGiamGiaTong(tienGiam);
+        hd.setPhiGiaoHang(phi);
+        hd.setTienTruocThue(truocThue.setScale(2, RoundingMode.HALF_UP));
+        hd.setTyLeVat(tyVat);
+        hd.setTienVat(vat);
+        hd.setTongThanhToan(truocThue.add(vat).setScale(2, RoundingMode.HALF_UP));
+    }
+
+    private KhachHang timKhachHangHopTac(Long id) {
+        KhachHang kh = khachHangRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.of("Khách hàng", id));
+        if (!"dang_hop_tac".equals(kh.getTrangThai())) {
+            throw new BusinessException("Khách hàng đã ngừng hợp tác");
+        }
+        return kh;
     }
 
     private void ghiNhanThanhToan(HoaDon hd, String phuongThuc, BigDecimal tienKhachDua,
@@ -492,12 +560,14 @@ public class HoaDonServiceImpl implements HoaDonService {
         if (h.getKhachHang() != null) {
             KhachHang k = h.getKhachHang();
             return HoaDonChiTietResponse.DoiTac.builder().loai("khach_hang")
+                    .id(k.getId())
                     .ma(k.getMaKh()).ten(k.getTenKh()).mst(k.getMst())
                     .nguoiDaiDien(k.getNguoiDaiDien()).sdt(k.getSdt()).diaChi(k.getDiaChi()).build();
         }
         if (h.getNcc() != null) {
             var n = h.getNcc();
             return HoaDonChiTietResponse.DoiTac.builder().loai("nha_cung_cap")
+                    .id(n.getId())
                     .ma(n.getMaNcc()).ten(n.getTenNcc()).mst(n.getMst())
                     .nguoiDaiDien(n.getNguoiLienHe()).sdt(n.getSdt()).diaChi(n.getDiaChi()).build();
         }
