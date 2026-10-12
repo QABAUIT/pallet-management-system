@@ -1,0 +1,452 @@
+/* ================== CustomerManagement ================== */
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.toolbar-add-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-only-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.icon-only-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Bố cục bảng + panel: mặc định bảng full-width, chỉ chia cột khi có detail */
+.cust-layout {
+  display: block;
+}
+
+.cust-layout.with-detail {
+  display: grid;
+  grid-template-columns: 3fr 2fr; /* 60% - 40%, thay cho "1fr 380px" cố định trước đó */
+  gap: 16px;
+  align-items: start;
+}
+
+.cust-table-col {
+  min-width: 0; /* THÊM dòng này - cho phép cột co lại, nhường chỗ cuộn ngang cho bảng bên trong thay vì đẩy tràn cả trang */
+}
+
+.cust-code {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.cust-name {
+  margin: 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cust-mst {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.cust-contact-line {
+  margin: 0;
+  font-size: 13px;
+  color: #374151;
+}
+
+.cust-contact-line.muted {
+  color: #9ca3af;
+}
+
+/* ---------- Panel chi tiết ---------- */
+.detail-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.detail-header {
+  position: relative;
+  padding: 16px;
+  background: var(--navy);
+  color: #ffffff;
+}
+
+.detail-header-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.detail-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.detail-close-btn {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.detail-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.detail-company-name {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.detail-company-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.detail-section {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.detail-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-section-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.detail-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.detail-muted {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.detail-field-full {
+  grid-column: 1 / -1;
+}
+
+.detail-field-label {
+  margin: 0 0 2px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.detail-field-value {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.detail-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.detail-stat-box {
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.detail-stat-value {
+  margin: 2px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.detail-stat-caption {
+  margin: 0;
+  font-size: 11px;
+  color: #16a34a;
+}
+
+.detail-debt-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.detail-debt-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-debt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  background: #fef2f2;
+  border-radius: 8px;
+}
+
+.debt-code {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.debt-dates {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.debt-amount {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.pay-btn {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #92400e;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pay-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* ================== Modal dùng chung ================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 20px;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  background: linear-gradient(90deg, var(--accent), var(--navy));
+  flex-shrink: 0;
+}
+
+.modal-header-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.modal-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.modal-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.modal-close-btn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden; 
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+/* ---------- Form fields ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-field-full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.form-required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1f2937;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: var(--navy);
+  background: #ffffff;
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+.form-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #dc2626;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tag-inactive {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  vertical-align: middle;
+}
