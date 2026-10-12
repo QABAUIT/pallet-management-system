@@ -2,13 +2,14 @@ package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.PhieuKho;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // Import thêm cái này
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long> {
+public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long>, JpaSpecificationExecutor<PhieuKho> {
 
     Optional<PhieuKho> findByMaPhieu(String maPhieu);
     List<PhieuKho> findByTrangThai(String trangThai);

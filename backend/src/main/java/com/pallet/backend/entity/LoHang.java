@@ -44,4 +44,8 @@ public class LoHang {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;
 
+    // Bổ sung thêm trường này
+    @Column(name = "muc_dich_nhap", nullable = false, length = 20)
+    private String mucDichNhap;
+
 }

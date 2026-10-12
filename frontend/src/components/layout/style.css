@@ -380,6 +380,7 @@
 .ft {
   position: relative;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .ft-btn {
@@ -1000,7 +1001,7 @@
   align-items: center;
   flex: 1;
   min-width: 200px;
-  max-width: 360px;
+  max-width: 385px;
 }
 
 .search-icon {
