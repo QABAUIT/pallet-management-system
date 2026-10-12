@@ -4,75 +4,68 @@ import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import SearchInput from '../common/SearchInput';
 import OtherTypeFilter from '../common/OtherTypeFilter';
 
-export default function PalletHeader({ searchText, setSearchText, filter, setFilter, filterTab, setFilterTab, defaultFilter, totalPallets, onAdd }) {
+export default function PalletHeader({ searchText, setSearchText, filter, setFilter, filterTab, setFilterTab, defaultFilter, totalPallets, onAdd, onExport }) {
   return (
     <Card
       styles={{ body: { padding: '16px 24px' } }}
       style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: 'none' }}
     >
       <Flex vertical gap="middle">
-        {/* Row 1: Search (Left) - RadioGroup (Right) */}
-        <Flex justify="space-between" align="center" wrap="wrap" gap="middle">
-          <div style={{ width: 320, maxWidth: '100%' }}>
-            <SearchInput
-              value={searchText}
-              onChange={setSearchText}
-              placeholder="Tìm kiếm pallet..."
-            />
-          </div>
+        {/* Row 1: Search + Filter (Left) - RadioGroup (Right) */}
+        <Flex justify="space-between" align="center" gap="middle" style={{ overflow: 'hidden' }}>
+          <Flex align="center" gap="small">
+            <div style={{ width: 280, maxWidth: '100%' }}>
+              <SearchInput
+                value={searchText}
+                onChange={setSearchText}
+                placeholder="Tìm kiếm pallet..."
+              />
+            </div>
+            
+            <div>
+              <OtherTypeFilter
+                label="Bộ lọc nâng cao"
+                title="Lọc theo thuộc tính"
+                groups={[
+                  {
+                    key: "chatLieu",
+                    label: "Chất liệu",
+                    type: "checkbox",
+                    options: [
+                      { value: "go", label: "Gỗ" },
+                      { value: "nhua", label: "Nhựa" },
+                      { value: "sat", label: "Sắt" },
+                      { value: "khac", label: "Khác" }
+                    ]
+                  }
+                ]}
+                value={filter}
+                defaultValue={defaultFilter}
+                onApply={setFilter}
+              />
+            </div>
+          </Flex>
 
-          <Radio.Group 
-            value={filterTab} 
+          <Radio.Group
+            value={filterTab}
             onChange={(e) => setFilterTab(e.target.value)}
-            style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}
+            style={{ overflowX: 'auto', whiteSpace: 'nowrap', minWidth: 0 }}
           >
-            <Radio.Button value="all">Tất cả Pallet <Badge count={totalPallets} style={{ backgroundColor: '#1677ff', marginLeft: 8 }} /></Radio.Button>
-            <Radio.Button value="standard">Tiêu chuẩn</Radio.Button>
-            <Radio.Button value="euro">Euro(EPAL)</Radio.Button>
-            <Radio.Button value="heavy">Tải trọng nặng</Radio.Button>
-            <Radio.Button value="plastic">Pallet nhựa</Radio.Button>
+            <Radio.Button value="all">Tất cả <Badge count={totalPallets} style={{ backgroundColor: '#1677ff', marginLeft: 8 }} /></Radio.Button>
+            <Radio.Button value="pallet">Pallet</Radio.Button>
+            <Radio.Button value="linh_kien">Linh kiện</Radio.Button>
+            <Radio.Button value="cho_tai_che">Chờ tái chế</Radio.Button>
           </Radio.Group>
         </Flex>
 
         {/* Row 2: Actions (Left) */}
         <Flex gap="small" wrap="wrap">
-          <Button icon={<DownloadOutlined />}>Xuất danh mục</Button>
+          <Button icon={<DownloadOutlined />} onClick={onExport}>Xuất danh mục</Button>
           <Button type="primary" icon={<PlusOutlined />} style={{ background: '#d97706' }} onClick={onAdd}>Thêm pallet mới</Button>
         </Flex>
 
         {/* Row 3: Filter (Left) */}
-        <div >
-          <OtherTypeFilter
-            label="Bộ lọc nâng cao"
-            title="Lọc theo thuộc tính"
-            groups={[
-              {
-                key: "loaiMatHang",
-                label: "Loại mặt hàng",
-                type: "checkbox",
-                options: [
-                  { value: "pallet", label: "Pallet" },
-                  { value: "linh_kien", label: "Linh kiện" },
-                  { value: "cho_tai_che", label: "Chờ tái chế" }
-                ]
-              },
-              {
-                key: "chatLieu",
-                label: "Chất liệu",
-                type: "checkbox",
-                options: [
-                  { value: "go", label: "Gỗ" },
-                  { value: "nhua", label: "Nhựa" },
-                  { value: "sat", label: "Sắt" },
-                  { value: "khac", label: "Khác" }
-                ]
-              }
-            ]}
-            value={filter}
-            defaultValue={defaultFilter}
-            onApply={setFilter}
-          />
-        </div>
+
       </Flex>
     </Card>
   );
