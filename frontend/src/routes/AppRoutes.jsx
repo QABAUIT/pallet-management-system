@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../components/layout/Layout";
 
@@ -10,7 +10,6 @@ import AboutUs from "../pages/AboutUs";
 import ReceiptDetail from "../pages/Receipt/ReceiptDetail";
 import ReceiptCreate from "../pages/Receipt/ReceiptCreate";
 import TransactionHistory from "../pages/Receipt/TransactionHistory";
-import { Routes, Route, Navigate } from "react-router-dom";
 // Pallet - chỉ có 1 trang duy nhất
 import PalletManagement from "../pages/PalletManagement";
 

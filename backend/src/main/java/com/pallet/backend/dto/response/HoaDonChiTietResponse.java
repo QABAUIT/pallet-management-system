@@ -45,6 +45,7 @@ public class HoaDonChiTietResponse {
     @Data
     @Builder
     public static class DoiTac {
+        private Long id; // MỚI: form sửa hóa đơn cần id khách hàng
         private String loai; // khach_hang | nha_cung_cap
         private String ma;
         private String ten;
@@ -68,6 +69,7 @@ public class HoaDonChiTietResponse {
     @Builder
     public static class Dong {
         private Integer stt;
+        private Long matHangId; // MỚI: form sửa hóa đơn cần id mặt hàng
         private String maMatHang;
         private String tenMatHang;
         private String moTa;
