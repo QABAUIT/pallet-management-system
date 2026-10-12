@@ -5,3 +5,5 @@ import { message } from 'antd';
 export const notifySuccess = (msg) => message.success(msg || 'Thao tác thành công!');
 export const notifyError = (err) =>
   message.error(err?.message || err || 'Có lỗi xảy ra, vui lòng thử lại!');
+
+export const notifyWarning = (msg) => message.warning(msg);

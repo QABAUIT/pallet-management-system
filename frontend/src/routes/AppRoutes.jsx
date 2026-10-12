@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../components/layout/Layout";
 
@@ -10,7 +10,6 @@ import AboutUs from "../pages/AboutUs";
 import ReceiptDetail from "../pages/Receipt/ReceiptDetail";
 import ReceiptCreate from "../pages/Receipt/ReceiptCreate";
 import TransactionHistory from "../pages/Receipt/TransactionHistory";
-
 // Pallet - chỉ có 1 trang duy nhất
 import PalletManagement from "../pages/PalletManagement";
 
@@ -54,9 +53,10 @@ export default function AppRoutes() {
         <Route path="/" element={<AboutUs />} />
 
         {/* Hoá đơn */}
-        <Route path="/hoa-don" element={<TransactionHistory />} />
-        <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
-        <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
+      <Route path="/hoa-don" element={<Navigate to="/hoa-don/lich-su" replace />} />
+      <Route path="/hoa-don/lich-su" element={<TransactionHistory />} />
+      <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
+      <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
 
         {/* Pallet */}
         <Route path="/pallet" element={<PalletManagement />} />

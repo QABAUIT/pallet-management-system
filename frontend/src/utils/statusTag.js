@@ -14,6 +14,7 @@ export const HOA_DON_TRANG_THAI = {
   da_thanh_toan: { label: 'Đã thanh toán', color: 'green' },
   qua_han: { label: 'Quá hạn', color: 'red' },
   da_huy: { label: 'Đã huỷ', color: 'default' },
+  cho_thanh_toan: { label: 'Chờ thanh toán', color: 'gold' },
 };
 
 export const PHIEU_KHO_TRANG_THAI = {
