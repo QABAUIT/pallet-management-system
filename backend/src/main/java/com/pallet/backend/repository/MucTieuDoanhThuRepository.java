@@ -12,4 +12,9 @@ public interface MucTieuDoanhThuRepository extends JpaRepository<MucTieuDoanhThu
 
     List<MucTieuDoanhThu> findByKho_Id(Long khoId);
     List<MucTieuDoanhThu> findByNguoiTao_Id(Long nguoiTaoId);
+
+    // Mục tiêu toàn công ty (kho null)
+    List<MucTieuDoanhThu> findByKhoIsNullAndNamKyOrderByThangKyAsc(Integer namKy);
+    Optional<MucTieuDoanhThu> findFirstByKhoIsNullAndKyAndNamKy(String ky, Integer namKy);
+    Optional<MucTieuDoanhThu> findFirstByKhoIsNullAndKyAndNamKyAndThangKy(String ky, Integer namKy, Short thangKy);
 }
