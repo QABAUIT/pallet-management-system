@@ -1,164 +1,216 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button, Card, Table, Tag, Typography } from 'antd'
-import { EyeOutlined } from '@ant-design/icons'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button, Space, Tag, Tooltip, Typography } from "antd";
+import { EditOutlined, EyeOutlined } from "@ant-design/icons";
+import { PackageMinus, Truck, Wrench, Gauge } from "lucide-react";
 
-import InventoryPage from '../../components/inventory/InventoryPage'
-import PhieuKhoToolbar from '../../components/inventory/PhieuKhoToolbar'
-import CreateExportModal from '../../components/inventory/CreateExportModal'
-import StatCard, { StatGrid } from '../../components/inventory/StatCard'
-import { phieuXuatApi } from '../../api/phieuXuatApi'
-import { usePhieuKhoList } from '../../hooks/usePhieuKhoList'
-import { useStats } from '../../hooks/useStats'
-import { fmtDateTime, fmtNumber } from '../../utils/format'
-import { LOAI_XUAT_MAU, PHIEU_KHO_TRANG_THAI, resolveStatus } from '../../utils/statusTag'
+import InventoryPage from "../../components/inventory/InventoryPage";
+import PhieuKhoToolbar from "../../components/inventory/PhieuKhoToolbar";
+import CreateExportModal from "../../components/inventory/CreateExportModal";
+import StatCard from "../../components/common/StatCard";
+import AppTable from "../../components/common/AppTable";
+import Pagination from "../../components/common/Pagination";
+import { phieuXuatApi } from "../../api/phieuXuatApi";
+import { usePhieuKhoList } from "../../hooks/usePhieuKhoList";
+import { useStats } from "../../hooks/useStats";
+import { fmtDateTime, fmtNumber } from "../../utils/format";
+import {
+  LOAI_XUAT_MAU,
+  PHIEU_KHO_TRANG_THAI,
+  resolveStatus,
+} from "../../utils/statusTag";
 
-const { Text } = Typography
+import "../../components/layout/style.css";
+
+const { Text } = Typography;
 
 export default function ExportInventory() {
-  const navigate = useNavigate()
-  const [openCreate, setOpenCreate] = useState(false)
+  const navigate = useNavigate();
+  const [openCreate, setOpenCreate] = useState(false);
+  const [editing, setEditing] = useState(null); // phiếu đang sửa
 
   const list = usePhieuKhoList({
     fetchList: phieuXuatApi.danhSach,
     exportExcel: phieuXuatApi.xuatExcel,
-    fileName: 'Lich_Su_Xuat_Kho.xlsx',
-  })
-  const stats = useStats(phieuXuatApi.thongKe)
-  const { table } = list
+    fileName: "Lich_Su_Xuat_Kho.xlsx",
+  });
+  const stats = useStats(phieuXuatApi.thongKe);
+  const { table } = list;
+  const s = stats.data;
+  const show = (v) => (stats.loading ? "…" : v);
 
   const columns = [
     {
-      title: 'MÃ PHIẾU XUẤT',
-      dataIndex: 'maPhieuXuat',
-      width: 160,
-      render: (t) => <b>{t}</b>,
+      key: "maPhieuXuat",
+      header: "MÃ PHIẾU XUẤT",
+      render: (r) => <b>{r.maPhieuXuat}</b>,
     },
     {
-      title: 'NHÂN VIÊN XUẤT',
-      key: 'nhanVien',
-      width: 190,
-      render: (_, r) => (
+      key: "nhanVien",
+      header: "NHÂN VIÊN XUẤT",
+      render: (r) => (
         <div>
-          <div style={{ fontWeight: 600 }}>{r.maNhanVienXuat || '—'}</div>
+          <div style={{ fontWeight: 600 }}>{r.maNhanVienXuat || "—"}</div>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {r.tenNhanVienXuat}
           </Text>
         </div>
       ),
     },
-    { title: 'NGÀY XUẤT KHO', dataIndex: 'ngayXuatKho', width: 160, render: fmtDateTime },
     {
-      title: 'LOẠI XUẤT',
-      dataIndex: 'loaiXuatKho',
-      width: 130,
-      render: (v) => <Tag color={LOAI_XUAT_MAU[v] || 'default'}>{v || '—'}</Tag>,
+      key: "ngayXuatKho",
+      header: "NGÀY XUẤT KHO",
+      render: (r) => fmtDateTime(r.ngayXuatKho),
     },
-    { title: 'LÝ DO XUẤT KHO', dataIndex: 'lyDoXuat', ellipsis: true, render: (t) => t || '—' },
-    { title: 'SỐ LƯỢNG', dataIndex: 'tongSoLuong', width: 110, align: 'right', render: fmtNumber },
     {
-      title: 'TRẠNG THÁI',
-      dataIndex: 'trangThai',
-      width: 150,
-      render: (v) => {
-        const s = resolveStatus(PHIEU_KHO_TRANG_THAI, v)
-        return <Tag color={s.color}>{s.label}</Tag>
+      key: "loaiXuatKho",
+      header: "LOẠI XUẤT",
+      render: (r) => (
+        <Tag color={LOAI_XUAT_MAU[r.loaiXuatKho] || "default"}>
+          {r.loaiXuatKho || "—"}
+        </Tag>
+      ),
+    },
+    {
+      key: "lyDoXuat",
+      header: "LÝ DO XUẤT KHO",
+      render: (r) => r.lyDoXuat || "—",
+    },
+    {
+      key: "tongSoLuong",
+      header: "SỐ LƯỢNG",
+      align: "right",
+      render: (r) => fmtNumber(r.tongSoLuong),
+    },
+    {
+      key: "trangThai",
+      header: "TRẠNG THÁI",
+      render: (r) => {
+        const st = resolveStatus(PHIEU_KHO_TRANG_THAI, r.trangThai);
+        return <Tag color={st.color}>{st.label}</Tag>;
       },
     },
     {
-      title: 'THAO TÁC',
-      key: 'action',
-      width: 90,
-      align: 'center',
-      render: (_, record) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          style={{ color: '#8c8c8c' }}
-          onClick={() => navigate(`/kho/xuat-kho/${record.id}`)}
-        />
+      key: "action",
+      header: "THAO TÁC",
+      align: "center",
+      render: (r) => (
+        <Space size="middle">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            style={{ color: "#8c8c8c" }}
+            onClick={() => navigate(`/kho/xuat-kho/${r.id}`)}
+          />
+          <Tooltip
+            title={
+              r.trangThai === "cho_xu_ly"
+                ? "Chỉnh sửa"
+                : "Chỉ sửa được phiếu đang chờ xử lý"
+            }
+          >
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              style={{ color: "#8c8c8c" }}
+              disabled={r.trangThai !== "cho_xu_ly"}
+              onClick={() => setEditing(r)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
-  ]
+  ];
+
+  const closeModal = () => {
+    setOpenCreate(false);
+    setEditing(null);
+  };
 
   const handleCreated = () => {
-    setOpenCreate(false)
-    table.reload()
-    stats.reload()
-  }
-
-  const s = stats.data
+    setOpenCreate(false);
+    setEditing(null);
+    table.reload();
+    stats.reload();
+  };
 
   return (
     <InventoryPage>
-      <StatGrid columns={4}>
+      <div className="stat-row">
         <StatCard
-          label="Tổng xuất hôm nay"
-          value={fmtNumber(s?.tongXuatHomNay)}
-          unit="pallet"
-          note="Chỉ tính phiếu đã hoàn thành"
-          color="#1677ff"
-          loading={stats.loading}
+          label="TỔNG XUẤT HÔM NAY"
+          value={show(fmtNumber(s?.tongXuatHomNay))}
+          icon={PackageMinus}
+          tone="blue"
+          badge="pallet"
+          caption="Chỉ tính phiếu đã hoàn thành"
         />
         <StatCard
-          label="Đang bốc dỡ & xếp xe"
-          value={fmtNumber(s?.dangBocDoXepXe)}
-          unit="pallet"
-          note="Phiếu đang chờ xử lý"
-          color="#d46b08"
-          loading={stats.loading}
+          label="ĐANG BỐC DỠ & XẾP XE"
+          value={show(fmtNumber(s?.dangBocDoXepXe))}
+          icon={Truck}
+          tone="amber"
+          badge="pallet"
+          caption="Phiếu đang chờ xử lý"
         />
         <StatCard
-          label="Xuất bảo dưỡng định kỳ"
-          value={fmtNumber(s?.xuatBaoDuongDinhKy)}
-          unit="pallet"
-          color="#722ed1"
-          loading={stats.loading}
+          label="XUẤT BẢO DƯỠNG ĐỊNH KỲ"
+          value={show(fmtNumber(s?.xuatBaoDuongDinhKy))}
+          icon={Wrench}
+          tone="purple"
+          badge="pallet"
+          caption="Loại Bảo trì, hoàn thành trong tháng"
         />
         <StatCard
-          label="Tỷ lệ xuất đúng tiến độ"
-          value={s?.tyLeXuatDungTienDo != null ? `${s.tyLeXuatDungTienDo}%` : '—'}
-          color="#389e0d"
-          loading={stats.loading}
+          label="TỶ LỆ XUẤT ĐÚNG TIẾN ĐỘ"
+          value={show(
+            s?.tyLeXuatDungTienDo != null ? `${s.tyLeXuatDungTienDo}%` : "—",
+          )}
+          icon={Gauge}
+          tone="green"
+          caption="Phiếu tháng này, trễ nếu chờ quá 24h"
         />
-      </StatGrid>
+      </div>
 
       <PhieuKhoToolbar
-        placeholder="Tìm theo mã phiếu xuất... (nhấn Enter)"
+        placeholder="Tìm theo mã phiếu xuất..."
         keyword={list.keyword}
-        onKeywordChange={list.handleKeywordChange}
-        onSearch={list.handleSearch}
+        onKeywordChange={list.setKeyword}
         trangThai={list.trangThai}
         onTrangThaiChange={list.handleTrangThaiChange}
-        range={list.range}
-        onRangeChange={list.handleRangeChange}
+        time={list.time}
+        onTimeChange={list.handleTimeChange}
         onExport={list.handleExport}
         exporting={list.exporting}
         onCreate={() => setOpenCreate(true)}
         createLabel="Tạo phiếu xuất kho"
       />
 
-      <Card
-        styles={{ body: { padding: 0 } }}
-        style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid #f0f0f0' }}
-      >
-        <Table
-          columns={columns}
-          dataSource={table.data}
-          loading={table.loading}
-          rowKey="id"
-          scroll={{ x: 1000 }}
-          pagination={{
-            ...table.pagination,
-            showTotal: (total, range) =>
-              `Hiển thị ${range[0]} - ${range[1]} trên tổng số ${total} phiếu xuất kho`,
-          }}
-          onChange={table.handleTableChange}
-          locale={{ emptyText: 'Chưa có phiếu xuất kho nào' }}
-        />
-      </Card>
+      <AppTable
+        columns={columns}
+        data={table.data}
+        rowKey={(r) => r.id}
+        emptyText={
+          table.loading ? "Đang tải dữ liệu..." : "Chưa có phiếu xuất kho nào"
+        }
+      />
 
-      {openCreate && <CreateExportModal onCancel={() => setOpenCreate(false)} onCreated={handleCreated} />}
+      <Pagination
+        currentPage={table.pagination.current}
+        totalItems={table.pagination.total}
+        itemsPerPage={table.pagination.pageSize}
+        itemLabel="phiếu xuất kho"
+        onPageChange={list.goToPage}
+      />
+
+      {(openCreate || editing) && (
+        <CreateExportModal
+          key={editing?.id ?? "new"}
+          record={editing}
+          onCancel={closeModal}
+          onCreated={handleCreated}
+        />
+      )}
     </InventoryPage>
-  )
+  );
 }

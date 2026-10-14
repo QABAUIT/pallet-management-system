@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { notifyError } from '../utils/notify';
+import { useCallback, useEffect, useState } from "react";
+import { notifyError } from "../utils/notify";
 
 /**
  * Hook dùng chung cho MỌI bảng danh sách có phân trang phía server (khớp
@@ -18,12 +18,17 @@ import { notifyError } from '../utils/notify';
  * @param fetchFn (params) => Promise<PageResponse> - thường là service.getAll
  * @param extraParams object các tham số lọc thêm (mã, trạng thái, khoảng ngày...),
  *        đổi giá trị object này (state ở component cha) sẽ tự fetch lại.
+ * @param initialPageSize số dòng mỗi trang ban đầu (mặc định 10; trang dùng <Pagination> chung thì truyền 8)
  */
-export function useServerTable(fetchFn, extraParams = {}) {
+export function useServerTable(
+  fetchFn,
+  extraParams = {},
+  initialPageSize = 10,
+) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageIndex, setPageIndex] = useState(0); // 0-based, khớp Spring Data
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const [total, setTotal] = useState(0);
   const [sortField, setSortField] = useState(undefined);
   const [sortOrder, setSortOrder] = useState(undefined);
@@ -33,7 +38,9 @@ export function useServerTable(fetchFn, extraParams = {}) {
     const params = {
       page: pageIndex,
       size: pageSize,
-      ...(sortField ? { sort: `${sortField},${sortOrder === 'descend' ? 'desc' : 'asc'}` } : {}),
+      ...(sortField
+        ? { sort: `${sortField},${sortOrder === "descend" ? "desc" : "asc"}` }
+        : {}),
       ...extraParams,
     };
     fetchFn(params)
