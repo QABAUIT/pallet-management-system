@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Space, Tag, Tooltip } from "antd";
-import { EditOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  EyeOutlined,
+  AppstoreAddOutlined,
+} from "@ant-design/icons";
 import { PackagePlus, ClipboardList, Wallet, Warehouse } from "lucide-react";
 
 import InventoryPage from "../../components/inventory/InventoryPage";
 import PhieuKhoToolbar from "../../components/inventory/PhieuKhoToolbar";
 import CreateImportModal from "../../components/inventory/CreateImportModal";
+import ArrangeLocationModal from "../../components/inventory/ArrangeLocationModal";
 import StatCard from "../../components/common/StatCard";
 import AppTable from "../../components/common/AppTable";
 import Pagination from "../../components/common/Pagination";
@@ -22,6 +27,7 @@ export default function ImportInventory() {
   const navigate = useNavigate();
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState(null); // phiếu đang sửa
+  const [arranging, setArranging] = useState(null); // phiếu đang được xếp vị trí
 
   const list = usePhieuKhoList({
     fetchList: phieuNhapApi.danhSach,
@@ -36,7 +42,7 @@ export default function ImportInventory() {
   const columns = [
     {
       key: "maPhieu",
-      header: "MÃ PHIẾU NHẬP",
+      header: "Mới MÃ PHIẾU NHẬP",
       render: (r) => <b>{r.maPhieu}</b>,
     },
     {
@@ -74,12 +80,15 @@ export default function ImportInventory() {
       align: "center",
       render: (r) => (
         <Space size="middle">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            style={{ color: "#8c8c8c" }}
-            onClick={() => navigate(`/kho/nhap-kho/${r.id}`)}
-          />
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              style={{ color: "#8c8c8c" }}
+              onClick={() => navigate(`/kho/nhap-kho/${r.id}`)}
+            />
+          </Tooltip>
+
           <Tooltip
             title={
               r.trangThai === "cho_xu_ly"
@@ -95,6 +104,24 @@ export default function ImportInventory() {
               onClick={() => setEditing(r)}
             />
           </Tooltip>
+
+          <Tooltip
+            title={
+              r.trangThai === "da_hoan_thanh"
+                ? "Xếp vị trí lưu trữ (Lên kệ)"
+                : "Phiếu phải hoàn tất mới có thể xếp vị trí"
+            }
+          >
+            <Button
+              type="text"
+              icon={<AppstoreAddOutlined />}
+              style={{
+                color: r.trangThai === "da_hoan_thanh" ? "#1677ff" : "#8c8c8c",
+              }}
+              disabled={r.trangThai !== "da_hoan_thanh"}
+              onClick={() => setArranging(r)}
+            />
+          </Tooltip>
         </Space>
       ),
     },
@@ -103,11 +130,13 @@ export default function ImportInventory() {
   const closeModal = () => {
     setOpenCreate(false);
     setEditing(null);
+    setArranging(null);
   };
 
   const handleCreated = () => {
     setOpenCreate(false);
     setEditing(null);
+    setArranging(null);
     table.reload();
     stats.reload();
   };
@@ -185,6 +214,15 @@ export default function ImportInventory() {
           record={editing}
           onCancel={closeModal}
           onCreated={handleCreated}
+        />
+      )}
+
+      {arranging && (
+        <ArrangeLocationModal
+          key={`arr_${arranging.id}`}
+          record={arranging}
+          onCancel={closeModal}
+          onSuccess={handleCreated}
         />
       )}
     </InventoryPage>
