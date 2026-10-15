@@ -41,6 +41,6 @@ public interface TonKhoRepository extends JpaRepository<TonKho, Long>, JpaSpecif
     Integer sumSoLuongKhaDung(@Param("matHangId") Long matHangId);
 
     // Đếm số vị trí đang chứa hàng (có Tồn kho > 0)
-    @Query("SELECT COUNT(DISTINCT t.viTri.id) FROM TonKho t WHERE t.soLuongTonKho > 0 AND t.viTri IS NOT NULL")
-    Integer countViTriDaSuDung();
+    @Query("SELECT COUNT(DISTINCT t.viTri.id) FROM TonKho t WHERE t.soLuongTonKho > 0 AND t.viTri IS NOT NULL AND t.kho.id = :khoId")
+Integer countViTriDaSuDungTheoKho(@Param("khoId") Long khoId);
 }

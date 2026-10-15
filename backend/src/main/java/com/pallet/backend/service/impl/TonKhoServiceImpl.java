@@ -1,11 +1,11 @@
 package com.pallet.backend.service.impl;
 
-import org.springframework.transaction.annotation.Transactional;
 import com.pallet.backend.dto.response.ThongKeTonKhoResponse;
 import com.pallet.backend.dto.response.TonKhoResponse;
 import com.pallet.backend.entity.MatHang;
 import com.pallet.backend.entity.TonKho;
 import com.pallet.backend.repository.TonKhoRepository;
+import com.pallet.backend.repository.specification.TonKhoSpecifications;
 import com.pallet.backend.service.TonKhoService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -26,11 +27,14 @@ public class TonKhoServiceImpl implements TonKhoService {
     private final TonKhoRepository tonKhoRepository;
 
     // --- HÀM DÙNG CHUNG ĐỂ LỌC ---
-    private Specification<TonKho> taoDieuKienLoc(String keyword, String chatLieu) {
-        Specification<TonKho> spec = (root, query, cb) -> cb.conjunction(); // Fix an toàn từ VS Code
+    private Specification<TonKho> taoDieuKienLoc(String keyword, String chatLieu, Long khoId) {
+        Specification<TonKho> spec = (root, query, cb) -> cb.conjunction();
+
+        // Chỉ tính tồn của kho đang làm việc
+        spec = spec.and(TonKhoSpecifications.khoId(khoId));
 
         // Bỏ qua hàng đang chờ tái chế, chỉ hiển thị thành phẩm/linh kiện bán được
-        spec = spec.and((root, query, cb) -> 
+        spec = spec.and((root, query, cb) ->
                 cb.notEqual(root.join("matHang").get("loaiMatHang"), "cho_tai_che"));
 
         // Tìm kiếm theo tên hoặc mã SKU
@@ -44,28 +48,28 @@ public class TonKhoServiceImpl implements TonKhoService {
             });
         }
 
-        // Lọc theo Tab chất liệu trên UI (Tất cả / gỗ / nhựa / kim loại)
+        // Lọc theo chất liệu (go / nhua / sat / khac)
         if (chatLieu != null && !chatLieu.trim().isEmpty()) {
-            spec = spec.and((root, query, cb) -> 
+            spec = spec.and((root, query, cb) ->
                     cb.equal(root.join("matHang").get("chatLieu"), chatLieu));
         }
-        
+
         return spec;
     }
 
-@Override
-    @Transactional(readOnly = true) // Thêm dòng này
-    public Page<TonKhoResponse> layDanhSachTonKho(String keyword, String chatLieu, Pageable pageable) {
-        Specification<TonKho> spec = taoDieuKienLoc(keyword, chatLieu);
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TonKhoResponse> layDanhSachTonKho(String keyword, String chatLieu, Long khoId, Pageable pageable) {
+        Specification<TonKho> spec = taoDieuKienLoc(keyword, chatLieu, khoId);
         Page<TonKho> pageResult = tonKhoRepository.findAll(spec, pageable);
         return pageResult.map(this::mapToResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ThongKeTonKhoResponse layThongKeTonKho() {
-        List<TonKho> tatCaTonKho = tonKhoRepository.findAll();
-        
+    public ThongKeTonKhoResponse layThongKeTonKho(Long khoId) {
+        List<TonKho> tatCaTonKho = tonKhoRepository.findByKho_Id(khoId);
+
         int tongSoLuong = 0;
         BigDecimal tongGiaTri = BigDecimal.ZERO;
         int soLuongCanhBao = 0;
@@ -74,13 +78,12 @@ public class TonKhoServiceImpl implements TonKhoService {
             MatHang mh = tk.getMatHang();
             if (!"cho_tai_che".equals(mh.getLoaiMatHang())) {
                 tongSoLuong += tk.getSoLuongTonKho();
-                
+
                 // Tổng giá trị = Số lượng tồn * Đơn giá bán
                 BigDecimal donGia = mh.getDonGiaBan() != null ? mh.getDonGiaBan() : BigDecimal.ZERO;
-                BigDecimal giaTriDong = donGia.multiply(BigDecimal.valueOf(tk.getSoLuongTonKho()));
-                tongGiaTri = tongGiaTri.add(giaTriDong);
+                tongGiaTri = tongGiaTri.add(donGia.multiply(BigDecimal.valueOf(tk.getSoLuongTonKho())));
 
-                // Cảnh báo nếu tồn kho thấp hơn hoặc bằng mức tối thiểu
+                // Cảnh báo nếu tồn kho thấp hơn hoặc bằng mức tối thiểu (khớp cột "Tình trạng" ở bảng)
                 if (tk.getSoLuongTonKho() <= tk.getSoLuongToiThieu()) {
                     soLuongCanhBao++;
                 }
@@ -96,17 +99,16 @@ public class TonKhoServiceImpl implements TonKhoService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] xuatExcelBaoCaoTonKho(String keyword, String chatLieu) {
-        Specification<TonKho> spec = taoDieuKienLoc(keyword, chatLieu);
-        List<TonKho> danhSachTonKho = tonKhoRepository.findAll(spec); // Lấy toàn bộ không phân trang
+    public byte[] xuatExcelBaoCaoTonKho(String keyword, String chatLieu, Long khoId) {
+        Specification<TonKho> spec = taoDieuKienLoc(keyword, chatLieu, khoId);
+        List<TonKho> danhSachTonKho = tonKhoRepository.findAll(spec);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Báo cáo tồn kho");
 
-            // Tạo header
             Row headerRow = sheet.createRow(0);
             String[] headers = {"Mã SKU", "Tên Pallet", "Phân loại", "Kích thước (DxRxC mm)", "Số lượng tồn", "Đơn giá định mức", "Tình trạng"};
-            
+
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
@@ -118,28 +120,20 @@ public class TonKhoServiceImpl implements TonKhoService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Ghi dữ liệu
             int rowIdx = 1;
             for (TonKho tk : danhSachTonKho) {
                 Row row = sheet.createRow(rowIdx++);
-                TonKhoResponse dto = mapToResponse(tk); 
+                TonKhoResponse dto = mapToResponse(tk);
 
                 row.createCell(0).setCellValue(dto.getMaSku());
                 row.createCell(1).setCellValue(dto.getTenPallet());
                 row.createCell(2).setCellValue(dto.getPhanLoai() != null ? dto.getPhanLoai() : "");
                 row.createCell(3).setCellValue(dto.getKichThuoc() != null ? dto.getKichThuoc() : "");
                 row.createCell(4).setCellValue(dto.getSoLuongTon());
-                
-                if (dto.getDonGiaDinhMuc() != null) {
-                    row.createCell(5).setCellValue(dto.getDonGiaDinhMuc().doubleValue());
-                } else {
-                    row.createCell(5).setCellValue(0);
-                }
-                
+                row.createCell(5).setCellValue(dto.getDonGiaDinhMuc() != null ? dto.getDonGiaDinhMuc().doubleValue() : 0);
                 row.createCell(6).setCellValue(dto.getTinhTrang());
             }
 
-            // Auto-size các cột cho đẹp
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
@@ -154,8 +148,7 @@ public class TonKhoServiceImpl implements TonKhoService {
     // --- HÀM MAP ENTITY SANG DTO ---
     private TonKhoResponse mapToResponse(TonKho tonKho) {
         MatHang mh = tonKho.getMatHang();
-        
-        // Tính toán tình trạng dựa trên số lượng tồn
+
         String tinhTrang = "Đủ hàng";
         if (tonKho.getSoLuongTonKho() == 0) {
             tinhTrang = "Cần nhập";
@@ -163,7 +156,6 @@ public class TonKhoServiceImpl implements TonKhoService {
             tinhTrang = "Sắp hết";
         }
 
-        // Ghép chuỗi kích thước
         String kichThuoc = "";
         if (mh.getKichThuocDai() != null && mh.getKichThuocRong() != null && mh.getKichThuocCao() != null) {
             kichThuoc = mh.getKichThuocDai() + " x " + mh.getKichThuocRong() + " x " + mh.getKichThuocCao();
