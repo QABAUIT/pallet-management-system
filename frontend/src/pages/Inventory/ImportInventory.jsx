@@ -172,7 +172,7 @@ export default function ImportInventory() {
           value={show(`${s?.sucChuaKhaDungPhanTram ?? 0}%`)}
           icon={Warehouse}
           tone="purple"
-          badge={`/ ${fmtNumber(s?.tongSoSlot)} slots`}
+          badge={`/ ${fmtNumber(s?.tongSoSlot)} slots hệ thống`}
           caption={`Còn ${fmtNumber(s?.soSlotTrong)} vị trí trống`}
         />
       </div>

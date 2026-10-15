@@ -93,16 +93,19 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
                 khoId, LOAI_PHIEU, DA_HOAN_THANH, dauThang, dauThangSau);
         long tongGiaTriThang = giaTriThang != null ? giaTriThang.setScale(0, RoundingMode.HALF_UP).longValue() : 0L;
 
-        int tongSlot = (int) viTriLuuTruRepository.countByKho_Id(khoId);
-        int slotDaDung = orZero(tonKhoRepository.countViTriDaSuDungTheoKho(khoId));
+        // LOGIC MỚI: Tính tỷ lệ dựa trên TỔNG VỊ TRÍ của TOÀN BỘ HỆ THỐNG
+        int tongSlot = (int) viTriLuuTruRepository.count();
+        int slotDaDung = orZero(tonKhoRepository.countViTriDaSuDungToanHeThong());
         int slotTrong = Math.max(0, tongSlot - slotDaDung);
-        double phanTram = tongSlot == 0 ? 0.0 : Math.round((double) slotTrong / tongSlot * 1000.0) / 10.0;
+        
+        // Tỷ lệ lấp đầy = (Số vị trí đã xếp / Tổng vị trí) * 100
+        double phanTram = tongSlot == 0 ? 0.0 : Math.round((double) slotDaDung / tongSlot * 1000.0) / 10.0;
 
         return ThongKePhieuNhapResponse.builder()
                 .nhapKhoTrongNgay(nhapTrongNgay)
                 .dangKiemDinh(dangKiemDinh)
                 .tongGiaTriNhapThang(tongGiaTriThang)
-                .sucChuaKhaDungPhanTram(phanTram)
+                .sucChuaKhaDungPhanTram(phanTram) // Giữ nguyên tên DTO để khỏi sửa các lớp khác, nhưng giá trị là Tỷ lệ lấp đầy
                 .tongSoSlot(tongSlot)
                 .soSlotTrong(slotTrong)
                 .build();
@@ -316,6 +319,61 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
 
             tonKhoRepository.save(tkNguon);
             tonKhoRepository.save(tkDich);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void xepViTri(Long id, XepViTriRequest request) {
+        PhieuKho pk = phieuKhoRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu"));
+        if (!DA_HOAN_THANH.equals(pk.getTrangThai())) {
+            throw new RuntimeException("Chỉ có thể xếp vị trí cho phiếu nhập đã hoàn thành");
+        }
+
+        List<ChiTietPhieuKho> chiTietPhieuNhaps = chiTietPhieuKhoRepository.findByPhieuKho_Id(pk.getId());
+
+        for (XepViTriRequest.Item item : request.getItems()) {
+            if (item.getKhoId() == null || item.getViTriId() == null) continue;
+
+            int soLuongDaNhap = chiTietPhieuNhaps.stream()
+                    .filter(ct -> ct.getMatHang().getId().equals(item.getMatHangId()))
+                    .mapToInt(ChiTietPhieuKho::getSoLuong)
+                    .sum();
+
+            if (soLuongDaNhap <= 0) continue;
+
+            TonKho tkNguon = tonKhoRepository.findByMatHang_IdAndKho_Id(item.getMatHangId(), pk.getKho().getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tồn kho của mặt hàng này trong kho gốc"));
+
+            Kho khoDich = khoRepository.findById(item.getKhoId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy kho đích"));
+            ViTriLuuTru viTriDich = viTriLuuTruRepository.findById(item.getViTriId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy vị trí đích"));
+
+            if (pk.getKho().getId().equals(khoDich.getId())) {
+                tkNguon.setViTri(viTriDich);
+                tonKhoRepository.save(tkNguon);
+            } else {
+                if (tkNguon.getSoLuongTonKho() < soLuongDaNhap) {
+                    throw new RuntimeException("Số lượng tồn kho gốc không đủ để luân chuyển sang kho khác");
+                }
+                tkNguon.setSoLuongTonKho(tkNguon.getSoLuongTonKho() - soLuongDaNhap);
+                tonKhoRepository.save(tkNguon);
+
+                TonKho tkDich = tonKhoRepository.findByMatHang_IdAndKho_Id(item.getMatHangId(), khoDich.getId())
+                        .orElse(TonKho.builder()
+                                .matHang(tkNguon.getMatHang())
+                                .kho(khoDich)
+                                .soLuongTonKho(0)
+                                .soLuongDaGiuCho(0)
+                                .soLuongToiThieu(0)
+                                .updatedAt(LocalDateTime.now())
+                                .build());
+                
+                tkDich.setSoLuongTonKho(tkDich.getSoLuongTonKho() + soLuongDaNhap);
+                tkDich.setViTri(viTriDich);
+                tonKhoRepository.save(tkDich);
+            }
         }
     }
 
