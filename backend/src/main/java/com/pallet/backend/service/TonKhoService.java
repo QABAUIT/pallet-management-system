@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TonKhoService {
-    Page<TonKhoResponse> layDanhSachTonKho(String keyword, String chatLieu, Pageable pageable);
-    ThongKeTonKhoResponse layThongKeTonKho();
-    byte[] xuatExcelBaoCaoTonKho(String keyword, String chatLieu);
+    ThongKeTonKhoResponse layThongKeTonKho(Long khoId);
+    Page<TonKhoResponse> layDanhSachTonKho(String keyword, String chatLieu, Long khoId, Pageable pageable);
+    byte[] xuatExcelBaoCaoTonKho(String keyword, String chatLieu, Long khoId);
 }

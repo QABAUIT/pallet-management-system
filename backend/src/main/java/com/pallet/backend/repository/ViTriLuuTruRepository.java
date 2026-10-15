@@ -12,4 +12,5 @@ public interface ViTriLuuTruRepository extends JpaRepository<ViTriLuuTru, Long> 
 
     Optional<ViTriLuuTru> findByMaViTri(String maViTri);
     List<ViTriLuuTru> findByKho_Id(Long khoId);
+    long countByKho_Id(Long khoId);
 }

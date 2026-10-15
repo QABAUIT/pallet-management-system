@@ -14,4 +14,9 @@ public class PhieuNhapResponse {
     private LocalDateTime ngayNhapKho;
     private Integer tongSoLuongPallet;
     private String trangThai;
+    private String ghiChu; // Bổ sung trường này
+
+    private Long nccId;
+    private String bienSoXe;
+    private java.util.List<ChiTietPhieuKhoResponse> chiTiet;
 }
