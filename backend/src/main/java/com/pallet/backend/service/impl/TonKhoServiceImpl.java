@@ -5,6 +5,8 @@ import com.pallet.backend.dto.response.TonKhoResponse;
 import com.pallet.backend.entity.MatHang;
 import com.pallet.backend.entity.TonKho;
 import com.pallet.backend.repository.TonKhoRepository;
+import com.pallet.backend.repository.ViTriLuuTruRepository;
+import com.pallet.backend.repository.KhoRepository;
 import com.pallet.backend.repository.specification.TonKhoSpecifications;
 import com.pallet.backend.service.TonKhoService;
 import lombok.RequiredArgsConstructor;
@@ -19,25 +21,23 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class TonKhoServiceImpl implements TonKhoService {
 
     private final TonKhoRepository tonKhoRepository;
+    private final ViTriLuuTruRepository viTriLuuTruRepository;
+    private final KhoRepository khoRepository;
 
-    // --- HÀM DÙNG CHUNG ĐỂ LỌC ---
     private Specification<TonKho> taoDieuKienLoc(String keyword, String chatLieu, Long khoId) {
         Specification<TonKho> spec = (root, query, cb) -> cb.conjunction();
 
-        // Chỉ tính tồn của kho đang làm việc
         spec = spec.and(TonKhoSpecifications.khoId(khoId));
-
-        // Bỏ qua hàng đang chờ tái chế, chỉ hiển thị thành phẩm/linh kiện bán được
         spec = spec.and((root, query, cb) ->
                 cb.notEqual(root.join("matHang").get("loaiMatHang"), "cho_tai_che"));
 
-        // Tìm kiếm theo tên hoặc mã SKU
         if (keyword != null && !keyword.trim().isEmpty()) {
             spec = spec.and((root, query, cb) -> {
                 String kw = "%" + keyword.toLowerCase() + "%";
@@ -48,7 +48,6 @@ public class TonKhoServiceImpl implements TonKhoService {
             });
         }
 
-        // Lọc theo chất liệu (go / nhua / sat / khac)
         if (chatLieu != null && !chatLieu.trim().isEmpty()) {
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.join("matHang").get("chatLieu"), chatLieu));
@@ -79,11 +78,9 @@ public class TonKhoServiceImpl implements TonKhoService {
             if (!"cho_tai_che".equals(mh.getLoaiMatHang())) {
                 tongSoLuong += tk.getSoLuongTonKho();
 
-                // Tổng giá trị = Số lượng tồn * Đơn giá bán
                 BigDecimal donGia = mh.getDonGiaBan() != null ? mh.getDonGiaBan() : BigDecimal.ZERO;
                 tongGiaTri = tongGiaTri.add(donGia.multiply(BigDecimal.valueOf(tk.getSoLuongTonKho())));
 
-                // Cảnh báo nếu tồn kho thấp hơn hoặc bằng mức tối thiểu (khớp cột "Tình trạng" ở bảng)
                 if (tk.getSoLuongTonKho() <= tk.getSoLuongToiThieu()) {
                     soLuongCanhBao++;
                 }
@@ -95,6 +92,29 @@ public class TonKhoServiceImpl implements TonKhoService {
                 .tongGiaTriUocTinh(tongGiaTri)
                 .soChungLoaiCanhBao(soLuongCanhBao)
                 .build();
+    }
+
+    // MỚI: Trả về danh sách Kho
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> layDanhSachKho() {
+        return khoRepository.findAll().stream().map(k -> Map.<String, Object>of(
+            "id", k.getId(),
+            "tenKho", k.getTenKho()
+        )).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> layDanhSachViTriKho(Long khoId) {
+        return viTriLuuTruRepository.findByKho_Id(khoId).stream().map(v -> Map.<String, Object>of(
+            "id", v.getId(),
+            "maViTri", v.getMaViTri(),
+            "tenViTri", String.format("Khu %s - Kệ %s - Tầng %s", 
+                            v.getKhuVuc(), 
+                            v.getKe() != null ? v.getKe() : "-", 
+                            v.getTang() != null ? v.getTang() : "-")
+        )).toList();
     }
 
     @Override
@@ -145,7 +165,6 @@ public class TonKhoServiceImpl implements TonKhoService {
         }
     }
 
-    // --- HÀM MAP ENTITY SANG DTO ---
     private TonKhoResponse mapToResponse(TonKho tonKho) {
         MatHang mh = tonKho.getMatHang();
 

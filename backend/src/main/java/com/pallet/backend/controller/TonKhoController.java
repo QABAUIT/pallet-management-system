@@ -57,4 +57,15 @@ public class TonKhoController {
                 .headers(headers)
                 .body(excelContent);
     }
+
+    // MỚI: API lấy danh sách Kho
+    @GetMapping("/kho")
+    public ResponseEntity<?> layDanhSachKho() {
+        return ResponseEntity.ok(tonKhoService.layDanhSachKho());
+    }
+
+    @GetMapping("/vi-tri/kho/{khoId}")
+    public ResponseEntity<?> layDanhSachViTri(@PathVariable Long khoId) {
+        return ResponseEntity.ok(tonKhoService.layDanhSachViTriKho(khoId));
+    }
 }

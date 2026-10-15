@@ -2,6 +2,7 @@ package com.pallet.backend.service.impl;
 
 import com.pallet.backend.dto.request.ChiTietPhieuNhapItemRequest;
 import com.pallet.backend.dto.request.TaoPhieuNhapRequest;
+import com.pallet.backend.dto.request.XepViTriRequest;
 import com.pallet.backend.dto.response.ChiTietPhieuKhoResponse;
 import com.pallet.backend.dto.response.PhieuNhapResponse;
 import com.pallet.backend.dto.response.ThongKePhieuNhapResponse;
@@ -75,14 +76,6 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         return phieuKhoRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
-    /**
-     * Thống kê 4 thẻ của tab Lịch sử nhập kho (tính theo 1 kho):
-     *  - Nhập kho trong ngày   : tổng SL phiếu nhập ĐÃ HOÀN THÀNH có ngày giờ là hôm nay.
-     *  - Đang kiểm định        : tổng SL phiếu nhập đang CHỜ XỬ LÝ.
-     *  - Tổng giá trị nhập tháng: tổng (SL x đơn giá bán) của phiếu nhập ĐÃ HOÀN THÀNH trong tháng hiện tại.
-     *                            (schema chưa có đơn giá nhập nên dùng mat_hang.don_gia_ban, giống báo cáo tồn kho)
-     *  - Sức chứa khả dụng     : % vị trí lưu trữ của kho chưa có hàng.
-     */
     @Override
     @Transactional(readOnly = true)
     public ThongKePhieuNhapResponse layThongKe(Long khoId) {
@@ -168,11 +161,6 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         return mapToResponse(pk);
     }
 
-    /**
-     * Sửa phiếu nhập. Chỉ phiếu đang CHỜ XỬ LÝ mới sửa được (chưa đụng tới tồn kho).
-     *  - Giữ "Chờ xử lý" hoặc chuyển "Hoàn tất": thay toàn bộ thông tin + dòng hàng (hoàn tất thì cộng tồn kho).
-     *  - Chuyển "Đã huỷ": chỉ đổi trạng thái, đóng các lô đã sinh khi tạo phiếu.
-     */
     @Override
     @Transactional
     public PhieuNhapResponse capNhatPhieuNhap(Long id, TaoPhieuNhapRequest request) {
@@ -208,7 +196,6 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         NhaCungCap ncc = request.getNccId() == null ? null
                 : nccRepository.findById(request.getNccId()).orElse(null);
 
-        // Xoá dòng hàng + lô cũ (phiếu chưa hoàn thành nên chưa có tồn kho nào phải hoàn lại)
         List<LoHang> loCu = chiTietCu.stream().map(ChiTietPhieuKho::getLo)
                 .filter(l -> l != null).distinct().toList();
         chiTietPhieuKhoRepository.deleteAll(chiTietCu);
@@ -223,7 +210,6 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         return mapToResponse(pk);
     }
 
-    /** Lưu từng dòng hàng, sinh lô và (nếu phiếu hoàn tất) cộng tồn kho. */
     private void ghiChiTietVaCapNhatTon(PhieuKho pk, Kho kho, NhaCungCap ncc, List<ChiTietPhieuNhapItemRequest> items) {
         for (ChiTietPhieuNhapItemRequest item : items) {
             MatHang mh = matHangRepository.findById(item.getMatHangId())
@@ -253,7 +239,9 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
             chiTietPhieuKhoRepository.save(ct);
 
             if (DA_HOAN_THANH.equals(pk.getTrangThai())) {
-                TonKho tk = tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId())
+                TonKho tk = tonKhoRepository.findByMatHang_Id(mh.getId()).stream()
+                        .filter(t -> t.getKho().getId().equals(kho.getId()) && t.getViTri() == null)
+                        .findFirst()
                         .orElse(TonKho.builder()
                                 .matHang(mh)
                                 .kho(kho)
@@ -265,6 +253,69 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
                 tk.setSoLuongTonKho(tk.getSoLuongTonKho() + item.getSoLuong());
                 tonKhoRepository.save(tk);
             }
+        }
+    }
+
+    // ĐÃ FIX: Logic xếp vị trí an toàn, linh hoạt tìm kiếm tồn kho nguồn
+    @Override
+    @Transactional
+    public void xepViTri(Long id, XepViTriRequest request) {
+        PhieuKho pk = phieuKhoRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu"));
+        if (!DA_HOAN_THANH.equals(pk.getTrangThai())) {
+            throw new RuntimeException("Chỉ có thể xếp vị trí cho phiếu nhập đã hoàn thành");
+        }
+
+        List<ChiTietPhieuKho> chiTietPhieuNhaps = chiTietPhieuKhoRepository.findByPhieuKho_Id(pk.getId());
+
+        for (XepViTriRequest.Item item : request.getItems()) {
+            if (item.getKhoId() == null || item.getViTriId() == null) continue;
+
+            int soLuongDaNhap = chiTietPhieuNhaps.stream()
+                    .filter(ct -> ct.getMatHang().getId().equals(item.getMatHangId()))
+                    .mapToInt(ChiTietPhieuKho::getSoLuong)
+                    .sum();
+
+            if (soLuongDaNhap <= 0) continue;
+
+            // Tìm tồn kho nguồn linh hoạt hơn (ưu tiên bản ghi chưa gán vị trí, nếu không có lấy bất kỳ dòng nào trong kho gốc còn đủ số lượng)
+            List<TonKho> dsTonKho = tonKhoRepository.findByMatHang_Id(item.getMatHangId());
+            TonKho tkNguon = dsTonKho.stream()
+                    .filter(t -> t.getKho().getId().equals(pk.getKho().getId()) && t.getViTri() == null)
+                    .findFirst()
+                    .orElseGet(() -> dsTonKho.stream()
+                            .filter(t -> t.getKho().getId().equals(pk.getKho().getId()) && t.getSoLuongTonKho() >= soLuongDaNhap)
+                            .findFirst()
+                            .orElse(null));
+
+            if (tkNguon == null || tkNguon.getSoLuongTonKho() < soLuongDaNhap) {
+                throw new RuntimeException("Số lượng tồn kho chờ xếp không đủ cho mặt hàng ID: " + item.getMatHangId());
+            }
+
+            Kho khoDich = khoRepository.findById(item.getKhoId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy kho đích"));
+            ViTriLuuTru viTriDich = viTriLuuTruRepository.findById(item.getViTriId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy vị trí đích"));
+
+            // Tìm hoặc tạo tồn kho ở Vị trí đích
+            TonKho tkDich = dsTonKho.stream()
+                    .filter(t -> t.getKho().getId().equals(khoDich.getId()) && t.getViTri() != null && t.getViTri().getId().equals(viTriDich.getId()))
+                    .findFirst()
+                    .orElse(TonKho.builder()
+                            .matHang(tkNguon.getMatHang())
+                            .kho(khoDich)
+                            .viTri(viTriDich)
+                            .soLuongTonKho(0)
+                            .soLuongDaGiuCho(0)
+                            .soLuongToiThieu(0)
+                            .updatedAt(LocalDateTime.now())
+                            .build());
+
+            // Tiến hành luân chuyển số lượng
+            tkNguon.setSoLuongTonKho(tkNguon.getSoLuongTonKho() - soLuongDaNhap);
+            tkDich.setSoLuongTonKho(tkDich.getSoLuongTonKho() + soLuongDaNhap);
+
+            tonKhoRepository.save(tkNguon);
+            tonKhoRepository.save(tkDich);
         }
     }
 

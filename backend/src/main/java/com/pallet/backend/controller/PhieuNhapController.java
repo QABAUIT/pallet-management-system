@@ -3,6 +3,7 @@ package com.pallet.backend.controller;
 import com.pallet.backend.dto.request.TaoPhieuNhapRequest;
 import com.pallet.backend.dto.response.PhieuNhapResponse;
 import com.pallet.backend.dto.response.ThongKePhieuNhapResponse;
+import com.pallet.backend.dto.request.XepViTriRequest;
 import com.pallet.backend.service.PhieuNhapService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -79,5 +80,11 @@ public class PhieuNhapController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(excelContent);
+    }
+
+    @PostMapping("/{id}/xep-vi-tri")
+    public ResponseEntity<?> xepViTri(@PathVariable Long id, @RequestBody XepViTriRequest request) {
+        phieuNhapService.xepViTri(id, request);
+        return ResponseEntity.ok(java.util.Map.of("message", "Xếp vị trí lưu trữ thành công"));
     }
 }

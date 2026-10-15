@@ -1,6 +1,7 @@
 package com.pallet.backend.service;
 
 import com.pallet.backend.dto.request.TaoPhieuNhapRequest;
+import com.pallet.backend.dto.request.XepViTriRequest;
 import com.pallet.backend.dto.response.PhieuNhapResponse;
 import com.pallet.backend.dto.response.ThongKePhieuNhapResponse;
 import org.springframework.data.domain.Page;
@@ -14,4 +15,5 @@ public interface PhieuNhapService {
     PhieuNhapResponse taoPhieuNhap(TaoPhieuNhapRequest request);
     PhieuNhapResponse capNhatPhieuNhap(Long id, TaoPhieuNhapRequest request);
     byte[] xuatExcel(String keyword, String trangThai, LocalDateTime tuNgay, LocalDateTime denNgay, Long khoId);
+    void xepViTri(Long id, XepViTriRequest request);
 }
