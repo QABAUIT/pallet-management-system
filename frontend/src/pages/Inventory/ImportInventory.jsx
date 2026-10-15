@@ -42,7 +42,7 @@ export default function ImportInventory() {
   const columns = [
     {
       key: "maPhieu",
-      header: "Mới MÃ PHIẾU NHẬP",
+      header: "MÃ PHIẾU NHẬP",
       render: (r) => <b>{r.maPhieu}</b>,
     },
     {
@@ -172,7 +172,7 @@ export default function ImportInventory() {
           value={show(`${s?.sucChuaKhaDungPhanTram ?? 0}%`)}
           icon={Warehouse}
           tone="purple"
-          badge={`/ ${fmtNumber(s?.tongSoSlot)} slots`}
+          badge={`/ ${fmtNumber(s?.tongSoSlot)} slots hệ thống`}
           caption={`Còn ${fmtNumber(s?.soSlotTrong)} vị trí trống`}
         />
       </div>

@@ -6,6 +6,7 @@ import com.pallet.backend.dto.response.ChiTietPhieuKhoResponse;
 import com.pallet.backend.dto.response.PhieuXuatResponse;
 import com.pallet.backend.dto.response.ThongKePhieuXuatResponse;
 import com.pallet.backend.entity.*;
+import com.pallet.backend.exception.BusinessException;
 import com.pallet.backend.repository.*;
 import com.pallet.backend.repository.specification.PhieuKhoSpecifications;
 import com.pallet.backend.service.PhieuXuatService;
@@ -32,7 +33,6 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
     private static final String DA_HOAN_THANH = "da_hoan_thanh";
     private static final String DA_HUY = "da_huy";
 
-    /** Phiếu xuất còn "Chờ xử lý" quá số giờ này thì bị tính là TRỄ tiến độ (đổi ở đây nếu nhóm thống nhất SLA khác). */
     private static final int SLA_GIO = 24;
 
     private final PhieuKhoRepository phieuKhoRepository;
@@ -73,15 +73,6 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         return phieuKhoRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
-    /**
-     * Thống kê 4 thẻ của tab Lịch sử xuất kho (tính theo 1 kho):
-     *  - Tổng xuất hôm nay         : tổng SL phiếu xuất ĐÃ HOÀN THÀNH có ngày giờ là hôm nay.
-     *  - Đang bốc dỡ & xếp xe      : tổng SL phiếu xuất đang CHỜ XỬ LÝ.
-     *  - Xuất bảo dưỡng định kỳ    : tổng SL phiếu xuất loại "Bảo trì" ĐÃ HOÀN THÀNH trong tháng này.
-     *  - Tỷ lệ xuất đúng tiến độ   : trong các phiếu xuất của tháng này (trừ phiếu huỷ), % phiếu KHÔNG bị trễ.
-     *                                Phiếu trễ = còn "Chờ xử lý" quá SLA_GIO giờ. Chưa có phiếu nào -> trả null (FE hiện "—").
-     *                                (schema chưa có hạn xuất / ngày hoàn thành nên chưa tính được trễ theo hạn thực tế)
-     */
     @Override
     @Transactional(readOnly = true)
     public ThongKePhieuXuatResponse layThongKe(Long khoId) {
@@ -124,17 +115,17 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
     @Override
     @Transactional(readOnly = true)
     public PhieuXuatResponse layChiTiet(Long id) {
-        PhieuKho pk = phieuKhoRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu"));
+        PhieuKho pk = phieuKhoRepository.findById(id).orElseThrow(() -> new BusinessException("Không tìm thấy phiếu"));
         return mapToResponse(pk);
     }
 
     private void kiemTraDauVao(TaoPhieuXuatRequest request) {
         if (request.getChiTiet() == null || request.getChiTiet().isEmpty()) {
-            throw new RuntimeException("Phiếu xuất cần ít nhất 1 mặt hàng");
+            throw new BusinessException("Phiếu xuất cần ít nhất 1 mặt hàng");
         }
         for (ChiTietPhieuXuatItemRequest it : request.getChiTiet()) {
             if (it.getMatHangId() == null || it.getSoLuong() == null || it.getSoLuong() <= 0) {
-                throw new RuntimeException("Mỗi dòng hàng cần chọn mặt hàng và số lượng lớn hơn 0");
+                throw new BusinessException("Mỗi dòng hàng cần chọn mặt hàng và số lượng lớn hơn 0");
             }
         }
     }
@@ -146,15 +137,15 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
     @Override
     @Transactional
     public PhieuXuatResponse taoPhieuXuat(TaoPhieuXuatRequest request) {
-        if (request.getKhoId() == null) throw new RuntimeException("Thiếu thông tin kho");
+        if (request.getKhoId() == null) throw new BusinessException("Thiếu thông tin kho");
         kiemTraDauVao(request);
 
         String trangThai = request.getTrangThai() == null ? CHO_XU_LY : request.getTrangThai();
         if (!CHO_XU_LY.equals(trangThai) && !DA_HOAN_THANH.equals(trangThai)) {
-            throw new RuntimeException("Trạng thái phiếu xuất không hợp lệ: " + trangThai);
+            throw new BusinessException("Trạng thái phiếu xuất không hợp lệ: " + trangThai);
         }
 
-        Kho kho = khoRepository.findById(request.getKhoId()).orElseThrow(() -> new RuntimeException("Không tìm thấy kho"));
+        Kho kho = khoRepository.findById(request.getKhoId()).orElseThrow(() -> new BusinessException("Không tìm thấy kho"));
         NhanVien nv = request.getNhanVienXuatId() == null ? null
                 : nhanVienRepository.findById(request.getNhanVienXuatId()).orElse(null);
 
@@ -176,24 +167,19 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         return mapToResponse(pk);
     }
 
-    /**
-     * Sửa phiếu xuất. Chỉ phiếu đang CHỜ XỬ LÝ mới sửa được (chưa trừ tồn kho).
-     *  - Giữ "Chờ xử lý" hoặc chuyển "Hoàn thành": thay toàn bộ thông tin + dòng hàng (hoàn thành thì trừ tồn kho).
-     *  - Chuyển "Đã huỷ": chỉ đổi trạng thái.
-     */
     @Override
     @Transactional
     public PhieuXuatResponse capNhatPhieuXuat(Long id, TaoPhieuXuatRequest request) {
         PhieuKho pk = phieuKhoRepository.findById(id)
                 .filter(p -> LOAI_PHIEU.equals(p.getLoaiPhieu()))
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu xuất"));
+                .orElseThrow(() -> new BusinessException("Không tìm thấy phiếu xuất"));
         if (!CHO_XU_LY.equals(pk.getTrangThai())) {
-            throw new RuntimeException("Chỉ được sửa phiếu đang ở trạng thái Chờ xử lý");
+            throw new BusinessException("Chỉ được sửa phiếu đang ở trạng thái Chờ xử lý");
         }
 
         String trangThaiMoi = request.getTrangThai() == null ? CHO_XU_LY : request.getTrangThai();
         if (!CHO_XU_LY.equals(trangThaiMoi) && !DA_HOAN_THANH.equals(trangThaiMoi) && !DA_HUY.equals(trangThaiMoi)) {
-            throw new RuntimeException("Trạng thái phiếu xuất không hợp lệ: " + trangThaiMoi);
+            throw new BusinessException("Trạng thái phiếu xuất không hợp lệ: " + trangThaiMoi);
         }
 
         if (DA_HUY.equals(trangThaiMoi)) {
@@ -214,11 +200,10 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         return mapToResponse(pk);
     }
 
-    /** Lưu từng dòng hàng và (nếu phiếu hoàn thành) trừ tồn kho + trừ lô. */
     private void ghiChiTietVaTruTon(PhieuKho pk, Kho kho, List<ChiTietPhieuXuatItemRequest> items) {
         for (ChiTietPhieuXuatItemRequest item : items) {
             MatHang mh = matHangRepository.findById(item.getMatHangId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy mặt hàng ID " + item.getMatHangId()));
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy mặt hàng ID " + item.getMatHangId()));
             LoHang lo = item.getLoId() != null ? loHangRepository.findById(item.getLoId()).orElse(null) : null;
 
             ChiTietPhieuKho ct = ChiTietPhieuKho.builder()
@@ -231,18 +216,39 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
             chiTietPhieuKhoRepository.save(ct);
 
             if (DA_HOAN_THANH.equals(pk.getTrangThai())) {
-                TonKho tk = tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId())
-                        .orElseThrow(() -> new RuntimeException("Sản phẩm chưa có trong kho này!"));
+                List<TonKho> tonKhos = tonKhoRepository.findByMatHang_Id(mh.getId()).stream()
+                        .filter(t -> t.getKho().getId().equals(kho.getId()))
+                        .toList();
 
-                if (tk.getSoLuongTonKho() < item.getSoLuong()) {
-                    throw new RuntimeException("Tồn kho không đủ cho mã: " + mh.getMaMatHang());
+                if (tonKhos.isEmpty()) {
+                    throw new BusinessException("Sản phẩm " + mh.getTenMatHang() + " chưa có trong kho này!");
                 }
-                tk.setSoLuongTonKho(tk.getSoLuongTonKho() - item.getSoLuong());
-                tonKhoRepository.save(tk);
+
+                int tongTon = tonKhos.stream().mapToInt(TonKho::getSoLuongTonKho).sum();
+                int tongGiuCho = tonKhos.stream().mapToInt(TonKho::getSoLuongDaGiuCho).sum();
+                int tonKhaDung = tongTon - tongGiuCho;
+
+                if (tonKhaDung < item.getSoLuong()) {
+                    throw new BusinessException(String.format("Tồn kho khả dụng của %s chỉ còn %d cái, không đủ để xuất %d cái.",
+                            mh.getTenMatHang(), tonKhaDung, item.getSoLuong()));
+                }
+
+                int soLuongCanTru = item.getSoLuong();
+                for (TonKho tk : tonKhos) {
+                    if (soLuongCanTru <= 0) break;
+                    
+                    int tkKhaDung = tk.getSoLuongTonKho() - tk.getSoLuongDaGiuCho();
+                    if (tkKhaDung > 0) {
+                        int truKhoan = Math.min(tkKhaDung, soLuongCanTru);
+                        tk.setSoLuongTonKho(tk.getSoLuongTonKho() - truKhoan);
+                        tonKhoRepository.save(tk);
+                        soLuongCanTru -= truKhoan;
+                    }
+                }
 
                 if (lo != null) {
                     if (lo.getSoLuongConLai() < item.getSoLuong()) {
-                        throw new RuntimeException("Số lượng trong lô " + lo.getMaLo() + " không đủ!");
+                        throw new BusinessException("Số lượng trong lô " + lo.getMaLo() + " không đủ!");
                     }
                     lo.setSoLuongConLai(lo.getSoLuongConLai() - item.getSoLuong());
                     if (lo.getSoLuongConLai() == 0) {
@@ -296,7 +302,7 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
             workbook.write(out);
             return out.toByteArray();
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi xuất Excel Lịch sử xuất kho", e);
+            throw new BusinessException("Lỗi xuất Excel Lịch sử xuất kho");
         }
     }
 
@@ -304,7 +310,6 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         List<ChiTietPhieuKho> dsChiTiet = chiTietPhieuKhoRepository.findByPhieuKho_Id(pk.getId());
         int tongSoLuong = dsChiTiet.stream().mapToInt(ChiTietPhieuKho::getSoLuong).sum();
 
-        // Tách Loại xuất và Lý do từ Ghi chú
         String loaiXuat = "Xuất bán";
         String lyDo = pk.getGhiChu();
         if (pk.getGhiChu() != null && pk.getGhiChu().contains(" - Lý do: ")) {

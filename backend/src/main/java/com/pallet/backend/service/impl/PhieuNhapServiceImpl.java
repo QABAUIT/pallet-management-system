@@ -93,16 +93,19 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
                 khoId, LOAI_PHIEU, DA_HOAN_THANH, dauThang, dauThangSau);
         long tongGiaTriThang = giaTriThang != null ? giaTriThang.setScale(0, RoundingMode.HALF_UP).longValue() : 0L;
 
-        int tongSlot = (int) viTriLuuTruRepository.countByKho_Id(khoId);
-        int slotDaDung = orZero(tonKhoRepository.countViTriDaSuDungTheoKho(khoId));
+        // LOGIC MỚI: Tính tỷ lệ dựa trên TỔNG VỊ TRÍ của TOÀN BỘ HỆ THỐNG
+        int tongSlot = (int) viTriLuuTruRepository.count();
+        int slotDaDung = orZero(tonKhoRepository.countViTriDaSuDungToanHeThong());
         int slotTrong = Math.max(0, tongSlot - slotDaDung);
-        double phanTram = tongSlot == 0 ? 0.0 : Math.round((double) slotTrong / tongSlot * 1000.0) / 10.0;
+        
+        // Tỷ lệ lấp đầy = (Số vị trí đã xếp / Tổng vị trí) * 100
+        double phanTram = tongSlot == 0 ? 0.0 : Math.round((double) slotDaDung / tongSlot * 1000.0) / 10.0;
 
         return ThongKePhieuNhapResponse.builder()
                 .nhapKhoTrongNgay(nhapTrongNgay)
                 .dangKiemDinh(dangKiemDinh)
                 .tongGiaTriNhapThang(tongGiaTriThang)
-                .sucChuaKhaDungPhanTram(phanTram)
+                .sucChuaKhaDungPhanTram(phanTram) // Giữ nguyên tên DTO để khỏi sửa các lớp khác, nhưng giá trị là Tỷ lệ lấp đầy
                 .tongSoSlot(tongSlot)
                 .soSlotTrong(slotTrong)
                 .build();
@@ -239,9 +242,7 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
             chiTietPhieuKhoRepository.save(ct);
 
             if (DA_HOAN_THANH.equals(pk.getTrangThai())) {
-                TonKho tk = tonKhoRepository.findByMatHang_Id(mh.getId()).stream()
-                        .filter(t -> t.getKho().getId().equals(kho.getId()) && t.getViTri() == null)
-                        .findFirst()
+                TonKho tk = tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId())
                         .orElse(TonKho.builder()
                                 .matHang(mh)
                                 .kho(kho)
@@ -256,7 +257,6 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         }
     }
 
-    // ĐÃ FIX: Logic xếp vị trí an toàn, linh hoạt tìm kiếm tồn kho nguồn
     @Override
     @Transactional
     public void xepViTri(Long id, XepViTriRequest request) {
@@ -277,45 +277,38 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
 
             if (soLuongDaNhap <= 0) continue;
 
-            // Tìm tồn kho nguồn linh hoạt hơn (ưu tiên bản ghi chưa gán vị trí, nếu không có lấy bất kỳ dòng nào trong kho gốc còn đủ số lượng)
-            List<TonKho> dsTonKho = tonKhoRepository.findByMatHang_Id(item.getMatHangId());
-            TonKho tkNguon = dsTonKho.stream()
-                    .filter(t -> t.getKho().getId().equals(pk.getKho().getId()) && t.getViTri() == null)
-                    .findFirst()
-                    .orElseGet(() -> dsTonKho.stream()
-                            .filter(t -> t.getKho().getId().equals(pk.getKho().getId()) && t.getSoLuongTonKho() >= soLuongDaNhap)
-                            .findFirst()
-                            .orElse(null));
-
-            if (tkNguon == null || tkNguon.getSoLuongTonKho() < soLuongDaNhap) {
-                throw new RuntimeException("Số lượng tồn kho chờ xếp không đủ cho mặt hàng ID: " + item.getMatHangId());
-            }
+            TonKho tkNguon = tonKhoRepository.findByMatHang_IdAndKho_Id(item.getMatHangId(), pk.getKho().getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tồn kho của mặt hàng này trong kho gốc"));
 
             Kho khoDich = khoRepository.findById(item.getKhoId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy kho đích"));
             ViTriLuuTru viTriDich = viTriLuuTruRepository.findById(item.getViTriId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy vị trí đích"));
 
-            // Tìm hoặc tạo tồn kho ở Vị trí đích
-            TonKho tkDich = dsTonKho.stream()
-                    .filter(t -> t.getKho().getId().equals(khoDich.getId()) && t.getViTri() != null && t.getViTri().getId().equals(viTriDich.getId()))
-                    .findFirst()
-                    .orElse(TonKho.builder()
-                            .matHang(tkNguon.getMatHang())
-                            .kho(khoDich)
-                            .viTri(viTriDich)
-                            .soLuongTonKho(0)
-                            .soLuongDaGiuCho(0)
-                            .soLuongToiThieu(0)
-                            .updatedAt(LocalDateTime.now())
-                            .build());
+            if (pk.getKho().getId().equals(khoDich.getId())) {
+                tkNguon.setViTri(viTriDich);
+                tonKhoRepository.save(tkNguon);
+            } else {
+                if (tkNguon.getSoLuongTonKho() < soLuongDaNhap) {
+                    throw new RuntimeException("Số lượng tồn kho gốc không đủ để luân chuyển sang kho khác");
+                }
+                tkNguon.setSoLuongTonKho(tkNguon.getSoLuongTonKho() - soLuongDaNhap);
+                tonKhoRepository.save(tkNguon);
 
-            // Tiến hành luân chuyển số lượng
-            tkNguon.setSoLuongTonKho(tkNguon.getSoLuongTonKho() - soLuongDaNhap);
-            tkDich.setSoLuongTonKho(tkDich.getSoLuongTonKho() + soLuongDaNhap);
-
-            tonKhoRepository.save(tkNguon);
-            tonKhoRepository.save(tkDich);
+                TonKho tkDich = tonKhoRepository.findByMatHang_IdAndKho_Id(item.getMatHangId(), khoDich.getId())
+                        .orElse(TonKho.builder()
+                                .matHang(tkNguon.getMatHang())
+                                .kho(khoDich)
+                                .soLuongTonKho(0)
+                                .soLuongDaGiuCho(0)
+                                .soLuongToiThieu(0)
+                                .updatedAt(LocalDateTime.now())
+                                .build());
+                
+                tkDich.setSoLuongTonKho(tkDich.getSoLuongTonKho() + soLuongDaNhap);
+                tkDich.setViTri(viTriDich);
+                tonKhoRepository.save(tkDich);
+            }
         }
     }
 
