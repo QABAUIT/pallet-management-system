@@ -18,24 +18,25 @@ import org.springframework.http.MediaType;
 public class TonKhoController {
 
     private final TonKhoService tonKhoService;
+    private static final String KHO_MAC_DINH = "1";
 
-    // API lấy biểu đồ/thống kê tổng quan
     @GetMapping("/thong-ke")
-    public ResponseEntity<ThongKeTonKhoResponse> getThongKe() {
-        ThongKeTonKhoResponse thongKe = tonKhoService.layThongKeTonKho();
+    public ResponseEntity<ThongKeTonKhoResponse> getThongKe(
+            @RequestParam(defaultValue = KHO_MAC_DINH) Long khoId) {
+        ThongKeTonKhoResponse thongKe = tonKhoService.layThongKeTonKho(khoId);
         return ResponseEntity.ok(thongKe);
     }
 
-    // API lấy danh sách chi tiết có search, filter, pagination
     @GetMapping
     public ResponseEntity<Page<TonKhoResponse>> getDanhSachTonKho(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String chatLieu,
+            @RequestParam(defaultValue = KHO_MAC_DINH) Long khoId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<TonKhoResponse> result = tonKhoService.layDanhSachTonKho(keyword, chatLieu, pageable);
+        Page<TonKhoResponse> result = tonKhoService.layDanhSachTonKho(keyword, chatLieu, khoId, pageable);
         
         return ResponseEntity.ok(result);
     }
@@ -43,17 +44,28 @@ public class TonKhoController {
     @GetMapping("/export")
     public ResponseEntity<byte[]> xuatExcelBaoCao(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String chatLieu) {
+            @RequestParam(required = false) String chatLieu,
+            @RequestParam(defaultValue = KHO_MAC_DINH) Long khoId) {
         
-        byte[] excelContent = tonKhoService.xuatExcelBaoCaoTonKho(keyword, chatLieu);
+        byte[] excelContent = tonKhoService.xuatExcelBaoCaoTonKho(keyword, chatLieu, khoId);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        // Trả file về Frontend với tên Bao_Cao_Ton_Kho.xlsx
         headers.setContentDispositionFormData("attachment", "Bao_Cao_Ton_Kho.xlsx");
         
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(excelContent);
+    }
+
+    // MỚI: API lấy danh sách Kho
+    @GetMapping("/kho")
+    public ResponseEntity<?> layDanhSachKho() {
+        return ResponseEntity.ok(tonKhoService.layDanhSachKho());
+    }
+
+    @GetMapping("/vi-tri/kho/{khoId}")
+    public ResponseEntity<?> layDanhSachViTri(@PathVariable Long khoId) {
+        return ResponseEntity.ok(tonKhoService.layDanhSachViTriKho(khoId));
     }
 }

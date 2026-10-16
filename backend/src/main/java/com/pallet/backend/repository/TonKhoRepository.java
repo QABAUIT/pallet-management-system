@@ -42,7 +42,11 @@ public interface TonKhoRepository extends JpaRepository<TonKho, Long>, JpaSpecif
     @Query("SELECT COALESCE(SUM(t.soLuongTonKho - t.soLuongDaGiuCho), 0) FROM TonKho t WHERE t.matHang.id = :matHangId")
     Integer sumSoLuongKhaDung(@Param("matHangId") Long matHangId);
 
-    // Đếm số vị trí đang chứa hàng (có Tồn kho > 0)
+    // Đếm số vị trí đang chứa hàng (Theo 1 kho cụ thể)
+    @Query("SELECT COUNT(DISTINCT t.viTri.id) FROM TonKho t WHERE t.soLuongTonKho > 0 AND t.viTri IS NOT NULL AND t.kho.id = :khoId")
+    Integer countViTriDaSuDungTheoKho(@Param("khoId") Long khoId);
+    
+    // MỚI: Đếm số vị trí đang chứa hàng trên TOÀN BỘ HỆ THỐNG (Tất cả các kho cộng lại)
     @Query("SELECT COUNT(DISTINCT t.viTri.id) FROM TonKho t WHERE t.soLuongTonKho > 0 AND t.viTri IS NOT NULL")
-    Integer countViTriDaSuDung();
+    Integer countViTriDaSuDungToanHeThong();
 }

@@ -1,21 +1,33 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Table, Tag } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { Button, Space, Tag, Tooltip } from "antd";
+import {
+  EditOutlined,
+  EyeOutlined,
+  AppstoreAddOutlined,
+} from "@ant-design/icons";
+import { PackagePlus, ClipboardList, Wallet, Warehouse } from "lucide-react";
 
 import InventoryPage from "../../components/inventory/InventoryPage";
 import PhieuKhoToolbar from "../../components/inventory/PhieuKhoToolbar";
 import CreateImportModal from "../../components/inventory/CreateImportModal";
-import StatCard, { StatGrid } from "../../components/inventory/StatCard";
+import ArrangeLocationModal from "../../components/inventory/ArrangeLocationModal";
+import StatCard from "../../components/common/StatCard";
+import AppTable from "../../components/common/AppTable";
+import Pagination from "../../components/common/Pagination";
 import { phieuNhapApi } from "../../api/phieuNhapApi";
 import { usePhieuKhoList } from "../../hooks/usePhieuKhoList";
 import { useStats } from "../../hooks/useStats";
 import { fmtDateTime, fmtNumber, fmtVnd } from "../../utils/format";
 import { PHIEU_KHO_TRANG_THAI, resolveStatus } from "../../utils/statusTag";
 
+import "../../components/layout/style.css";
+
 export default function ImportInventory() {
   const navigate = useNavigate();
   const [openCreate, setOpenCreate] = useState(false);
+  const [editing, setEditing] = useState(null); // phiếu đang sửa
+  const [arranging, setArranging] = useState(null); // phiếu đang được xếp vị trí
 
   const list = usePhieuKhoList({
     fetchList: phieuNhapApi.danhSach,
@@ -24,148 +36,193 @@ export default function ImportInventory() {
   });
   const stats = useStats(phieuNhapApi.thongKe);
   const { table } = list;
+  const s = stats.data;
+  const show = (v) => (stats.loading ? "…" : v);
 
   const columns = [
     {
-      title: "MÃ PHIẾU NHẬP",
-      dataIndex: "maPhieu",
-      width: 160,
-      render: (t) => <b>{t}</b>,
+      key: "maPhieu",
+      header: "Mới MÃ PHIẾU NHẬP",
+      render: (r) => <b>{r.maPhieu}</b>,
     },
     {
-      title: "NHÀ CUNG CẤP",
-      dataIndex: "tenNhaCungCap",
-      render: (t) => t || "—",
+      key: "tenNhaCungCap",
+      header: "NHÀ CUNG CẤP",
+      render: (r) => r.tenNhaCungCap || "—",
     },
     {
-      title: "NHÂN VIÊN TIẾP NHẬN",
-      dataIndex: "tenNhanVienTiepNhan",
-      render: (t) => t || "—",
+      key: "tenNhanVienTiepNhan",
+      header: "NHÂN VIÊN TIẾP NHẬN",
+      render: (r) => r.tenNhanVienTiepNhan || "—",
     },
     {
-      title: "NGÀY NHẬP KHO",
-      dataIndex: "ngayNhapKho",
-      width: 160,
-      render: fmtDateTime,
+      key: "ngayNhapKho",
+      header: "NGÀY NHẬP KHO",
+      render: (r) => fmtDateTime(r.ngayNhapKho),
     },
     {
-      title: "SL PALLET",
-      dataIndex: "tongSoLuongPallet",
-      width: 110,
+      key: "tongSoLuongPallet",
+      header: "SL PALLET",
       align: "right",
-      render: fmtNumber,
+      render: (r) => fmtNumber(r.tongSoLuongPallet),
     },
     {
-      title: "TRẠNG THÁI",
-      dataIndex: "trangThai",
-      width: 150,
-      render: (v) => {
-        const s = resolveStatus(PHIEU_KHO_TRANG_THAI, v);
-        return <Tag color={s.color}>{s.label}</Tag>;
+      key: "trangThai",
+      header: "TRẠNG THÁI",
+      render: (r) => {
+        const st = resolveStatus(PHIEU_KHO_TRANG_THAI, r.trangThai);
+        return <Tag color={st.color}>{st.label}</Tag>;
       },
     },
     {
-      title: "THAO TÁC",
       key: "action",
-      width: 90,
+      header: "THAO TÁC",
       align: "center",
-      render: (_, record) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          style={{ color: "#8c8c8c" }}
-          onClick={() => navigate(`/kho/nhap-kho/${record.id}`)}
-        />
+      render: (r) => (
+        <Space size="middle">
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              style={{ color: "#8c8c8c" }}
+              onClick={() => navigate(`/kho/nhap-kho/${r.id}`)}
+            />
+          </Tooltip>
+
+          <Tooltip
+            title={
+              r.trangThai === "cho_xu_ly"
+                ? "Chỉnh sửa"
+                : "Chỉ sửa được phiếu đang chờ xử lý"
+            }
+          >
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              style={{ color: "#8c8c8c" }}
+              disabled={r.trangThai !== "cho_xu_ly"}
+              onClick={() => setEditing(r)}
+            />
+          </Tooltip>
+
+          <Tooltip
+            title={
+              r.trangThai === "da_hoan_thanh"
+                ? "Xếp vị trí lưu trữ (Lên kệ)"
+                : "Phiếu phải hoàn tất mới có thể xếp vị trí"
+            }
+          >
+            <Button
+              type="text"
+              icon={<AppstoreAddOutlined />}
+              style={{
+                color: r.trangThai === "da_hoan_thanh" ? "#1677ff" : "#8c8c8c",
+              }}
+              disabled={r.trangThai !== "da_hoan_thanh"}
+              onClick={() => setArranging(r)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
 
+  const closeModal = () => {
+    setOpenCreate(false);
+    setEditing(null);
+    setArranging(null);
+  };
+
   const handleCreated = () => {
     setOpenCreate(false);
+    setEditing(null);
+    setArranging(null);
     table.reload();
     stats.reload();
   };
 
-  const s = stats.data;
-
   return (
     <InventoryPage>
-      <StatGrid columns={4}>
+      <div className="stat-row">
         <StatCard
-          label="Nhập kho trong ngày"
-          value={fmtNumber(s?.nhapKhoTrongNgay)}
-          unit="pallet"
-          note="Chỉ tính phiếu đã hoàn thành"
-          color="#1677ff"
-          loading={stats.loading}
+          label="NHẬP KHO TRONG NGÀY"
+          value={show(fmtNumber(s?.nhapKhoTrongNgay))}
+          icon={PackagePlus}
+          tone="blue"
+          badge="pallet"
+          caption="Chỉ tính phiếu đã hoàn thành"
         />
         <StatCard
-          label="Đang kiểm định"
-          value={fmtNumber(s?.dangKiemDinh)}
-          unit="pallet"
-          note="Phiếu đang chờ xử lý"
-          color="#cf1322"
-          loading={stats.loading}
+          label="ĐANG KIỂM ĐỊNH"
+          value={show(fmtNumber(s?.dangKiemDinh))}
+          icon={ClipboardList}
+          tone="red"
+          badge="pallet"
+          caption="Phiếu đang chờ xử lý"
         />
         <StatCard
-          label="Tổng giá trị nhập tháng"
-          value={fmtVnd(s?.tongGiaTriNhapThang)}
-          color="#389e0d"
-          loading={stats.loading}
+          label="TỔNG GIÁ TRỊ NHẬP THÁNG"
+          value={show(fmtVnd(s?.tongGiaTriNhapThang))}
+          icon={Wallet}
+          tone="green"
+          caption="Phiếu hoàn thành trong tháng"
         />
         <StatCard
-          label="Sức chứa khả dụng"
-          value={`${s?.sucChuaKhaDungPhanTram ?? 0}%`}
-          unit={`/ ${fmtNumber(s?.tongSoSlot)} slots`}
-          note={`Hệ thống còn ${fmtNumber(s?.soSlotTrong)} vị trí trống`}
-          color="#595959"
-          loading={stats.loading}
+          label="SỨC CHỨA KHẢ DỤNG"
+          value={show(`${s?.sucChuaKhaDungPhanTram ?? 0}%`)}
+          icon={Warehouse}
+          tone="purple"
+          badge={`/ ${fmtNumber(s?.tongSoSlot)} slots hệ thống`}
+          caption={`Còn ${fmtNumber(s?.soSlotTrong)} vị trí trống`}
         />
-      </StatGrid>
+      </div>
 
       <PhieuKhoToolbar
-        placeholder="Tìm theo mã phiếu nhập... (nhấn Enter)"
+        placeholder="Tìm theo mã phiếu nhập..."
         keyword={list.keyword}
-        onKeywordChange={list.handleKeywordChange}
-        onSearch={list.handleSearch}
+        onKeywordChange={list.setKeyword}
         trangThai={list.trangThai}
         onTrangThaiChange={list.handleTrangThaiChange}
-        range={list.range}
-        onRangeChange={list.handleRangeChange}
+        time={list.time}
+        onTimeChange={list.handleTimeChange}
         onExport={list.handleExport}
         exporting={list.exporting}
         onCreate={() => setOpenCreate(true)}
         createLabel="Tạo phiếu nhập kho"
       />
 
-      <Card
-        styles={{ body: { padding: 0 } }}
-        style={{
-          borderRadius: 8,
-          overflow: "hidden",
-          border: "1px solid #f0f0f0",
-        }}
-      >
-        <Table
-          columns={columns}
-          dataSource={table.data}
-          loading={table.loading}
-          rowKey="id"
-          scroll={{ x: 900 }}
-          pagination={{
-            ...table.pagination,
-            showTotal: (total, range) =>
-              `Hiển thị ${range[0]} - ${range[1]} trên tổng số ${total} phiếu nhập kho`,
-          }}
-          onChange={table.handleTableChange}
-          locale={{ emptyText: "Chưa có phiếu nhập kho nào" }}
-        />
-      </Card>
+      <AppTable
+        columns={columns}
+        data={table.data}
+        rowKey={(r) => r.id}
+        emptyText={
+          table.loading ? "Đang tải dữ liệu..." : "Chưa có phiếu nhập kho nào"
+        }
+      />
 
-      {openCreate && (
+      <Pagination
+        currentPage={table.pagination.current}
+        totalItems={table.pagination.total}
+        itemsPerPage={table.pagination.pageSize}
+        itemLabel="phiếu nhập kho"
+        onPageChange={list.goToPage}
+      />
+
+      {(openCreate || editing) && (
         <CreateImportModal
-          onCancel={() => setOpenCreate(false)}
+          key={editing?.id ?? "new"}
+          record={editing}
+          onCancel={closeModal}
           onCreated={handleCreated}
+        />
+      )}
+
+      {arranging && (
+        <ArrangeLocationModal
+          key={`arr_${arranging.id}`}
+          record={arranging}
+          onCancel={closeModal}
+          onSuccess={handleCreated}
         />
       )}
     </InventoryPage>

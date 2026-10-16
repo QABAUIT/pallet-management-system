@@ -13,13 +13,18 @@ const TRANG_THAI_OPTIONS = [
   { value: "cho_xu_ly", label: "Chờ nhập (chưa cộng tồn kho)" },
   { value: "da_hoan_thanh", label: "Hoàn tất nhập (cộng tồn kho ngay)" },
 ];
+const TRANG_THAI_HUY = { value: "da_huy", label: "Hủy phiếu" };
 
 /**
- * Modal tạo phiếu nhập kho. Khớp TaoPhieuNhapRequest:
+ * Modal tạo / sửa phiếu nhập kho. Khớp TaoPhieuNhapRequest:
  * khoId, nccId, nhanVienTiepNhanId, trangThai, ghiChu, bienSoXe, chiTiet[{matHangId, soLuong, ghiChu}]
+ *
+ * - Không truyền `record`: chế độ TẠO MỚI.
+ * - Truyền `record` (1 dòng của bảng, BE trả kèm chiTiet): chế độ SỬA (chỉ phiếu "cho_xu_ly").
  * Trang cha chỉ render khi cần mở: {open && <CreateImportModal ... />}
  */
-export default function CreateImportModal({ onCancel, onCreated }) {
+export default function CreateImportModal({ record, onCancel, onCreated }) {
+  const isEdit = Boolean(record);
   const { user } = useAuth();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
@@ -73,8 +78,13 @@ export default function CreateImportModal({ onCancel, onCreated }) {
 
     setSaving(true);
     try {
-      await phieuNhapApi.tao(payload);
-      notifySuccess("Tạo phiếu nhập kho thành công");
+      if (isEdit) {
+        await phieuNhapApi.capNhat(record.id, payload);
+        notifySuccess("Cập nhật phiếu nhập kho thành công");
+      } else {
+        await phieuNhapApi.tao(payload);
+        notifySuccess("Tạo phiếu nhập kho thành công");
+      }
       onCreated();
     } catch (err) {
       notifyError(err);
@@ -83,13 +93,33 @@ export default function CreateImportModal({ onCancel, onCreated }) {
     }
   };
 
+  const initialValues = isEdit
+    ? {
+        nccId: record.nccId ?? undefined,
+        trangThai: record.trangThai,
+        bienSoXe: record.bienSoXe ?? undefined,
+        ghiChu: record.ghiChu ?? undefined,
+        chiTiet: record.chiTiet?.length
+          ? record.chiTiet.map((r) => ({
+              matHangId: r.matHangId,
+              soLuong: r.soLuong,
+              ghiChu: r.ghiChu ?? undefined,
+            }))
+          : [{}],
+      }
+    : { trangThai: "cho_xu_ly", chiTiet: [{}] };
+
   return (
     <Modal
       open
       centered
       width={760}
-      title="Tạo phiếu nhập kho pallet"
-      okText="Xác nhận tạo phiếu nhập"
+      title={
+        isEdit
+          ? `Cập nhật phiếu nhập kho ${record.maPhieu}`
+          : "Tạo phiếu nhập kho pallet"
+      }
+      okText={isEdit ? "Lưu thay đổi" : "Xác nhận tạo phiếu nhập"}
       cancelText="Hủy"
       maskClosable={false}
       confirmLoading={saving}
@@ -99,19 +129,28 @@ export default function CreateImportModal({ onCancel, onCreated }) {
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ trangThai: "cho_xu_ly", chiTiet: [{}] }}
+        initialValues={initialValues}
         onFinish={handleFinish}
         style={{ marginTop: 16 }}
       >
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item label="Mã phiếu nhập">
-              <Input disabled placeholder="Hệ thống tự tạo khi lưu" />
+              <Input
+                disabled
+                value={record?.maPhieu}
+                placeholder="Hệ thống tự tạo khi lưu"
+              />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="Nhân viên tiếp nhận">
-              <Input disabled value={user?.hoTen || ""} />
+              <Input
+                disabled
+                value={
+                  (isEdit ? record.tenNhanVienTiepNhan : user?.hoTen) || ""
+                }
+              />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -137,7 +176,13 @@ export default function CreateImportModal({ onCancel, onCreated }) {
               name="trangThai"
               rules={[{ required: true }]}
             >
-              <Select options={TRANG_THAI_OPTIONS} />
+              <Select
+                options={
+                  isEdit
+                    ? [...TRANG_THAI_OPTIONS, TRANG_THAI_HUY]
+                    : TRANG_THAI_OPTIONS
+                }
+              />
             </Form.Item>
           </Col>
           <Col span={12}>

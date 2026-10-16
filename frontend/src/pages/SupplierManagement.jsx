@@ -1,5 +1,5 @@
-﻿import React, { useMemo, useState } from "react";
-import { Card, Table, Typography, message } from "antd";
+﻿import React, { useEffect, useMemo, useState } from "react";
+import { message } from "antd";
 
 import { useServerTable } from "../hooks/useServerTable";
 import { nhaCungCapApi } from "../api/nhaCungCapApi";
@@ -9,11 +9,15 @@ import SupplierFilterBar from "../components/supplier/SupplierFilterBar";
 import SupplierModal from "../components/supplier/SupplierModal";
 import SupplierDetailModal from "../components/supplier/SupplierDetailModal";
 import { getSupplierColumns } from "../components/supplier/SupplierTableColumns";
+import AppTable from "../components/common/AppTable";
+import Pagination from "../components/common/Pagination";
 
-const { Title, Text } = Typography;
+import "../components/layout/style.css";
 
 // Giá trị phải KHỚP CHÍNH XÁC với cột nhom_hang trong DB (backend lọc bằng dấu "=")
 const NHOM_HANG = ["Gỗ tràm xẻ, thanh gỗ các loại", "Pallet nhựa"];
+
+const PAGE_SIZE = 8; // khớp <Pagination> dùng chung
 
 // apiClient đã giải nén axios (response.data) nên nhận được ApiResponse
 // { status, message, data }. useServerTable cần PageResponse { content, totalElements }
@@ -23,8 +27,8 @@ const fetchSuppliers = (params) =>
 
 export default function SupplierManagement() {
   const [keyword, setKeyword] = useState(""); // chữ đang gõ
-  const [searchTerm, setSearchTerm] = useState(""); // chữ đã áp dụng (Enter)
-  const [nhomHang, setNhomHang] = useState(undefined); // undefined = tất cả
+  const [searchTerm, setSearchTerm] = useState(""); // chữ đã gửi lên BE
+  const [nhomHang, setNhomHang] = useState(null); // null = tất cả
 
   // Modal xem chi tiết (lưu id đang xem, null = đóng)
   const [detailId, setDetailId] = useState(null);
@@ -45,29 +49,29 @@ export default function SupplierManagement() {
     [searchTerm, nhomHang],
   );
 
-  const table = useServerTable(fetchSuppliers, extraParams);
-  const { current, pageSize } = table.pagination;
+  const table = useServerTable(fetchSuppliers, extraParams, PAGE_SIZE);
+  const { current, pageSize, total } = table.pagination;
 
   // Về trang đầu khi đổi điều kiện tìm/lọc (hook dùng pageIndex 0-based nội bộ)
-  const goToFirstPage = () => table.handleTableChange({ current: 1, pageSize });
+  const goToPage = (page) =>
+    table.handleTableChange({ current: page, pageSize: PAGE_SIZE });
 
-  const handleSearch = () => {
-    setSearchTerm(keyword.trim());
-    goToFirstPage();
-  };
-
-  // Xóa hết chữ trong ô tìm kiếm thì tự quay lại danh sách đầy đủ
-  const handleKeywordChange = (value) => {
-    setKeyword(value);
-    if (value === "" && searchTerm !== "") {
-      setSearchTerm("");
-      goToFirstPage();
-    }
-  };
+  // SearchInput chỉ có onChange (không có Enter) nên tự tìm sau khi ngừng gõ 0,4s
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const next = keyword.trim();
+      if (next !== searchTerm) {
+        setSearchTerm(next);
+        goToPage(1);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyword]);
 
   const handleNhomHangChange = (value) => {
-    setNhomHang(value);
-    goToFirstPage();
+    setNhomHang(value ?? null);
+    goToPage(1);
   };
 
   const openAdd = () => setModal({ open: true, mode: "add", record: null });
@@ -98,11 +102,16 @@ export default function SupplierManagement() {
   };
 
   const columns = getSupplierColumns({
-    offset: (current - 1) * pageSize,
     onView: (record) => setDetailId(record.id),
     onEdit: openEdit,
     onDelete: handleDelete,
   });
+
+  // AppTable không có số thứ tự nên gắn sẵn `stt` (đánh liên tục qua các trang)
+  const rows = table.data.map((r, i) => ({
+    ...r,
+    stt: (current - 1) * pageSize + i + 1,
+  }));
 
   return (
     <div
@@ -115,37 +124,29 @@ export default function SupplierManagement() {
     >
       <SupplierFilterBar
         keyword={keyword}
-        onKeywordChange={handleKeywordChange}
-        onSearch={handleSearch}
+        onKeywordChange={setKeyword}
         nhomHang={nhomHang}
         onNhomHangChange={handleNhomHangChange}
         nhomHangOptions={NHOM_HANG}
         onAdd={openAdd}
       />
 
-      <Card
-        bodyStyle={{ padding: 0 }}
-        style={{
-          borderRadius: "8px",
-          overflow: "hidden",
-          border: "1px solid #f0f0f0",
-        }}
-      >
-        <Table
-          columns={columns}
-          dataSource={table.data}
-          loading={table.loading}
-          rowKey="id"
-          scroll={{ x: 1300 }}
-          pagination={{
-            ...table.pagination,
-            showTotal: (total, range) =>
-              `Hiển thị ${range[0]} - ${range[1]} trên tổng số ${total} nhà cung cấp`,
-          }}
-          onChange={table.handleTableChange}
-          locale={{ emptyText: "Chưa có nhà cung cấp nào" }}
-        />
-      </Card>
+      <AppTable
+        columns={columns}
+        data={rows}
+        rowKey={(row) => row.id}
+        emptyText={
+          table.loading ? "Đang tải dữ liệu..." : "Chưa có nhà cung cấp nào"
+        }
+      />
+
+      <Pagination
+        currentPage={current}
+        totalItems={total}
+        itemsPerPage={pageSize}
+        itemLabel="nhà cung cấp"
+        onPageChange={goToPage}
+      />
 
       {detailId && (
         <SupplierDetailModal

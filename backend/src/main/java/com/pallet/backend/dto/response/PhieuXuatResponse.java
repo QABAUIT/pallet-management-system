@@ -16,4 +16,7 @@ public class PhieuXuatResponse {
     private String lyDoXuat;
     private Integer tongSoLuong;
     private String trangThai;
+
+    private String bienSoXe;
+    private java.util.List<ChiTietPhieuKhoResponse> chiTiet;
 }

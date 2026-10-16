@@ -1,75 +1,61 @@
 import React from "react";
-import { Space, Typography, Tag, Button, Popconfirm } from "antd";
-import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Space, Typography, Tag, Button } from "antd";
+import { EyeOutlined, EditOutlined } from "@ant-design/icons";
+import ConfirmDeleteButton from "../common/ConfirmDeleteButton";
 
 const { Text } = Typography;
 
 /**
- * @param offset số dòng đã đi qua ở các trang trước, dùng để đánh STT liên tục
- *               (= (trang hiện tại - 1) * số dòng/trang)
+ * Cột cho <AppTable> (dạng { key, header, align?, width?, render?(row) }).
+ * AppTable không đưa số thứ tự vào render nên trang cha thêm sẵn field `stt` vào từng dòng.
  */
-export const getSupplierColumns = ({
-  offset = 0,
-  onView,
-  onEdit,
-  onDelete,
-}) => [
+export const getSupplierColumns = ({ onView, onEdit, onDelete }) => [
   {
-    title: "STT",
     key: "stt",
-    width: 60,
+    header: "STT",
     align: "center",
-    render: (_, __, index) => String(offset + index + 1).padStart(2, "0"),
+    width: "60px",
+    render: (row) => String(row.stt).padStart(2, "0"),
   },
   {
-    title: "MÃ NCC",
-    dataIndex: "maNcc",
     key: "maNcc",
-    width: 110,
-    render: (text) => <div style={{ fontWeight: 600 }}>{text || "N/A"}</div>,
+    header: "MÃ NCC",
+    render: (row) => (
+      <div style={{ fontWeight: 600 }}>{row.maNcc || "N/A"}</div>
+    ),
   },
   {
-    title: "TÊN NHÀ CUNG CẤP",
-    dataIndex: "tenNcc",
     key: "tenNcc",
-    width: 240,
-    render: (text, record) => (
+    header: "TÊN NHÀ CUNG CẤP",
+    render: (row) => (
       <div>
-        <div style={{ fontWeight: 600 }}>{text}</div>
+        <div style={{ fontWeight: 600 }}>{row.tenNcc}</div>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          MST: {record.mst || "N/A"}
+          MST: {row.mst || "N/A"}
         </Text>
       </div>
     ),
   },
   {
-    title: "SỐ ĐIỆN THOẠI",
-    dataIndex: "sdt",
     key: "sdt",
-    width: 130,
-    render: (text) => <Text>{text}</Text>,
+    header: "SỐ ĐIỆN THOẠI",
+    render: (row) => <Text>{row.sdt}</Text>,
   },
   {
-    title: "ĐỊA CHỈ",
-    dataIndex: "diaChi",
     key: "diaChi",
-    width: 260,
-    render: (text) => <Text>{text}</Text>,
+    header: "ĐỊA CHỈ",
+    render: (row) => <Text>{row.diaChi}</Text>,
   },
   {
-    title: "EMAIL",
-    dataIndex: "email",
     key: "email",
-    width: 200,
-    render: (text) => <Text>{text}</Text>,
+    header: "EMAIL",
+    render: (row) => <Text>{row.email}</Text>,
   },
   {
-    title: "NHÓM HÀNG",
-    dataIndex: "nhomHang",
     key: "nhomHang",
-    width: 190,
-    render: (text) =>
-      text ? (
+    header: "NHÓM HÀNG",
+    render: (row) =>
+      row.nhomHang ? (
         <Tag
           style={{
             color: "#d46b08",
@@ -80,27 +66,25 @@ export const getSupplierColumns = ({
             whiteSpace: "normal",
           }}
         >
-          {text}
+          {row.nhomHang}
         </Tag>
       ) : null,
   },
   {
-    title: "TRẠNG THÁI",
-    dataIndex: "trangThai",
     key: "trangThai",
-    width: 140,
-    render: (status) => {
+    header: "TRẠNG THÁI",
+    render: (row) => {
       let color = "#595959";
       let bg = "#fafafa";
       let borderColor = "#d9d9d9";
-      let label = status;
+      let label = row.trangThai;
 
-      if (status === "dang_hop_tac") {
+      if (row.trangThai === "dang_hop_tac") {
         color = "#389e0d";
         bg = "#f6ffed";
         borderColor = "#b7eb8f";
         label = "Đang hợp tác";
-      } else if (status === "ngung_hop_tac") {
+      } else if (row.trangThai === "ngung_hop_tac") {
         color = "#cf1322";
         bg = "#fff1f0";
         borderColor = "#ffa39e";
@@ -123,37 +107,30 @@ export const getSupplierColumns = ({
     },
   },
   {
-    title: "THAO TÁC",
     key: "action",
-    width: 140,
-    render: (_, record) => (
-      <Space size="small">
+    header: "THAO TÁC",
+    align: "center",
+    render: (row) => (
+      <Space size="middle">
         <Button
           type="text"
           icon={<EyeOutlined />}
           style={{ color: "#8c8c8c" }}
-          onClick={() => onView(record)}
+          onClick={() => onView(row)}
         />
         <Button
           type="text"
           icon={<EditOutlined />}
           style={{ color: "#8c8c8c" }}
-          onClick={() => onEdit(record)}
+          onClick={() => onEdit(row)}
         />
         {/* Nhà cung cấp là dữ liệu gốc nên không xóa thật, chỉ chuyển sang "Ngừng hợp tác" */}
-        <Popconfirm
+        <ConfirmDeleteButton
           title="Chuyển nhà cung cấp này sang trạng thái Ngừng hợp tác?"
           okText="Đồng ý"
-          cancelText="Hủy"
-          onConfirm={() => onDelete(record.id)}
-        >
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            disabled={record.trangThai === "ngung_hop_tac"}
-          />
-        </Popconfirm>
+          disabled={row.trangThai === "ngung_hop_tac"}
+          onConfirm={() => onDelete(row.id)}
+        />
       </Space>
     ),
   },
