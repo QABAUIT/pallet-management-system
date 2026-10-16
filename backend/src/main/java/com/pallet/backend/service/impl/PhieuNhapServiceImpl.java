@@ -323,61 +323,6 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
     }
 
     @Override
-    @Transactional
-    public void xepViTri(Long id, XepViTriRequest request) {
-        PhieuKho pk = phieuKhoRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu"));
-        if (!DA_HOAN_THANH.equals(pk.getTrangThai())) {
-            throw new RuntimeException("Chỉ có thể xếp vị trí cho phiếu nhập đã hoàn thành");
-        }
-
-        List<ChiTietPhieuKho> chiTietPhieuNhaps = chiTietPhieuKhoRepository.findByPhieuKho_Id(pk.getId());
-
-        for (XepViTriRequest.Item item : request.getItems()) {
-            if (item.getKhoId() == null || item.getViTriId() == null) continue;
-
-            int soLuongDaNhap = chiTietPhieuNhaps.stream()
-                    .filter(ct -> ct.getMatHang().getId().equals(item.getMatHangId()))
-                    .mapToInt(ChiTietPhieuKho::getSoLuong)
-                    .sum();
-
-            if (soLuongDaNhap <= 0) continue;
-
-            TonKho tkNguon = tonKhoRepository.findByMatHang_IdAndKho_Id(item.getMatHangId(), pk.getKho().getId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tồn kho của mặt hàng này trong kho gốc"));
-
-            Kho khoDich = khoRepository.findById(item.getKhoId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy kho đích"));
-            ViTriLuuTru viTriDich = viTriLuuTruRepository.findById(item.getViTriId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy vị trí đích"));
-
-            if (pk.getKho().getId().equals(khoDich.getId())) {
-                tkNguon.setViTri(viTriDich);
-                tonKhoRepository.save(tkNguon);
-            } else {
-                if (tkNguon.getSoLuongTonKho() < soLuongDaNhap) {
-                    throw new RuntimeException("Số lượng tồn kho gốc không đủ để luân chuyển sang kho khác");
-                }
-                tkNguon.setSoLuongTonKho(tkNguon.getSoLuongTonKho() - soLuongDaNhap);
-                tonKhoRepository.save(tkNguon);
-
-                TonKho tkDich = tonKhoRepository.findByMatHang_IdAndKho_Id(item.getMatHangId(), khoDich.getId())
-                        .orElse(TonKho.builder()
-                                .matHang(tkNguon.getMatHang())
-                                .kho(khoDich)
-                                .soLuongTonKho(0)
-                                .soLuongDaGiuCho(0)
-                                .soLuongToiThieu(0)
-                                .updatedAt(LocalDateTime.now())
-                                .build());
-                
-                tkDich.setSoLuongTonKho(tkDich.getSoLuongTonKho() + soLuongDaNhap);
-                tkDich.setViTri(viTriDich);
-                tonKhoRepository.save(tkDich);
-            }
-        }
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public byte[] xuatExcel(String keyword, String trangThai, LocalDateTime tuNgay, LocalDateTime denNgay, Long khoId) {
         Specification<PhieuKho> spec = taoDieuKienLoc(keyword, trangThai, tuNgay, denNgay, khoId);
