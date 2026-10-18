@@ -58,8 +58,10 @@ export function useNotifications() {
   const { refreshBadge, decrementBadge, clearBadge } = useNotificationBadge()
 
   // ----- Fetch danh sách -----
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true)
+  const fetchNotifications = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true)
+    }
     try {
       const params = {}
       if (statusFilter === 'unread') params.daDoc = false
@@ -85,12 +87,36 @@ export function useNotifications() {
     } catch (err) {
       console.error('Lỗi tải thông báo:', err)
     } finally {
-      setLoading(false)
+      if (!isSilent) {
+        setLoading(false)
+      }
     }
   }, [statusFilter, refreshBadge])
 
   useEffect(() => {
-    fetchNotifications()
+    fetchNotifications(false)
+
+    // Lắng nghe sự kiện SSE khi có thông báo mới đẩy từ backend về
+    const handleNewNotification = (e) => {
+      const raw = e.detail
+      if (!raw) return
+      const newItem = transformBackendItem(raw)
+      setNotifications((prev) => {
+        // Tránh trùng lặp id
+        if (prev.some((x) => x.id === newItem.id)) return prev
+        return [newItem, ...prev]
+      })
+      setStats((prev) => ({
+        ...prev,
+        tongSo: prev.tongSo + 1,
+        chuaDoc: prev.chuaDoc + 1,
+      }))
+    }
+
+    window.addEventListener('app:new-notification', handleNewNotification)
+    return () => {
+      window.removeEventListener('app:new-notification', handleNewNotification)
+    }
   }, [fetchNotifications])
 
   // ----- Lọc client-side -----

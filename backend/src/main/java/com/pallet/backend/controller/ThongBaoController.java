@@ -16,6 +16,16 @@ import java.util.List;
 public class ThongBaoController {
 
     private final ThongBaoService thongBaoService;
+    private final com.pallet.backend.service.SseNotificationService sseNotificationService;
+
+    /**
+     * Endpoint kết nối SSE cho client nhận thông báo realtime
+     */
+    @GetMapping(value = "/subscribe", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter subscribe(Principal principal) {
+        String username = principal != null ? principal.getName() : "anonymous";
+        return sseNotificationService.subscribe(username);
+    }
 
     @GetMapping
     public ApiResponse<List<ThongBaoResponse>> layDanhSach(

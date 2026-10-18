@@ -8,6 +8,7 @@ import { useNotifications } from '../hooks/useNotifications'
 
 export default function Notifications() {
   const {
+    notifications,
     filteredNotifications,
     unreadList,
     readList,
@@ -43,8 +44,8 @@ export default function Notifications() {
         onMarkAllRead={handleMarkAllRead}
       />
 
-      {/* Loading Skeleton */}
-      {loading ? (
+      {/* Loading Skeleton chỉ hiện khi lần đầu tải dữ liệu */}
+      {loading && notifications.length === 0 ? (
         <Skeleton
           active
           paragraph={{ rows: 6 }}

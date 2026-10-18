@@ -47,24 +47,34 @@ public class ThongBaoServiceImpl implements ThongBaoService {
             var predicate = cb.conjunction();
 
             if (nv != null) {
-                Long nvId     = nv.getId();
-                Long vaiTroId = nv.getVaiTro() != null ? nv.getVaiTro().getId() : null;
+                Long nvId = nv.getId();
+                VaiTro vt = nv.getVaiTro();
+                Long vaiTroId = vt != null ? vt.getId() : null;
+                String maVaiTro = vt != null ? vt.getMaVaiTro() : "";
+                Short capDuyet = vt != null ? vt.getCapDuyet() : null;
 
-                // (1) Gửi trực tiếp cho cá nhân
-                var isNguoiNhan = cb.equal(root.get("nguoiNhan").get("id"), nvId);
+                // Giám đốc (GD) và Phó giám đốc (PGD) có cấp duyệt >= 2 -> Nhận và xem TẤT CẢ thông báo
+                boolean isLanhDao = (capDuyet != null && capDuyet >= 2) 
+                        || "GD".equalsIgnoreCase(maVaiTro) 
+                        || "PGD".equalsIgnoreCase(maVaiTro);
 
-                // (3) Broadcast – cả hai FK đều null
-                var isBroadcast = cb.and(
-                        cb.isNull(root.get("nguoiNhan")),
-                        cb.isNull(root.get("vaiTroNhan"))
-                );
+                if (!isLanhDao) {
+                    // (1) Gửi trực tiếp cho cá nhân
+                    var isNguoiNhan = cb.equal(root.get("nguoiNhan").get("id"), nvId);
 
-                if (vaiTroId != null) {
-                    // (2) Gửi cho vai trò – vai_tro_nhan_id khớp vai trò user
-                    var isVaiTroTarget = cb.equal(root.get("vaiTroNhan").get("id"), vaiTroId);
-                    predicate = cb.and(predicate, cb.or(isNguoiNhan, isVaiTroTarget, isBroadcast));
-                } else {
-                    predicate = cb.and(predicate, cb.or(isNguoiNhan, isBroadcast));
+                    // (3) Broadcast – cả hai FK đều null
+                    var isBroadcast = cb.and(
+                            cb.isNull(root.get("nguoiNhan")),
+                            cb.isNull(root.get("vaiTroNhan"))
+                    );
+
+                    if (vaiTroId != null) {
+                        // (2) Gửi cho vai trò – vai_tro_nhan_id khớp vai trò user
+                        var isVaiTroTarget = cb.equal(root.get("vaiTroNhan").get("id"), vaiTroId);
+                        predicate = cb.and(predicate, cb.or(isNguoiNhan, isVaiTroTarget, isBroadcast));
+                    } else {
+                        predicate = cb.and(predicate, cb.or(isNguoiNhan, isBroadcast));
+                    }
                 }
             }
 
