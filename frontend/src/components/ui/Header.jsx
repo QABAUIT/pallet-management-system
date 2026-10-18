@@ -26,7 +26,7 @@ const titles = {
   "/tai-chinh/thue": "Quản lí tài chính",
   "/tai-chinh/loi-nhuan": "Quản lí tài chính",
 
-  "/notifications": "Thông báo",
+  "/notifications": "Trung tâm Thông báo",
 };
 
 const subtitles = {
@@ -49,6 +49,8 @@ const subtitles = {
   "/tai-chinh": "Theo dõi doanh thu và dòng tiền thu về theo từng kỳ",
   "/tai-chinh/thue": "Quản lý thuế phải nộp và theo dõi hạn kê khai",
   "/tai-chinh/loi-nhuan": "Phân tích lợi nhuận và hiệu quả kinh doanh theo kỳ",
+
+  "/notifications": "Theo dõi và cập nhật theo thời gian thực các biến động xuất hóa đơn, giao dịch nhập kho, xuất kho",
 };
 
 // Các trang chi tiết (URL có thêm /:id). Muốn thêm trang chi tiết mới
@@ -151,7 +153,9 @@ export default function Header({
           className="icon-btn"
         >
           <Bell size={20} />
-          {notificationCount > 0 && <span className="notif-dot" />}
+          {notificationCount > 0 && (
+            <span className="notif-badge-count">{notificationCount}</span>
+          )}
         </button>
 
         <div className="divider" />
