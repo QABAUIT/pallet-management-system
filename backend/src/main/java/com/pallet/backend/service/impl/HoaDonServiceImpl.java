@@ -78,6 +78,7 @@ public class HoaDonServiceImpl implements HoaDonService {
     private final KhoRepository khoRepository;
     private final PhieuKhoRepository phieuKhoRepository;
     private final ChiTietPhieuKhoRepository chiTietPhieuKhoRepository;
+    private final com.pallet.backend.service.ThongBaoTriggerService thongBaoTrigger;
 
     // ======================= ĐỌC =======================
 
@@ -245,7 +246,10 @@ public class HoaDonServiceImpl implements HoaDonService {
             apDungTonKho(hd, dong, CheDoTon.GIU_CHO);
             ghiLichSu(hd, nguoiLap, "tao_moi", null, null, null, "Lập hóa đơn, chờ thanh toán");
         }
-        hd = hoaDonRepository.save(hd);
+
+        thongBaoTrigger.hoaDonTaoMoi(hd.getId(), hd.getMaHoaDon(),
+                hd.getKhachHang() != null ? hd.getKhachHang().getTenKh() : "Khách lẻ",
+                hd.getTongThanhToan(), nguoiLap);
 
         return new TaoHoaDonResponse(hd.getId(), hd.getMaHoaDon(), hd.getTrangThai(),
                 hd.getTongThanhToan(), hd.getTienThoiLai());
@@ -269,6 +273,9 @@ public class HoaDonServiceImpl implements HoaDonService {
         taoPhieuXuatKho(hd, lines, nv);
         hoaDonRepository.save(hd);
         ghiLichSu(hd, nv, "cap_nhat", "trang_thai", CHO_THANH_TOAN, DA_THANH_TOAN, "Ghi nhận thanh toán");
+        thongBaoTrigger.hoaDonThanhToan(hd.getId(), hd.getMaHoaDon(),
+                hd.getKhachHang() != null ? hd.getKhachHang().getTenKh() : "Khách lẻ",
+                hd.getTongThanhToan(), nv);
     }
 
     /**
@@ -350,6 +357,7 @@ public class HoaDonServiceImpl implements HoaDonService {
         hd.setTrangThai(DA_HUY);
         hoaDonRepository.save(hd);
         ghiLichSu(hd, nv, "huy", "trang_thai", cu, DA_HUY, lyDo.trim());
+        thongBaoTrigger.hoaDonHuy(hd.getId(), hd.getMaHoaDon(), lyDo.trim(), nv);
     }
 
     // ======================= HELPER =======================

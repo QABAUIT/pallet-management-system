@@ -31,6 +31,9 @@ import Revenue from "../pages/Finance/Revenue";
 import Tax from "../pages/Finance/Tax";
 import Profit from "../pages/Finance/Profit";
 
+// Thông báo
+import Notifications from "../pages/Notifications";
+
 /**
  * AppRoutes - khai báo URL path <-> component trang.
  * Nhóm Hoá đơn / Kho / Tài chính giờ có nhiều trang con, nên mỗi nhóm có
@@ -78,6 +81,9 @@ export default function AppRoutes() {
         <Route path="/tai-chinh" element={<Revenue />} />
         <Route path="/tai-chinh/thue" element={<Tax />} />
         <Route path="/tai-chinh/loi-nhuan" element={<Profit />} />
+
+        {/* Thông báo */}
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
     </Routes>
   );

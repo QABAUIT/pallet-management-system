@@ -42,6 +42,7 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
     private final NhanVienRepository nhanVienRepository;
     private final LoHangRepository loHangRepository;
     private final TonKhoRepository tonKhoRepository;
+    private final com.pallet.backend.service.ThongBaoTriggerService thongBaoTrigger;
 
     private static int orZero(Integer v) {
         return v != null ? v : 0;
@@ -164,6 +165,10 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         pk = phieuKhoRepository.save(pk);
 
         ghiChiTietVaTruTon(pk, kho, request.getChiTiet());
+        if (DA_HOAN_THANH.equals(trangThai)) {
+            thongBaoTrigger.phieuXuatHoanThanh(pk.getId(), pk.getMaPhieu(), kho.getTenKho(),
+                    request.getChiTiet() != null ? request.getChiTiet().size() : 0, nv);
+        }
         return mapToResponse(pk);
     }
 
@@ -197,6 +202,11 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         pk = phieuKhoRepository.save(pk);
 
         ghiChiTietVaTruTon(pk, pk.getKho(), request.getChiTiet());
+        if (DA_HOAN_THANH.equals(trangThaiMoi)) {
+            thongBaoTrigger.phieuXuatHoanThanh(pk.getId(), pk.getMaPhieu(),
+                    pk.getKho() != null ? pk.getKho().getTenKho() : "",
+                    request.getChiTiet() != null ? request.getChiTiet().size() : 0, pk.getNhanVienGiaoNhan());
+        }
         return mapToResponse(pk);
     }
 
