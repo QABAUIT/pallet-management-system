@@ -17,6 +17,8 @@ public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long>, JpaSp
     List<PhieuKho> findByKhoDoiUng_Id(Long khoDoiUngId);
     List<PhieuKho> findByViTri_Id(Long viTriId);
     List<PhieuKho> findByHoaDon_Id(Long hoaDonId);
+    List<PhieuKho> findByDonMua_Id(Long donMuaId);
+    List<PhieuKho> findByPhieuTaiChe_Id(Long phieuTaiCheId);
     List<PhieuKho> findByNhanVienGiaoNhan_Id(Long nhanVienGiaoNhanId);
     List<PhieuKho> findByNguoiDuyet_Id(Long nguoiDuyetId);
     List<PhieuKho> findByPhuongTien_Id(Long phuongTienId);

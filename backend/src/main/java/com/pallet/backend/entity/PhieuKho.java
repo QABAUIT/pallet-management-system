@@ -34,6 +34,14 @@ public class PhieuKho {
     private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "don_mua_id")
+    private DonMua donMua;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "phieu_tai_che_id")
+    private PhieuTaiChe phieuTaiChe;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nhan_vien_giao_nhan_id")
     private NhanVien nhanVienGiaoNhan;
 

@@ -10,6 +10,7 @@ import com.pallet.backend.entity.*;
 import com.pallet.backend.repository.*;
 import com.pallet.backend.repository.specification.PhieuKhoSpecifications;
 import com.pallet.backend.service.PhieuNhapService;
+import com.pallet.backend.service.TonKhoNghiepVu;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -25,7 +26,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +45,7 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
     private final LoHangRepository loHangRepository;
     private final TonKhoRepository tonKhoRepository;
     private final ViTriLuuTruRepository viTriLuuTruRepository;
+    private final TonKhoNghiepVu tonKhoNghiepVu;
     private final com.pallet.backend.service.ThongBaoTriggerService thongBaoTrigger;
 
     private static int orZero(Integer v) {
@@ -98,7 +99,7 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         int tongSlot = (int) viTriLuuTruRepository.count();
         int slotDaDung = orZero(tonKhoRepository.countViTriDaSuDungToanHeThong());
         int slotTrong = Math.max(0, tongSlot - slotDaDung);
-        
+
         // Tỷ lệ lấp đầy = (Số vị trí đã xếp / Tổng vị trí) * 100
         double phanTram = tongSlot == 0 ? 0.0 : Math.round((double) slotDaDung / tongSlot * 1000.0) / 10.0;
 
@@ -228,9 +229,8 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
             MatHang mh = matHangRepository.findById(item.getMatHangId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy mặt hàng ID " + item.getMatHangId()));
 
-            String maLo = "LO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             LoHang lo = LoHang.builder()
-                    .maLo(maLo)
+                    .maLo(phieuKhoRepository.getMaChungTu("LO", "LO-"))
                     .matHang(mh)
                     .kho(kho)
                     .ncc(ncc)
@@ -238,7 +238,7 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
                     .soLuongConLai(item.getSoLuong())
                     .ngayNhap(LocalDate.now())
                     .trangThai("con_hang")
-                    .mucDichNhap("ban_thanh_pham")
+                    .mucDichNhap("cho_tai_che".equals(mh.getLoaiMatHang()) ? "cho_tai_che" : "ban_thanh_pham")
                     .build();
             lo = loHangRepository.save(lo);
 
@@ -251,25 +251,16 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
                     .build();
             chiTietPhieuKhoRepository.save(ct);
 
+            // Mỗi (mặt hàng, kho) chỉ có 1 dòng tồn -> luôn cộng vào đúng dòng đó
             if (DA_HOAN_THANH.equals(pk.getTrangThai())) {
-                TonKho tk = tonKhoRepository.findByMatHang_Id(mh.getId()).stream()
-                        .filter(t -> t.getKho().getId().equals(kho.getId()) && t.getViTri() == null)
-                        .findFirst()
-                        .orElse(TonKho.builder()
-                                .matHang(mh)
-                                .kho(kho)
-                                .soLuongTonKho(0)
-                                .soLuongDaGiuCho(0)
-                                .soLuongToiThieu(0)
-                                .updatedAt(LocalDateTime.now())
-                                .build());
-                tk.setSoLuongTonKho(tk.getSoLuongTonKho() + item.getSoLuong());
-                tonKhoRepository.save(tk);
+                tonKhoNghiepVu.cong(mh, kho, item.getSoLuong());
             }
         }
     }
 
-    // ĐÃ FIX: Logic xếp vị trí an toàn, linh hoạt tìm kiếm tồn kho nguồn
+    // Xếp vị trí: mỗi (mặt hàng, kho) chỉ có 1 dòng tồn nên
+    //  - cùng kho: chỉ ghi vị trí lên dòng tồn đó (không chuyển số lượng)
+    //  - khác kho: trừ kho nguồn, cộng kho đích, rồi ghi vị trí lên dòng tồn ở kho đích
     @Override
     @Transactional
     public void xepViTri(Long id, XepViTriRequest request) {
@@ -290,44 +281,25 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
 
             if (soLuongDaNhap <= 0) continue;
 
-            // Tìm tồn kho nguồn linh hoạt hơn (ưu tiên bản ghi chưa gán vị trí, nếu không có lấy bất kỳ dòng nào trong kho gốc còn đủ số lượng)
-            List<TonKho> dsTonKho = tonKhoRepository.findByMatHang_Id(item.getMatHangId());
-            TonKho tkNguon = dsTonKho.stream()
-                    .filter(t -> t.getKho().getId().equals(pk.getKho().getId()) && t.getViTri() == null)
-                    .findFirst()
-                    .orElseGet(() -> dsTonKho.stream()
-                            .filter(t -> t.getKho().getId().equals(pk.getKho().getId()) && t.getSoLuongTonKho() >= soLuongDaNhap)
-                            .findFirst()
-                            .orElse(null));
-
-            if (tkNguon == null || tkNguon.getSoLuongTonKho() < soLuongDaNhap) {
-                throw new RuntimeException("Số lượng tồn kho chờ xếp không đủ cho mặt hàng ID: " + item.getMatHangId());
-            }
-
+            MatHang mh = matHangRepository.findById(item.getMatHangId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy mặt hàng ID " + item.getMatHangId()));
             Kho khoDich = khoRepository.findById(item.getKhoId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy kho đích"));
             ViTriLuuTru viTriDich = viTriLuuTruRepository.findById(item.getViTriId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy vị trí đích"));
+            if (!viTriDich.getKho().getId().equals(khoDich.getId())) {
+                throw new RuntimeException("Vị trí " + viTriDich.getMaViTri() + " không thuộc kho đã chọn");
+            }
 
-            // Tìm hoặc tạo tồn kho ở Vị trí đích
-            TonKho tkDich = dsTonKho.stream()
-                    .filter(t -> t.getKho().getId().equals(khoDich.getId()) && t.getViTri() != null && t.getViTri().getId().equals(viTriDich.getId()))
-                    .findFirst()
-                    .orElse(TonKho.builder()
-                            .matHang(tkNguon.getMatHang())
-                            .kho(khoDich)
-                            .viTri(viTriDich)
-                            .soLuongTonKho(0)
-                            .soLuongDaGiuCho(0)
-                            .soLuongToiThieu(0)
-                            .updatedAt(LocalDateTime.now())
-                            .build());
+            if (!khoDich.getId().equals(pk.getKho().getId())) {
+                tonKhoNghiepVu.tru(mh, pk.getKho(), soLuongDaNhap);
+                tonKhoNghiepVu.cong(mh, khoDich, soLuongDaNhap);
+            }
 
-            // Tiến hành luân chuyển số lượng
-            tkNguon.setSoLuongTonKho(tkNguon.getSoLuongTonKho() - soLuongDaNhap);
-            tkDich.setSoLuongTonKho(tkDich.getSoLuongTonKho() + soLuongDaNhap);
-
-            tonKhoRepository.save(tkNguon);
+            TonKho tkDich = tonKhoRepository.findForUpdate(mh.getId(), khoDich.getId())
+                    .orElseThrow(() -> new RuntimeException("Chưa có tồn kho của " + mh.getTenMatHang()
+                            + " tại " + khoDich.getTenKho()));
+            tkDich.setViTri(viTriDich);
             tonKhoRepository.save(tkDich);
         }
     }
