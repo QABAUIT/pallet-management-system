@@ -9,6 +9,10 @@ public final class QuyTacTaiChe {
     public static final String MA_CHO_THAO_DO = "PL-CTD-06";   // Pallet gỗ cũ chờ tháo dỡ
     public static final String MA_DAT_CHUAN = "PL-DC-07";      // Pallet gỗ cũ đạt chuẩn
     public static final String MA_PHE_LIEU = "PE-GO-15";       // Phế liệu gỗ (kg)
+    public static final String MA_THANH_NGUYEN = "LK-TN-09";
+    public static final String MA_CUC_VUONG = "LK-CV-10";
+    public static final String MA_THANH_CAN_XU_LY = "LK-TX-11";
+    public static final String MA_CUC_CAN_XU_LY = "LK-CX-12";
 
     private QuyTacTaiChe() {
     }
@@ -37,5 +41,24 @@ public final class QuyTacTaiChe {
     /** Còn pallet cần tháo dỡ thì phiếu chưa xong, chờ bước tháo dỡ. */
     public static String trangThaiSauDuyet(int soThaoDo) {
         return soThaoDo > 0 ? "da_phan_loai" : "da_hoan_tat";
+    }
+        /** Một đợt tháo dỡ: số pallet > 0, các số lượng không âm, phải thu được ít nhất một thứ (TC10). */
+    public static void kiemTraThaoDo(int soPallet, int thanhNguyen, int cucVuong,
+                                     int thanhCanXuLy, int cucCanXuLy, int kgPheLieu) {
+        if (soPallet <= 0) {
+            throw new BusinessException("Số pallet tháo dỡ phải lớn hơn 0");
+        }
+        if (thanhNguyen < 0 || cucVuong < 0 || thanhCanXuLy < 0 || cucCanXuLy < 0 || kgPheLieu < 0) {
+            throw new BusinessException("Số lượng kết quả tháo dỡ không được âm");
+        }
+        if (thanhNguyen + cucVuong + thanhCanXuLy + cucCanXuLy + kgPheLieu == 0) {
+            throw new BusinessException("Đợt tháo dỡ phải thu được ít nhất một loại linh kiện hoặc phế liệu. "
+                    + "Pallet hỏng hoàn toàn cần được phân loại vào nhóm loại bỏ");
+        }
+    }
+
+    /** Đủ số pallet cần tháo dỡ thì phiếu tái chế hoàn tất. */
+    public static String trangThaiSauThaoDo(int tongDaDuyet, int soCanThaoDo) {
+        return tongDaDuyet >= soCanThaoDo ? "da_hoan_tat" : "da_phan_loai";
     }
 }

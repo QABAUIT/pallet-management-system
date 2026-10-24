@@ -42,4 +42,8 @@ public interface PhieuTaiCheRepository extends JpaRepository<PhieuTaiChe, Long> 
     @Query("SELECT p FROM PhieuTaiChe p JOIN FETCH p.loHang l JOIN FETCH l.matHang JOIN FETCH p.kho "
             + "JOIN FETCH p.nhanVienThucHien WHERE p.trangThai = :trangThai ORDER BY p.createdAt DESC")
     List<PhieuTaiChe> timTheoTrangThai(@Param("trangThai") String trangThai);
+
+        @Query("SELECT p FROM PhieuTaiChe p JOIN FETCH p.loHang l JOIN FETCH l.matHang JOIN FETCH p.kho "
+            + "JOIN FETCH p.nhanVienThucHien WHERE p.trangThai = 'da_phan_loai' ORDER BY p.createdAt")
+    List<PhieuTaiChe> timChoThaoDo();
 }
