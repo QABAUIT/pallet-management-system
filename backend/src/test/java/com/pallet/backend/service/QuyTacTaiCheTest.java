@@ -58,4 +58,29 @@ class QuyTacTaiCheTest {
         assertEquals("da_phan_loai", QuyTacTaiChe.trangThaiSauThaoDo(20, 30));
         assertEquals("da_hoan_tat", QuyTacTaiChe.trangThaiSauThaoDo(30, 30));
     }
+
+        @Test
+    void xuLyThemHopLe() {
+        assertDoesNotThrow(() -> QuyTacTaiChe.kiemTraXuLyThem("thanh", 4, 2, 3, "Bào lại mép"));
+        assertDoesNotThrow(() -> QuyTacTaiChe.kiemTraXuLyThem("cuc", 5, 0, 0, "Cắt lại cho vuông"));
+        assertDoesNotThrow(() -> QuyTacTaiChe.kiemTraXuLyThem("cuc", 0, 3, 2, "Mục hết"));
+    }
+
+    @Test
+    void xuLyThemSaiThiBiTuChoi() {
+        assertThrows(BusinessException.class, () -> QuyTacTaiChe.kiemTraXuLyThem("thanh", 4, 0, 0, " ")); // thiếu lý do
+        assertThrows(BusinessException.class, () -> QuyTacTaiChe.kiemTraXuLyThem("thanh", 0, 0, 0, "x")); // không có gì
+        assertThrows(BusinessException.class, () -> QuyTacTaiChe.kiemTraXuLyThem("thanh", 0, 2, 0, "x")); // bỏ mà không có kg
+        assertThrows(BusinessException.class, () -> QuyTacTaiChe.kiemTraXuLyThem("thanh", 3, 0, 5, "x")); // có kg mà không bỏ
+        assertThrows(BusinessException.class, () -> QuyTacTaiChe.kiemTraXuLyThem("go", 1, 0, 0, "x"));    // sai loại nguồn
+        assertThrows(BusinessException.class, () -> QuyTacTaiChe.kiemTraXuLyThem("thanh", -1, 2, 1, "x"));
+    }
+
+    @Test
+    void maNguonVaMaDich() {
+        assertEquals("LK-TX-11", QuyTacTaiChe.maNguon("thanh"));
+        assertEquals("LK-TN-09", QuyTacTaiChe.maDich("thanh"));
+        assertEquals("LK-CX-12", QuyTacTaiChe.maNguon("cuc"));
+        assertEquals("LK-CV-10", QuyTacTaiChe.maDich("cuc"));
+    }
 }

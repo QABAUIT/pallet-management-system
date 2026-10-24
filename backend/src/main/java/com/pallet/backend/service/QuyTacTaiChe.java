@@ -61,4 +61,37 @@ public final class QuyTacTaiChe {
     public static String trangThaiSauThaoDo(int tongDaDuyet, int soCanThaoDo) {
         return tongDaDuyet >= soCanThaoDo ? "da_hoan_tat" : "da_phan_loai";
     }
+        /** Mã mặt hàng nguồn ("cần xử lý thêm") theo loại nguồn thanh/cuc. */
+    public static String maNguon(String loaiNguon) {
+        if ("thanh".equals(loaiNguon)) return MA_THANH_CAN_XU_LY;
+        if ("cuc".equals(loaiNguon)) return MA_CUC_CAN_XU_LY;
+        throw new BusinessException("Loại nguồn phải là thanh hoặc cuc");
+    }
+
+    /** Mã mặt hàng đích khi dùng lại được (thanh -> thanh nguyên, cục -> cục vuông). */
+    public static String maDich(String loaiNguon) {
+        if ("thanh".equals(loaiNguon)) return MA_THANH_NGUYEN;
+        if ("cuc".equals(loaiNguon)) return MA_CUC_VUONG;
+        throw new BusinessException("Loại nguồn phải là thanh hoặc cuc");
+    }
+
+    /** Xử lý thêm: có lý do, số lượng không âm, có kết quả, và kg phế liệu khớp với số hàng bị bỏ. */
+    public static void kiemTraXuLyThem(String loaiNguon, int datLai, int pheLieu, int kg, String lyDo) {
+        maNguon(loaiNguon); // kiểm tra loại nguồn hợp lệ
+        if (lyDo == null || lyDo.isBlank()) {
+            throw new BusinessException("Bắt buộc nhập lý do xử lý");
+        }
+        if (datLai < 0 || pheLieu < 0 || kg < 0) {
+            throw new BusinessException("Số lượng và số kg không được âm");
+        }
+        if (datLai + pheLieu == 0) {
+            throw new BusinessException("Phải có ít nhất một chiếc được xử lý (dùng lại hoặc bỏ)");
+        }
+        if (pheLieu > 0 && kg <= 0) {
+            throw new BusinessException("Có hàng bị bỏ thì phải nhập số kg phế liệu thu được");
+        }
+        if (pheLieu == 0 && kg > 0) {
+            throw new BusinessException("Có nhập kg phế liệu nhưng không có chiếc nào bị bỏ");
+        }
+    }
 }
