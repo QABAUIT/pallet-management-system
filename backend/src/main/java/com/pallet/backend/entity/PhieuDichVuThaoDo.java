@@ -63,6 +63,14 @@ public class PhieuDichVuThaoDo {
     @Column(name = "kg_phe_lieu", nullable = false)
     private int kgPheLieu;
 
+    
+    @Column(name = "kg_phe_lieu_da_mua", nullable = false)
+    private int kgPheLieuDaMua;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hoa_don_id")
+    private HoaDon hoaDon;
+
     @Column(name = "phi_dich_vu", precision = 18, scale = 2)
     private BigDecimal phiDichVu;
 

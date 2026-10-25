@@ -29,6 +29,10 @@ public class PhieuDichVuThaoDoResponse {
     private int soCucCanXuLy;
     private int kgPheLieu;
     private BigDecimal phiDichVu;
+    private int kgPheLieuDaMua;        // công ty đã mua lại
+    private int kgPheLieuConLai;       // còn của khách, sẽ trả khi trả hàng
+    private Long hoaDonId;
+    private String maHoaDon;
     private LocalDate ngayTiepNhan;
     private LocalDateTime thoiGianDuyet;
     private LocalDateTime thoiGianTraHang;

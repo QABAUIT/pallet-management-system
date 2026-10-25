@@ -199,8 +199,7 @@ public class PhieuDichVuThaoDoServiceImpl implements PhieuDichVuThaoDoService {
         tonKhoKhachNghiepVu.tru(khach, layMatHang(QuyTacTaiChe.MA_CUC_VUONG), kho, p.getSoCucVuong());
         tonKhoKhachNghiepVu.tru(khach, layMatHang(QuyTacTaiChe.MA_THANH_CAN_XU_LY), kho, p.getSoThanhCanXuLy());
         tonKhoKhachNghiepVu.tru(khach, layMatHang(QuyTacTaiChe.MA_CUC_CAN_XU_LY), kho, p.getSoCucCanXuLy());
-        tonKhoKhachNghiepVu.tru(khach, layMatHang(QuyTacTaiChe.MA_PHE_LIEU), kho, p.getKgPheLieu());
-
+        tonKhoKhachNghiepVu.tru(khach, layMatHang(QuyTacTaiChe.MA_PHE_LIEU), kho, p.getKgPheLieu() - p.getKgPheLieuDaMua());
         p.setThoiGianTraHang(LocalDateTime.now());
         p.setTrangThai(DA_TRA_HANG);
         p = phieuRepository.save(p);
@@ -278,6 +277,10 @@ public class PhieuDichVuThaoDoServiceImpl implements PhieuDichVuThaoDoService {
                 .soThanhNguyen(p.getSoThanhNguyen()).soCucVuong(p.getSoCucVuong())
                 .soThanhCanXuLy(p.getSoThanhCanXuLy()).soCucCanXuLy(p.getSoCucCanXuLy())
                 .kgPheLieu(p.getKgPheLieu()).phiDichVu(p.getPhiDichVu())
+                .kgPheLieuDaMua(p.getKgPheLieuDaMua())
+                .kgPheLieuConLai(p.getKgPheLieu() - p.getKgPheLieuDaMua())
+                .hoaDonId(p.getHoaDon() != null ? p.getHoaDon().getId() : null)
+                .maHoaDon(p.getHoaDon() != null ? p.getHoaDon().getMaHoaDon() : null)
                 .ngayTiepNhan(p.getNgayTiepNhan()).thoiGianDuyet(p.getThoiGianDuyet())
                 .thoiGianTraHang(p.getThoiGianTraHang()).createdAt(p.getCreatedAt())
                 .ghiChu(p.getGhiChu()).lyDoHuy(p.getLyDoHuy())

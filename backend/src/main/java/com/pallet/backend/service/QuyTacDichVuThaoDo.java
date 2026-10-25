@@ -33,4 +33,21 @@ public final class QuyTacDichVuThaoDo {
     public static BigDecimal tinhPhi(int soPalletThaoDo, BigDecimal donGia) {
         return donGia.multiply(BigDecimal.valueOf(soPalletThaoDo)).setScale(2, java.math.RoundingMode.HALF_UP);
     }
+        /** Mua lại phế liệu của khách: số kg dương, không vượt phần còn lại của khách, đơn giá dương. */
+    public static void kiemTraMuaLai(int kgConLai, Integer soKg, BigDecimal donGiaKg) {
+        if (soKg == null || soKg <= 0) {
+            throw new BusinessException("Số kg mua lại phải lớn hơn 0");
+        }
+        if (soKg > kgConLai) {
+            throw new BusinessException("Khách chỉ còn " + kgConLai + " kg phế liệu, không thể mua lại " + soKg + " kg");
+        }
+        if (donGiaKg == null || donGiaKg.signum() <= 0) {
+            throw new BusinessException("Đơn giá mua lại phải lớn hơn 0");
+        }
+    }
+
+    /** Tiền VAT làm tròn 2 chữ số. */
+    public static BigDecimal tinhVat(BigDecimal truocThue, BigDecimal tyLeVat) {
+        return truocThue.multiply(tyLeVat).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+    }
 }

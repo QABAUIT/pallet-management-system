@@ -10,6 +10,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.pallet.backend.dto.request.LapHoaDonDichVuRequest;
+import com.pallet.backend.dto.request.MuaLaiPheLieuRequest;
+import com.pallet.backend.service.DichVuThaoDoTaiChinhService;
 
 import java.security.Principal;
 import java.util.List;
@@ -21,6 +24,7 @@ import java.util.List;
 public class PhieuDichVuThaoDoController {
 
     private final PhieuDichVuThaoDoService service;
+    private final DichVuThaoDoTaiChinhService taiChinhService;
 
     @GetMapping
     public ApiResponse<List<PhieuDichVuThaoDoResponse>> layDanhSach(
@@ -65,5 +69,20 @@ public class PhieuDichVuThaoDoController {
     public ApiResponse<PhieuDichVuThaoDoResponse> huy(@PathVariable Long id,
                                                       @RequestParam(required = false) String lyDo, Principal principal) {
         return ApiResponse.success(service.huy(id, lyDo, principal.getName()), "Đã hủy phiếu dịch vụ");
+    }
+        @PostMapping("/{id}/lap-hoa-don")
+    @PreAuthorize("hasAnyRole('GD','PGD')")
+    public ApiResponse<PhieuDichVuThaoDoResponse> lapHoaDon(@PathVariable Long id,
+                                                            @Valid @RequestBody(required = false) LapHoaDonDichVuRequest req,
+                                                            Principal principal) {
+        return ApiResponse.success(taiChinhService.lapHoaDon(id, req, principal.getName()), "Đã lập hóa đơn dịch vụ");
+    }
+
+    @PostMapping("/{id}/mua-lai-phe-lieu")
+    @PreAuthorize("hasAnyRole('GD','PGD')")
+    public ApiResponse<PhieuDichVuThaoDoResponse> muaLaiPheLieu(@PathVariable Long id,
+                                                                @Valid @RequestBody MuaLaiPheLieuRequest req,
+                                                                Principal principal) {
+        return ApiResponse.success(taiChinhService.muaLaiPheLieu(id, req, principal.getName()), "Đã mua lại phế liệu của khách");
     }
 }
