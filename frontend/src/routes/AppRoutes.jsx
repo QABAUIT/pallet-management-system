@@ -10,6 +10,8 @@ import AboutUs from "../pages/AboutUs";
 import ReceiptDetail from "../pages/Receipt/ReceiptDetail";
 import ReceiptCreate from "../pages/Receipt/ReceiptCreate";
 import TransactionHistory from "../pages/Receipt/TransactionHistory";
+import BaoGia from "../pages/Receipt/BaoGia";
+import BanPheLieu from "../pages/Receipt/BanPheLieu";
 // Pallet - chỉ có 1 trang duy nhất
 import PalletManagement from "../pages/PalletManagement";
 
@@ -33,6 +35,14 @@ import Profit from "../pages/Finance/Profit";
 
 // Thông báo
 import Notifications from "../pages/Notifications";
+
+import DonMua from "../pages/Inventory/DonMua";
+import PhanLoai from "../pages/Inventory/Recycle/PhanLoai";
+import ThaoDo from "../pages/Inventory/Recycle/ThaoDo";
+import XuLyThem from "../pages/Inventory/Recycle/XuLyThem";
+import DinhMuc from "../pages/Inventory/Recycle/DinhMuc";
+import DongPallet from "../pages/Inventory/Recycle/DongPallet";
+import DichVuKhach from "../pages/Inventory/Recycle/DichVuKhach";
 
 /**
  * AppRoutes - khai báo URL path <-> component trang.
@@ -60,6 +70,8 @@ export default function AppRoutes() {
       <Route path="/hoa-don/lich-su" element={<TransactionHistory />} />
       <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
       <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
+      <Route path="/hoa-don/bao-gia" element={<BaoGia />} />
+      <Route path="/hoa-don/ban-phe-lieu" element={<BanPheLieu />} /> 
 
         {/* Pallet */}
         <Route path="/pallet" element={<PalletManagement />} />
@@ -77,6 +89,17 @@ export default function AppRoutes() {
         <Route path="/kho/xuat-kho/:id" element={<ExportInventoryDetail />} />
         <Route path="/kho/kiem-ke" element={<Stocktaking />} />
 
+        <Route path="/kho/don-mua" element={<DonMua />} />
+        <Route path="/kho/tai-che" element={<Navigate to="/kho/tai-che/phan-loai" replace />} />
+        <Route path="/kho/tai-che/phan-loai" element={<PhanLoai />} />
+        <Route path="/kho/tai-che/thao-do" element={<ThaoDo />} />
+        <Route path="/kho/tai-che/xu-ly-them" element={<XuLyThem />} />
+
+        <Route path="/kho/tai-che/dinh-muc" element={<DinhMuc />} />
+        <Route path="/kho/tai-che/dong-pallet" element={<DongPallet />} />
+
+        <Route path="/kho/tai-che/dich-vu-khach" element={<DichVuKhach />} /> 
+
         {/* Tài chính */}
         <Route path="/tai-chinh" element={<Revenue />} />
         <Route path="/tai-chinh/thue" element={<Tax />} />
@@ -84,6 +107,7 @@ export default function AppRoutes() {
 
         {/* Thông báo */}
         <Route path="/notifications" element={<Notifications />} />
+        
       </Route>
     </Routes>
   );

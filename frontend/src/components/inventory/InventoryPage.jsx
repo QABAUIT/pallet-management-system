@@ -1,10 +1,13 @@
 import { NavLink } from 'react-router-dom'
 
 // Thứ tự giống Figma. "Báo cáo tồn kho" nằm ở /kho (Header.jsx đã khai báo tiêu đề cho path này).
+// "Tái chế" không có `end` nên sáng cho cả /kho/tai-che/phan-loai, /thao-do, /xu-ly-them.
 const TABS = [
   { to: '/kho/nhap-kho', label: 'Lịch sử nhập kho' },
   { to: '/kho/xuat-kho', label: 'Lịch sử xuất kho' },
   { to: '/kho/kiem-ke', label: 'Kiểm kê kho' },
+  { to: '/kho/don-mua', label: 'Đơn mua' },
+  { to: '/kho/tai-che', label: 'Tái chế' },
   { to: '/kho', label: 'Báo cáo tồn kho', end: true },
 ]
 
