@@ -15,6 +15,8 @@ const money = {
   parser: (v) => v?.replace(/\./g, ""),
 };
 const num = (v) => Number(v) || 0;
+// BE làm tròn VAT 2 chữ số thập phân (HALF_UP), FE tính y hệt để so sánh tiền khách đưa chính xác
+const r2 = (x) => Math.round(x * 100) / 100;
 
 // Bán phế liệu gỗ theo kg cho khách (route /hoa-don/ban-phe-lieu)
 export default function BanPheLieu() {
@@ -48,9 +50,9 @@ export default function BanPheLieu() {
   }, []);
 
   const tienHang = num(soKg) * num(donGiaKg);
-  const vat = Math.round((tienHang * num(tyLeVat)) / 100);
-  const tong = tienHang + vat;
-  const thoiLai = phuongThuc === "tien_mat" ? Math.max(0, num(tienKhachDua) - tong) : 0;
+  const vat = r2((tienHang * num(tyLeVat)) / 100);
+  const tong = r2(tienHang + vat);
+  const thoiLai = phuongThuc === "tien_mat" ? Math.max(0, r2(num(tienKhachDua) - tong)) : 0;
 
   const reset = () => {
     setKhachHangId(null);
@@ -69,7 +71,7 @@ export default function BanPheLieu() {
     if (!soKg || soKg < 1) return notifyWarning("Vui lòng nhập số kg");
     if (soKg > dm.tonKhaDungKg) return notifyWarning(`Kho chỉ còn ${dm.tonKhaDungKg} kg phế liệu`);
     if (!donGiaKg || donGiaKg <= 0) return notifyWarning("Vui lòng nhập đơn giá mỗi kg");
-    if (thanhToanNgay && phuongThuc === "tien_mat" && num(tienKhachDua) < tong) {
+    if (thanhToanNgay && phuongThuc === "tien_mat" && Math.round(num(tienKhachDua) * 100) < Math.round(tong * 100)) {
       return notifyWarning("Tiền khách đưa chưa đủ");
     }
     setSubmitting(true);

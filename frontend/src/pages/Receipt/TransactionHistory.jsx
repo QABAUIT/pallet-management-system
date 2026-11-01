@@ -149,7 +149,7 @@ export default function TransactionHistory() {
       align: "center",
       width: "120px",
       render: (r) => {
-        const khoa = r.daChotSo || r.trangThai === "da_huy";
+        const khoa = r.daChotSo || r.trangThai === "da_huy" || ["thu_dich_vu_thao_do", "thu_ban_phe_lieu", "chi_mua_phe_lieu_khach"].includes(r.loaiGiaoDich);
         return (
           <div style={{ display: "flex", justifyContent: "center", gap: 2 }}>
             <button className="icon-btn" title="Xem chi tiết" onClick={() => navigate(`/hoa-don/${r.id}`)}>

@@ -217,6 +217,8 @@ export default function BaoGia() {
                     askReason({
                       title: `Khách từ chối báo giá ${r.maBaoGia}?`,
                       okText: "Ghi nhận từ chối",
+                      placeholder: "Lý do khách từ chối (bắt buộc)",
+                      required: true,
                       onOk: (lyDo) => run(() => baoGiaApi.tuChoi(r.id, lyDo), "Đã ghi nhận khách từ chối"),
                     })
                   }
@@ -225,7 +227,7 @@ export default function BaoGia() {
                 </button>
               </>
             )}
-            {t === "da_chap_nhan" && !r.hoaDonId && (
+            {t === "da_chap_nhan" && (!r.hoaDonId || r.trangThaiHoaDon === "da_huy") && (
               <Popconfirm
                 title="Lập hóa đơn từ báo giá này?"
                 description="Hóa đơn lập theo đúng giá và số lượng đã báo, ở trạng thái chờ thanh toán."
@@ -270,7 +272,7 @@ export default function BaoGia() {
         />
         <StatCard
           label="CHƯA LẬP HÓA ĐƠN"
-          value={rows.filter((r) => r.trangThai === "da_chap_nhan" && !r.hoaDonId).length}
+          value={rows.filter((r) => r.trangThai === "da_chap_nhan" && (!r.hoaDonId || r.trangThaiHoaDon === "da_huy")).length}
           icon={Wallet}
           tone="red"
           badge="báo giá"
@@ -278,7 +280,7 @@ export default function BaoGia() {
         />
         <StatCard
           label="ĐÃ LẬP HÓA ĐƠN"
-          value={rows.filter((r) => r.hoaDonId).length}
+          value={rows.filter((r) => r.hoaDonId && r.trangThaiHoaDon !== "da_huy").length}
           icon={CheckCircle2}
           tone="green"
           badge="báo giá"

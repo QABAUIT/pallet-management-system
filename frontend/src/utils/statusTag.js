@@ -70,9 +70,9 @@ export const PHIEU_TAI_CHE_TRANG_THAI = {
 
 // Đơn mua. Chỉ "nhap" và "da_huy" được code dùng để xét nút; các nhãn còn lại để hiển thị.
 export const DON_MUA_TRANG_THAI = {
-  nhap: { label: 'Nháp', color: 'default' },
-  da_xac_nhan: { label: 'Đã xác nhận', color: 'blue' },
-  nhan_mot_phan: { label: 'Nhận một phần', color: 'gold' },
-  hoan_thanh: { label: 'Đã nhận đủ', color: 'green' },
-  da_huy: { label: 'Đã huỷ', color: 'default' },
+  nhap: { label: "Nháp", color: "default" },
+  da_xac_nhan: { label: "Đã xác nhận", color: "blue" },
+  da_nhan_mot_phan: { label: "Nhận một phần", color: "orange" },
+  da_nhan_du: { label: "Đã nhận đủ", color: "green" },
+  da_huy: { label: "Đã hủy", color: "red" },
 };

@@ -20,9 +20,11 @@ const money = {
 };
 
 const num = (v) => Number(v) || 0;
+// BE làm tròn 2 chữ số thập phân (HALF_UP)
+const r2 = (x) => Math.round(x * 100) / 100;
 const lineTotal = (r) => {
   const gross = num(r?.soLuong) * num(r?.donGia);
-  return gross - Math.round((gross * num(r?.tyLeChietKhau)) / 100);
+  return r2(gross - r2((gross * num(r?.tyLeChietKhau)) / 100));
 };
 
 /**
@@ -60,9 +62,9 @@ export default function BaoGiaFormModal({ id, onCancel, onSaved }) {
   const giamTong = Form.useWatch("tyLeGiamGiaTong", form);
 
   const tongHang = lines.reduce((s, r) => s + lineTotal(r), 0);
-  const giam = Math.round((tongHang * num(giamTong)) / 100);
+  const giam = r2((tongHang * num(giamTong)) / 100);
   const truocThue = tongHang - giam;
-  const tong = truocThue + Math.round((truocThue * num(vat)) / 100);
+  const tong = r2(truocThue + r2((truocThue * num(vat)) / 100));
 
   const matHangOptions = (dm?.matHang ?? []).map((m) => ({
     value: m.id,
@@ -121,8 +123,8 @@ export default function BaoGiaFormModal({ id, onCancel, onSaved }) {
             ? Math.round((Number(detail.tienGiamGiaTong) / Number(detail.tongTienHang)) * 10000) / 100
             : 0,
         soNgayHieuLuc:
-          detail?.hanHieuLuc && detail?.ngayTao
-            ? Math.max(1, dayjs(detail.hanHieuLuc).diff(dayjs(detail.ngayTao), "day"))
+          detail?.hanHieuLuc
+            ? Math.min(90, Math.max(1, dayjs(detail.hanHieuLuc).diff(dayjs().startOf("day"), "day")))
             : DEFAULT_HIEU_LUC,
         ghiChu: detail?.ghiChu ?? undefined,
         chiTiet: (detail?.chiTiet ?? []).map((d) => ({
