@@ -1,122 +1,110 @@
+/* ===========================================================
+   index.css — Design System tokens (single source of truth)
+   Tất cả các trang, component, CSS khác đều dùng biến từ đây.
+   =========================================================== */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* ── Bảng màu thương hiệu ── */
+  --navy:        #101a33;
+  --navy-light:  #162445;
+  --accent:      #f5a623;
+  --accent-hover:#e6991a;
+  --accent-bg:   rgba(245, 166, 35, 0.12);
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* ── Ngữ nghĩa (Semantic) ── */
+  --color-blue:       #1d4ed8;
+  --color-blue-bg:    #dbeafe;
+  --color-green:      #16a34a;
+  --color-green-bg:   #dcfce7;
+  --color-red:        #dc2626;
+  --color-red-bg:     #fee2e2;
+  --color-amber:      #b45309;
+  --color-amber-bg:   #fef3c7;
+  --color-purple:     #7c3aed;
+  --color-purple-bg:  #ede9fe;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* ── Văn bản ── */
+  --text-primary:   #111827;
+  --text-secondary: #4b5563;
+  --text-muted:     #6b7280;
+  --text-faint:     #9ca3af;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* ── Nền & Viền ── */
+  --bg-page:      #f5f5f4;
+  --bg-card:      #ffffff;
+  --bg-subtle:    #f9fafb;
+  --bg-tint:      #eff4ff;
+  --border-light: #e5e7eb;
+  --border-mid:   #c3c6ce;
+  --border-hover: #9ca3af;
+
+  /* ── Bóng đổ ── */
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.12);
+
+  /* ── Bo góc ── */
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl:  12px;
+  --radius-full: 9999px;
+
+  /* ── Khoảng cách ── */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  12px;
+  --space-lg:  16px;
+  --space-xl:  20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* ── Phông chữ ── */
+  --font-sans:  'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --font-display: 'Space Grotesk', var(--font-sans);
+
+  /* ── Chuyển động ── */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-sm: 0.15s;
+  --duration-md: 0.25s;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* ── Reset toàn cục ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  min-height: 100vh;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+h1, h2, h3, h4, h5, h6 {
   margin: 0;
+  color: var(--text-primary);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+p { margin: 0; }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
+a { color: var(--color-blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
+/* ── Accent gradient dùng nhiều nơi ── */
 .top-accent-bar {
-  background: linear-gradient(
-    to right,
-    rgba(0, 20, 40, 1) 0%,
-    rgba(15, 41, 66, 1) 50%,
-    rgba(254, 147, 44, 1) 100%
-  );
-  height: 8px;
+  background: linear-gradient(to right, var(--navy) 0%, var(--navy-light) 50%, var(--accent) 100%);
+  height: 4px;
   width: 100%;
 }
