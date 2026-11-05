@@ -145,7 +145,7 @@ public class DichVuThaoDoTaiChinhService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PN", "PN-"))
                 .loaiPhieu("nhap_kho").kho(p.getKho())
                 .nhanVienGiaoNhan(nv).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Mua lại " + kg + " kg phế liệu của khách " + p.getKhachHang().getTenKh()
                         + " theo phiếu " + p.getMaPhieu())
                 .build());

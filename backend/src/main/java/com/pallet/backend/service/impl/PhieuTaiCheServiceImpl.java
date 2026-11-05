@@ -246,7 +246,7 @@ public class PhieuTaiCheServiceImpl implements PhieuTaiCheService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PX", "PX-"))
                 .loaiPhieu("xuat_kho").kho(kho).phieuTaiChe(p)
                 .nhanVienGiaoNhan(p.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Xuất để phân loại theo phiếu tái chế " + p.getMaPhieu())
                 .build());
         chiTietPhieuKhoRepository.save(ChiTietPhieuKho.builder()
@@ -258,7 +258,7 @@ public class PhieuTaiCheServiceImpl implements PhieuTaiCheService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PN", "PN-"))
                 .loaiPhieu("nhap_kho").kho(kho).phieuTaiChe(p)
                 .nhanVienGiaoNhan(p.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Nhập kết quả phân loại theo phiếu tái chế " + p.getMaPhieu())
                 .build());
 

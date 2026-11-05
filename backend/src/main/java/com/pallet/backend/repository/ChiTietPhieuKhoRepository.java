@@ -35,14 +35,14 @@ public interface ChiTietPhieuKhoRepository extends JpaRepository<ChiTietPhieuKho
 
     /** Tổng số lượng của phiếu cùng loại + trạng thái trong 1 kho (không giới hạn thời gian). */
     @Query("SELECT COALESCE(SUM(c.soLuong), 0) FROM ChiTietPhieuKho c "
-            + "WHERE c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai")
+            + "WHERE c.phieuKho.laHeThong = false AND c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai")
     Integer sumSoLuongTheoKho(@Param("khoId") Long khoId,
                               @Param("loaiPhieu") String loaiPhieu,
                               @Param("trangThai") String trangThai);
 
     /** Như trên nhưng chỉ tính phiếu có ngày giờ trong [tuNgay, denNgay). */
     @Query("SELECT COALESCE(SUM(c.soLuong), 0) FROM ChiTietPhieuKho c "
-            + "WHERE c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai "
+            + "WHERE c.phieuKho.laHeThong = false AND c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai "
             + "AND c.phieuKho.ngayGio >= :tuNgay AND c.phieuKho.ngayGio < :denNgay")
     Integer sumSoLuongTheoKhoVaThoiGian(@Param("khoId") Long khoId,
                                         @Param("loaiPhieu") String loaiPhieu,
@@ -52,7 +52,7 @@ public interface ChiTietPhieuKhoRepository extends JpaRepository<ChiTietPhieuKho
 
     /** Giá trị = số lượng x đơn giá bán (mat_hang.don_gia_ban). Trả null nếu không có dòng nào. */
     @Query("SELECT SUM(c.soLuong * c.matHang.donGiaBan) FROM ChiTietPhieuKho c "
-            + "WHERE c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai "
+            + "WHERE c.phieuKho.laHeThong = false AND c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai "
             + "AND c.phieuKho.ngayGio >= :tuNgay AND c.phieuKho.ngayGio < :denNgay")
     BigDecimal sumGiaTriTheoKhoVaThoiGian(@Param("khoId") Long khoId,
                                           @Param("loaiPhieu") String loaiPhieu,
@@ -62,7 +62,7 @@ public interface ChiTietPhieuKhoRepository extends JpaRepository<ChiTietPhieuKho
 
     /** Như sumSoLuongTheoKhoVaThoiGian nhưng ghi chú phiếu phải khớp mẫu LIKE (vd "Loại xuất: Bảo trì%"). */
     @Query("SELECT COALESCE(SUM(c.soLuong), 0) FROM ChiTietPhieuKho c "
-            + "WHERE c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai "
+            + "WHERE c.phieuKho.laHeThong = false AND c.phieuKho.kho.id = :khoId AND c.phieuKho.loaiPhieu = :loaiPhieu AND c.phieuKho.trangThai = :trangThai "
             + "AND c.phieuKho.ngayGio >= :tuNgay AND c.phieuKho.ngayGio < :denNgay "
             + "AND c.phieuKho.ghiChu LIKE :mauGhiChu")
     Integer sumSoLuongTheoKhoThoiGianVaGhiChu(@Param("khoId") Long khoId,

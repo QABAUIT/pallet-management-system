@@ -34,6 +34,7 @@ const titles = {
   "/tai-chinh": "Quản lí tài chính",
   "/tai-chinh/thue": "Quản lí tài chính",
   "/tai-chinh/loi-nhuan": "Quản lí tài chính",
+  "/tai-chinh/tai-che": "Báo cáo tái chế",
 
   "/notifications": "Trung tâm Thông báo",
 

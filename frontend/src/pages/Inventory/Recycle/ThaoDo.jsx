@@ -5,7 +5,7 @@ import ThaoDoFormModal from "../../../components/recycle/ThaoDoFormModal";
 import { fmtDate, statusColumn } from "../../../components/recycle/helpers";
 import { thaoDoApi } from "../../../api/recycleApi";
 import { fmtNumber } from "../../../utils/format";
-import { PHIEU_TAI_CHE_TRANG_THAI } from "../../../utils/statusTag";
+import { PHIEU_DUYET_TRANG_THAI } from "../../../utils/statusTag";
 
 const SEARCH_FIELDS = ["maPhieu", "maPhieuTaiChe", "maLo", "tenKho"];
 
@@ -39,7 +39,7 @@ const COLUMNS = [
     render: (r) => fmtNumber(r.kgPheLieu),
   },
   { key: "ngayThucHien", header: "NGÀY", render: (r) => fmtDate(r.ngayThucHien) },
-  statusColumn(PHIEU_TAI_CHE_TRANG_THAI),
+  statusColumn(PHIEU_DUYET_TRANG_THAI),
 ];
 
 const buildStats = (rows) => {

@@ -212,7 +212,7 @@ public class PhieuThaoDoServiceImpl implements PhieuThaoDoService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PX", "PX-"))
                 .loaiPhieu("xuat_kho").kho(kho).phieuTaiChe(p)
                 .nhanVienGiaoNhan(t.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Xuất pallet để tháo dỡ theo phiếu " + t.getMaPhieu())
                 .build());
         chiTietPhieuKhoRepository.save(ChiTietPhieuKho.builder()
@@ -223,7 +223,7 @@ public class PhieuThaoDoServiceImpl implements PhieuThaoDoService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PN", "PN-"))
                 .loaiPhieu("nhap_kho").kho(kho).phieuTaiChe(p)
                 .nhanVienGiaoNhan(t.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Nhập kết quả tháo dỡ theo phiếu " + t.getMaPhieu())
                 .build());
 

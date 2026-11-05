@@ -229,7 +229,7 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PX", "PX-"))
                 .loaiPhieu("xuat_kho").kho(kho)
                 .nhanVienGiaoNhan(p.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Xuất vật tư đóng pallet theo phiếu " + p.getMaPhieu())
                 .build());
 
@@ -248,7 +248,7 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PN", "PN-"))
                 .loaiPhieu("nhap_kho").kho(kho)
                 .nhanVienGiaoNhan(p.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Nhập pallet tái chế thành phẩm theo phiếu " + p.getMaPhieu())
                 .build());
         tonKhoNghiepVu.cong(thanhPham, kho, p.getSoLuongSanXuat());

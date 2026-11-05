@@ -74,4 +74,9 @@ public class PhieuKho {
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;
 
+    /** Phiếu do hệ thống tự sinh khi tái chế/đóng pallet/dịch vụ; không tính vào thống kê nhập xuất kho. */
+    @Builder.Default
+    @Column(name = "la_he_thong", nullable = false)
+    private boolean laHeThong = false;
+
 }

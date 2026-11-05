@@ -54,7 +54,6 @@ export default function PalletHeader({ searchText, setSearchText, filter, setFil
             <Radio.Button value="all">Tất cả <Badge count={totalPallets} style={{ backgroundColor: '#1677ff', marginLeft: 8 }} /></Radio.Button>
             <Radio.Button value="pallet">Pallet</Radio.Button>
             <Radio.Button value="linh_kien">Linh kiện</Radio.Button>
-            <Radio.Button value="cho_tai_che">Chờ tái chế</Radio.Button>
           </Radio.Group>
         </Flex>
 

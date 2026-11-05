@@ -3,7 +3,7 @@ import { Descriptions, Drawer, Spin, Table, Tag } from "antd";
 import { dongPalletApi } from "../../api/recycleApi";
 import { fmtDateTime, fmtNumber } from "../../utils/format";
 import { notifyError } from "../../utils/notify";
-import { PHIEU_TAI_CHE_TRANG_THAI, resolveStatus } from "../../utils/statusTag";
+import { PHIEU_DUYET_TRANG_THAI, resolveStatus } from "../../utils/statusTag";
 import { fmtDate } from "./helpers";
 
 /** Chi tiết phiếu đóng pallet: số vật tư theo định mức so với thực tế, dòng lệch tô đỏ kèm lý do. */
@@ -27,7 +27,7 @@ export default function PhieuDongPalletDrawer({ id, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const st = resolveStatus(PHIEU_TAI_CHE_TRANG_THAI, data?.trangThai);
+  const st = resolveStatus(PHIEU_DUYET_TRANG_THAI, data?.trangThai);
 
   return (
     <Drawer open width={720} title={data ? `Phiếu đóng pallet ${data.maPhieu}` : "Chi tiết phiếu"} onClose={onClose}>

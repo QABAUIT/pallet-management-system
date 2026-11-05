@@ -5,7 +5,7 @@ import XuLyThemFormModal from "../../../components/recycle/XuLyThemFormModal";
 import { LOAI_NGUON, fmtDate, statusColumn } from "../../../components/recycle/helpers";
 import { xuLyThemApi } from "../../../api/recycleApi";
 import { fmtNumber } from "../../../utils/format";
-import { PHIEU_TAI_CHE_TRANG_THAI } from "../../../utils/statusTag";
+import { PHIEU_DUYET_TRANG_THAI } from "../../../utils/statusTag";
 
 const SEARCH_FIELDS = ["maPhieu", "tenMatHangNguon", "tenMatHangDich", "lyDo"];
 
@@ -30,7 +30,7 @@ const COLUMNS = [
   },
   { key: "lyDo", header: "LÝ DO" },
   { key: "ngayThucHien", header: "NGÀY", render: (r) => fmtDate(r.ngayThucHien) },
-  statusColumn(PHIEU_TAI_CHE_TRANG_THAI),
+  statusColumn(PHIEU_DUYET_TRANG_THAI),
 ];
 
 const buildStats = (rows) => {

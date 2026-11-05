@@ -8,7 +8,7 @@ import AppTable from "../common/AppTable";
 import Pagination from "../common/Pagination";
 import { useLocalList } from "../../hooks/useLocalList";
 import { usePhanQuyen } from "../../hooks/usePhanQuyen";
-import { PHIEU_TAI_CHE_TRANG_THAI } from "../../utils/statusTag";
+import { PHIEU_DUYET_TRANG_THAI } from "../../utils/statusTag";
 
 import "../layout/style.css";
 
@@ -22,6 +22,7 @@ import "../layout/style.css";
  * - buildStats(rows) -> [{ label, value, icon, tone, badge, caption }]
  * - FormModal: component form tạo/sửa, nhận { record, onCancel, onSaved }
  * - DetailDrawer: (tuỳ chọn) nhận { id, onClose }
+ * - statusMap: bảng trạng thái cho bộ lọc (mặc định nhap / da_duyet / da_huy)
  */
 export default function PhieuListPage({
   api,
@@ -34,6 +35,7 @@ export default function PhieuListPage({
   placeholder,
   itemLabel,
   emptyText,
+  statusMap = PHIEU_DUYET_TRANG_THAI,
 }) {
   const list = useLocalList(api.danhSach, { searchFields });
   const { duocThaoTacKho } = usePhanQuyen();
@@ -75,7 +77,7 @@ export default function PhieuListPage({
         placeholder={placeholder}
         keyword={list.keyword}
         onKeywordChange={list.setKeyword}
-        statusMap={PHIEU_TAI_CHE_TRANG_THAI}
+        statusMap={statusMap}
         trangThai={list.trangThai}
         onTrangThaiChange={list.setTrangThai}
         onCreate={duocThaoTacKho ? () => setForm({}) : undefined}

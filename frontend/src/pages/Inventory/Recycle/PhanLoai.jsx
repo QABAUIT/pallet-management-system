@@ -65,7 +65,7 @@ const buildStats = (rows) => {
     },
     {
       label: "PHIẾU ĐÃ DUYỆT",
-      value: fmtNumber(rows.filter((r) => r.trangThai === "da_duyet").length),
+      value: fmtNumber(rows.filter((r) => r.trangThai === "da_phan_loai" || r.trangThai === "da_hoan_tat").length),
       icon: CheckCircle2,
       tone: "green",
       badge: "phiếu",
@@ -78,6 +78,7 @@ export default function PhanLoai() {
   return (
     <PhieuListPage
       api={taiCheApi}
+      statusMap={PHIEU_TAI_CHE_TRANG_THAI}
       searchFields={SEARCH_FIELDS}
       columns={COLUMNS}
       buildStats={buildStats}

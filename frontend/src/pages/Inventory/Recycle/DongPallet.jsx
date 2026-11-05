@@ -7,7 +7,7 @@ import PhieuDongPalletDrawer from "../../../components/recycle/PhieuDongPalletDr
 import { fmtDate, statusColumn } from "../../../components/recycle/helpers";
 import { dongPalletApi } from "../../../api/recycleApi";
 import { fmtNumber } from "../../../utils/format";
-import { PHIEU_TAI_CHE_TRANG_THAI } from "../../../utils/statusTag";
+import { PHIEU_DUYET_TRANG_THAI } from "../../../utils/statusTag";
 
 const SEARCH_FIELDS = ["maPhieu", "tenDinhMuc", "tenThanhPham", "tenKho"];
 
@@ -29,7 +29,7 @@ const COLUMNS = [
       r.soDongChenhLech > 0 ? <Tag color="red">{r.soDongChenhLech} dòng lệch</Tag> : <Tag color="green">Đúng ĐM</Tag>,
   },
   { key: "ngayThucHien", header: "NGÀY", render: (r) => fmtDate(r.ngayThucHien) },
-  statusColumn(PHIEU_TAI_CHE_TRANG_THAI),
+  statusColumn(PHIEU_DUYET_TRANG_THAI),
 ];
 
 const buildStats = (rows) => {

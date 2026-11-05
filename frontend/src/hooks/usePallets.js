@@ -3,6 +3,10 @@ import { Form, message } from 'antd';
 import { matHangApi } from '../api/matHangApi';
 import { mapMatHangToPallet } from '../utils/palletMapper';
 
+// Mặt hàng nội bộ của quy trình tái chế: không hiển thị trong danh mục bán hàng
+const LOAI_NOI_BO = new Set(['cho_tai_che', 'phe_lieu', 'dich_vu']);
+const MA_NOI_BO = new Set(['LK-TX-11', 'LK-CX-12']); // thanh / cục cần xử lý thêm (hàng trung gian)
+
 export function usePallets(itemsPerPage = 8) {
   const [pallets, setPallets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +27,11 @@ export function usePallets(itemsPerPage = 8) {
     try {
       const res = await matHangApi.danhSach();
       if (res.data) {
-        setPallets(res.data.map(mapMatHangToPallet));
+        setPallets(
+          res.data
+            .filter((m) => !LOAI_NOI_BO.has(m.loaiMatHang) && !MA_NOI_BO.has(m.maMatHang))
+            .map(mapMatHangToPallet),
+        );
       }
     } catch (err) {
       console.error("Fetch pallets error", err);

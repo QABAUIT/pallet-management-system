@@ -203,7 +203,7 @@ public class PhieuXuLyThemServiceImpl implements PhieuXuLyThemService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PX", "PX-"))
                 .loaiPhieu("xuat_kho").kho(kho)
                 .nhanVienGiaoNhan(x.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Xuất hàng cần xử lý thêm theo phiếu " + x.getMaPhieu() + ": " + x.getLyDo())
                 .build());
         chiTietPhieuKhoRepository.save(ChiTietPhieuKho.builder()
@@ -213,7 +213,7 @@ public class PhieuXuLyThemServiceImpl implements PhieuXuLyThemService {
                 .maPhieu(phieuKhoRepository.getMaChungTu("PN", "PN-"))
                 .loaiPhieu("nhap_kho").kho(kho)
                 .nhanVienGiaoNhan(x.getNhanVienThucHien()).nguoiDuyet(nv)
-                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh")
+                .ngayGio(LocalDateTime.now()).trangThai("da_hoan_thanh").laHeThong(true)
                 .ghiChu("Nhập kết quả xử lý thêm theo phiếu " + x.getMaPhieu())
                 .build());
         if (datLai > 0) {

@@ -32,6 +32,7 @@ import StocktakingReport from "../pages/Inventory/StocktakingReport";
 import Revenue from "../pages/Finance/Revenue";
 import Tax from "../pages/Finance/Tax";
 import Profit from "../pages/Finance/Profit";
+import RecycleReport from "../pages/Finance/RecycleReport";
 
 // Thông báo
 import Notifications from "../pages/Notifications";
@@ -104,6 +105,7 @@ export default function AppRoutes() {
         <Route path="/tai-chinh" element={<Revenue />} />
         <Route path="/tai-chinh/thue" element={<Tax />} />
         <Route path="/tai-chinh/loi-nhuan" element={<Profit />} />
+        <Route path="/tai-chinh/tai-che" element={<RecycleReport />} />
 
         {/* Thông báo */}
         <Route path="/notifications" element={<Notifications />} />
