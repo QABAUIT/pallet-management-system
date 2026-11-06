@@ -34,7 +34,7 @@ export default function PhieuRowActions({ r, api, onChanged, onView, onEdit }) {
           <Button
             type="text"
             icon={<EyeOutlined />}
-            style={{ color: "#8c8c8c" }}
+            style={{ color: "var(--text-muted)" }}
             onClick={() => onView(r)}
           />
         </Tooltip>
@@ -44,7 +44,7 @@ export default function PhieuRowActions({ r, api, onChanged, onView, onEdit }) {
         <Button
           type="text"
           icon={<EditOutlined />}
-          style={{ color: "#8c8c8c" }}
+          style={{ color: "var(--text-muted)" }}
           disabled={!laNhap}
           onClick={() => onEdit(r)}
         />
@@ -59,7 +59,7 @@ export default function PhieuRowActions({ r, api, onChanged, onView, onEdit }) {
           onConfirm={() => run(() => api.duyet(r.id), "Đã duyệt phiếu")}
         >
           <Tooltip title="Duyệt phiếu">
-            <Button type="text" icon={<CheckOutlined />} style={{ color: "#389e0d" }} />
+            <Button type="text" icon={<CheckOutlined />} style={{ color: "var(--color-green)" }} />
           </Tooltip>
         </Popconfirm>
       )}

@@ -114,7 +114,7 @@ export function KetQuaModal({ record, onCancel, onSaved }) {
       onCancel={onCancel}
       onOk={() => form.submit()}
     >
-      <div style={{ color: "#8c8c8c", margin: "8px 0 16px" }}>
+      <div style={{ color: "var(--text-muted)", margin: "8px 0 16px" }}>
         Khách: <b>{record.tenKhachHang}</b> · Đã nhận <b>{record.soPalletNhan}</b> pallet
       </div>
       <Form
@@ -305,7 +305,7 @@ export function MuaLaiModal({ record, onCancel, onSaved }) {
           <Input.TextArea rows={2} />
         </Form.Item>
         <div style={{ textAlign: "right", fontSize: 15 }}>
-          Số tiền chi: <b style={{ color: "#d46b08", fontSize: 18 }}>{fmtVnd((soKg || 0) * (donGia || 0))}</b>
+          Số tiền chi: <b style={{ color: "var(--color-amber-strong)", fontSize: 18 }}>{fmtVnd((soKg || 0) * (donGia || 0))}</b>
         </div>
       </Form>
     </Modal>

@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     // Ô checkbox trong thiết kế màu navy, kích thước 20px (khác màu chủ đạo cam của app)
     <ConfigProvider
-      theme={{ token: { colorPrimary: '#0f2942', controlInteractiveSize: 20 } }}
+      theme={{ token: { colorPrimary: '#101a33', controlInteractiveSize: 20 } }}
     >
       <div className="login-page" style={{ '--login-bg': `url(${bgLogin})` }}>
         <div className="login-card">

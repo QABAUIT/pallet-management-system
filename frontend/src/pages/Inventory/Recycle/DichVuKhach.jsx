@@ -188,7 +188,7 @@ export default function DichVuKhach() {
     {
       key: "hoaDon",
       header: "HÓA ĐƠN",
-      render: (r) => r.maHoaDon || <span style={{ color: "#bfbfbf" }}>Chưa lập</span>,
+      render: (r) => r.maHoaDon || <span style={{ color: "var(--text-faint)" }}>Chưa lập</span>,
     },
     { key: "ngayTiepNhan", header: "NGÀY NHẬN", render: (r) => fmtDate(r.ngayTiepNhan) },
     {
@@ -209,14 +209,14 @@ export default function DichVuKhach() {
         const daDuyet = gd === "da_duyet" || gd === "da_tra";
         return (
           <Space size={0} wrap>
-            {btn("Xem chi tiết", <EyeOutlined />, () => setViewId(r.id), { style: { color: "#8c8c8c" } })}
+            {btn("Xem chi tiết", <EyeOutlined />, () => setViewId(r.id), { style: { color: "var(--text-muted)" } })}
             {duocThaoTacKho &&
               dangMo &&
               btn(
                 gd === "da_tiep_nhan" ? "Ghi kết quả tháo dỡ" : "Sửa kết quả tháo dỡ",
                 <ToolOutlined />,
                 () => setModal({ loai: "ketQua", record: r }),
-                { style: { color: "#1677ff" } },
+                { style: { color: "var(--color-blue)" } },
               )}
             {laQuanLy && gd === "cho_duyet" && (
               <Popconfirm
@@ -226,20 +226,20 @@ export default function DichVuKhach() {
                 cancelText="Đóng"
                 onConfirm={() => run(() => dichVuApi.duyet(r.id), "Đã duyệt kết quả tháo dỡ")}
               >
-                {btn("Duyệt kết quả", <CheckOutlined />, undefined, { style: { color: "#389e0d" } })}
+                {btn("Duyệt kết quả", <CheckOutlined />, undefined, { style: { color: "var(--color-green)" } })}
               </Popconfirm>
             )}
             {laQuanLy &&
               daDuyet &&
               !r.hoaDonId &&
               btn("Lập hóa đơn dịch vụ", <FileTextOutlined />, () => setModal({ loai: "hoaDon", record: r }), {
-                style: { color: "#d46b08" },
+                style: { color: "var(--color-amber-strong)" },
               })}
             {laQuanLy &&
               daDuyet &&
               r.kgPheLieuConLai > 0 &&
               btn("Mua lại phế liệu", <DollarOutlined />, () => setModal({ loai: "muaLai", record: r }), {
-                style: { color: "#531dab" },
+                style: { color: "var(--color-purple-strong)" },
               })}
             {duocThaoTacKho && gd === "da_duyet" && (
               <Popconfirm
@@ -249,7 +249,7 @@ export default function DichVuKhach() {
                 cancelText="Đóng"
                 onConfirm={() => run(() => dichVuApi.traHang(r.id), "Đã trả hàng cho khách")}
               >
-                {btn("Trả hàng cho khách", <CarOutlined />, undefined, { style: { color: "#08979c" } })}
+                {btn("Trả hàng cho khách", <CarOutlined />, undefined, { style: { color: "var(--color-blue)" } })}
               </Popconfirm>
             )}
             {duocThaoTacKho &&

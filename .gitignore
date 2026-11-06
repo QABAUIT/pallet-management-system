@@ -4,6 +4,10 @@ node_modules/
 target/
 **/target/
 
+# Ảnh upload runtime
+uploads/
+backend/uploads/
+
 # Bỏ qua dữ liệu PostgreSQL
 postgres_data/
 **/postgres_data/

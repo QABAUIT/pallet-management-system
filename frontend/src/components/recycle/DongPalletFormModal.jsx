@@ -246,7 +246,7 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Switch checked={dieuChinh} onChange={toggleDieuChinh} disabled={!dinhMucId} />
             <span style={{ fontWeight: 600 }}>Điều chỉnh số vật tư thực tế</span>
-            <span style={{ color: "#8c8c8c", fontSize: 12 }}>
+            <span style={{ color: "var(--text-muted)", fontSize: 12 }}>
               Tắt = dùng đúng định mức. Dòng lệch phải ghi lý do.
             </span>
           </div>
@@ -277,7 +277,7 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
                         >
                           <InputNumber min={0} precision={0} placeholder="Thực tế" style={{ width: "100%" }} />
                         </Form.Item>
-                        <div style={{ paddingTop: 5, fontSize: 12, color: lech ? "#cf1322" : "#8c8c8c" }}>
+                        <div style={{ paddingTop: 5, fontSize: 12, color: lech ? "var(--color-red)" : "var(--text-muted)" }}>
                           ĐM: {fmtNumber(base)}
                         </div>
                         <Form.Item

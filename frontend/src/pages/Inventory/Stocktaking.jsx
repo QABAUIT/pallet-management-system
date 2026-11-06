@@ -164,7 +164,7 @@ export default function Stocktaking() {
         if (v == null) return "—";
         if (v === 0) return "0";
         return (
-          <b style={{ color: v > 0 ? "#389e0d" : "#cf1322" }}>
+          <b style={{ color: v > 0 ? "var(--color-green)" : "var(--color-red)" }}>
             {v > 0 ? `+${v}` : v}
           </b>
         );
@@ -186,7 +186,7 @@ export default function Stocktaking() {
         <Button
           type="text"
           icon={<EditOutlined />}
-          style={{ color: "#8c8c8c" }}
+          style={{ color: "var(--text-muted)" }}
           onClick={() => setEditing(r)}
         />
       ),
@@ -222,7 +222,7 @@ export default function Stocktaking() {
   return (
     <InventoryPage>
       {!phienId ? (
-        <Card style={{ borderRadius: 8, border: "1px solid #f0f0f0" }}>
+        <Card style={{ borderRadius: 8, border: "1px solid var(--border-light)" }}>
           <Empty description="Chưa có phiên kiểm kê nào đang mở trên máy này">
             <Button
               type="primary"
@@ -230,8 +230,8 @@ export default function Stocktaking() {
               icon={<PlusOutlined />}
               onClick={() => setOpenCreate(true)}
               style={{
-                backgroundColor: "#d46b08",
-                borderColor: "#d46b08",
+                backgroundColor: "var(--color-amber-strong)",
+                borderColor: "var(--color-amber-strong)",
                 borderRadius: 6,
               }}
             >
@@ -325,8 +325,8 @@ export default function Stocktaking() {
                   icon={<CheckOutlined />}
                   loading={finishing}
                   style={{
-                    backgroundColor: "#d46b08",
-                    borderColor: "#d46b08",
+                    backgroundColor: "var(--color-amber-strong)",
+                    borderColor: "var(--color-amber-strong)",
                     borderRadius: 6,
                     fontWeight: 500,
                   }}

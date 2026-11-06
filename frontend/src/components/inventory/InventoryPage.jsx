@@ -13,28 +13,13 @@ const TABS = [
 
 function InventoryTabs() {
   return (
-    <nav
-      style={{
-        display: 'flex',
-        gap: 28,
-        borderBottom: '1px solid #f0f0f0',
-        marginBottom: 20,
-      }}
-    >
+    <nav className="inv-tabs" aria-label="Điều hướng kho">
       {TABS.map((t) => (
         <NavLink
           key={t.to}
           to={t.to}
           end={t.end}
-          style={({ isActive }) => ({
-            padding: '10px 2px',
-            marginBottom: -1,
-            fontSize: 14,
-            fontWeight: 600,
-            textDecoration: 'none',
-            color: isActive ? '#d46b08' : '#595959',
-            borderBottom: `2px solid ${isActive ? '#d46b08' : 'transparent'}`,
-          })}
+          className={({ isActive }) => 'inv-tab' + (isActive ? ' active' : '')}
         >
           {t.label}
         </NavLink>
@@ -46,7 +31,7 @@ function InventoryTabs() {
 /** Khung chung cho các trang kho: nền, padding, căn trái (vì #root đang text-align: center). */
 export default function InventoryPage({ showTabs = true, children }) {
   return (
-    <div style={{ padding: 24, background: '#fcfcfc', minHeight: '100%', textAlign: 'left' }}>
+    <div className="page-shell">
       {showTabs && <InventoryTabs />}
       {children}
     </div>

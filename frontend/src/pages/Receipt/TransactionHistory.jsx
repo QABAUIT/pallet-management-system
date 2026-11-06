@@ -166,7 +166,7 @@ export default function TransactionHistory() {
             )}
             {!khoa && laQuanLy && r.trangThai === "cho_thanh_toan" && (
               <button className="icon-btn" title="Xóa hóa đơn" onClick={() => setXoaRow(r)}>
-                <Trash2 size={16} color="#dc2626" />
+                <Trash2 size={16} color="var(--color-red)" />
               </button>
             )}
           </div>

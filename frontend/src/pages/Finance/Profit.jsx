@@ -15,12 +15,12 @@ import "../../components/layout/style.css";
 
 // Biểu tượng + màu cho từng hạng mục chi phí
 const HANG_MUC_STYLE = {
-  van_tai_logistics: { icon: Truck, bg: "#dbeafe", color: "#1d4ed8" },
-  nhan_su: { icon: Users, bg: "#fef3c7", color: "#b45309" },
-  bao_tri_thiet_bi: { icon: Wrench, bg: "#dcfce7", color: "#16a34a" },
-  dien_nang_luong: { icon: Bolt, bg: "#ede9fe", color: "#7c3aed" },
-  khac: { icon: MoreHorizontal, bg: "#f1f5f9", color: "#64748b" },
-  mua_hang_dich_vu: { icon: ShoppingCart, bg: "#ffe4e6", color: "#e11d48" },
+  van_tai_logistics: { icon: Truck, bg: "var(--color-blue-bg)", color: "var(--color-blue)" },
+  nhan_su: { icon: Users, bg: "var(--color-amber-bg)", color: "var(--color-amber)" },
+  bao_tri_thiet_bi: { icon: Wrench, bg: "var(--color-green-bg)", color: "var(--color-green)" },
+  dien_nang_luong: { icon: Bolt, bg: "var(--color-purple-bg)", color: "var(--color-purple)" },
+  khac: { icon: MoreHorizontal, bg: "var(--bg-tint)", color: "var(--text-muted)" },
+  mua_hang_dich_vu: { icon: ShoppingCart, bg: "var(--color-red-bg)", color: "var(--color-red)" },
 };
 
 // Chi phí tăng là xấu: badge luôn màu đỏ của thẻ, kèm mũi tên

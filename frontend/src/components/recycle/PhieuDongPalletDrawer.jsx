@@ -85,7 +85,7 @@ export default function PhieuDongPalletDrawer({ id, onClose }) {
                   v === 0 ? (
                     "0"
                   ) : (
-                    <b style={{ color: v > 0 ? "#cf1322" : "#389e0d" }}>{v > 0 ? `+${v}` : v}</b>
+                    <b style={{ color: v > 0 ? "var(--color-red)" : "var(--color-green)" }}>{v > 0 ? `+${v}` : v}</b>
                   ),
               },
               { title: "Lý do", dataIndex: "lyDoChenhLech", render: (v) => v || "—" },

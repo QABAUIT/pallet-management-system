@@ -12,21 +12,12 @@ const TABS = [
 /** Thanh chuyển giữa các bước tái chế (nằm dưới tab "Tái chế" của khu Kho). */
 export default function RecycleTabs() {
   return (
-    <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+    <div className="pill-tabs">
       {TABS.map((t, i) => (
         <NavLink
           key={t.to}
           to={t.to}
-          style={({ isActive }) => ({
-            padding: "6px 14px",
-            fontSize: 13,
-            fontWeight: 600,
-            textDecoration: "none",
-            borderRadius: 9999,
-            border: `1px solid ${isActive ? "#d46b08" : "#d9d9d9"}`,
-            background: isActive ? "#fff7e6" : "#fff",
-            color: isActive ? "#d46b08" : "#595959",
-          })}
+          className={({ isActive }) => "pill-tab" + (isActive ? " active" : "")}
         >
           {i + 1}. {t.label}
         </NavLink>

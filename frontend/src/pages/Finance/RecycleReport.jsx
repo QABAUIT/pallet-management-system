@@ -21,7 +21,7 @@ const LOAI_NGUON = { thanh: "Thanh gỗ cần xử lý", cuc: "Cục gỗ cần 
 const lech = (v) => {
   const n = num(v);
   if (n === 0) return <span className="muted-text">0</span>;
-  return <b style={{ color: n > 0 ? "#dc2626" : "#16a34a" }}>{n > 0 ? `+${formatMoney(n)}` : formatMoney(n)}</b>;
+  return <b style={{ color: n > 0 ? "var(--color-red)" : "var(--color-green)" }}>{n > 0 ? `+${formatMoney(n)}` : formatMoney(n)}</b>;
 };
 
 const Row = ({ label, children }) => (

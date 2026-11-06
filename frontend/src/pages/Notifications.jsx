@@ -49,7 +49,7 @@ export default function Notifications() {
         <Skeleton
           active
           paragraph={{ rows: 6 }}
-          style={{ padding: 24, background: '#ffffff', borderRadius: 12 }}
+          style={{ padding: 24, background: 'var(--bg-card)', borderRadius: 12 }}
         />
       ) : (
         <>

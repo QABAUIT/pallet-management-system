@@ -86,7 +86,7 @@ export function EditStocktakeModal({ row, onCancel, onSaved }) {
       onOk={() => form.submit()}
     >
       <div style={{ marginBottom: 4, fontWeight: 600 }}>{row.tenPallet}</div>
-      <div style={{ color: '#8c8c8c', marginBottom: 16 }}>
+      <div style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
         {row.viTriLuuTru} · Tồn hệ thống: <b>{row.tonHeThong}</b>
       </div>
       <Form

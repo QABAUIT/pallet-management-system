@@ -193,7 +193,7 @@ export default function BaoGia() {
                   onConfirm={() => run(() => baoGiaApi.gui(r.id), "Đã gửi báo giá cho khách")}
                 >
                   <button className="icon-btn" title="Gửi khách">
-                    <Send size={16} color="#1d4ed8" />
+                    <Send size={16} color="var(--color-blue)" />
                   </button>
                 </Popconfirm>
               </>
@@ -207,7 +207,7 @@ export default function BaoGia() {
                   onConfirm={() => run(() => baoGiaApi.chapNhan(r.id), "Khách đã chấp nhận báo giá")}
                 >
                   <button className="icon-btn" title="Khách chấp nhận">
-                    <Check size={16} color="#16a34a" />
+                    <Check size={16} color="var(--color-green)" />
                   </button>
                 </Popconfirm>
                 <button
@@ -223,7 +223,7 @@ export default function BaoGia() {
                     })
                   }
                 >
-                  <X size={16} color="#dc2626" />
+                  <X size={16} color="var(--color-red)" />
                 </button>
               </>
             )}
@@ -236,7 +236,7 @@ export default function BaoGia() {
                 onConfirm={() => chuyen(r)}
               >
                 <button className="icon-btn" title="Chuyển thành hóa đơn">
-                  <FilePlus2 size={16} color="#d46b08" />
+                  <FilePlus2 size={16} color="var(--color-amber-strong)" />
                 </button>
               </Popconfirm>
             )}

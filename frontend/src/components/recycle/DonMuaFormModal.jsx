@@ -232,7 +232,7 @@ export default function DonMuaFormModal({ id, onCancel, onSaved }) {
           </Form.List>
 
           <div style={{ textAlign: "right", marginTop: 16, fontSize: 15 }}>
-            Tổng tiền: <b style={{ color: "#d46b08", fontSize: 18 }}>{fmtVnd(tongTien)}</b>
+            Tổng tiền: <b style={{ color: "var(--color-amber-strong)", fontSize: 18 }}>{fmtVnd(tongTien)}</b>
           </div>
         </Form>
       )}

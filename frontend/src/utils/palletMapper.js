@@ -1,3 +1,15 @@
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1605378280621-08d4b3136894?q=80&w=300&auto=format&fit=crop';
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1')
+  .replace(/\/+$/, '')
+  .replace(/\/api\/v1$/, '');
+
+// Ảnh do backend trả về có thể là URL tuyệt đối, hoặc đường dẫn tương đối (/uploads/...)
+const toAbsoluteImageUrl = (url) => {
+  if (!url) return null;
+  if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return `${API_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export const mapMatHangToPallet = (item) => {
   const hasDim = item.kichThuocDai != null;
   return {
@@ -9,7 +21,8 @@ export const mapMatHangToPallet = (item) => {
     price: item.donGiaBan || 0,
     status: item.trangThai === 'dang_kinh_doanh' ? 'Còn hàng' : 'Sắp hết hàng',
     stock: item.tongKhaDung || 0,
-    image: item.hinhAnh || 'https://images.unsplash.com/photo-1605378280621-08d4b3136894?q=80&w=300&auto=format&fit=crop',
+    image: toAbsoluteImageUrl(item.hinhAnh) || FALLBACK_IMAGE,
+    hasImage: Boolean(item.hinhAnh),
     desc: item.moTa || 'Chưa có mô tả.',
     specs: {
       size: hasDim ? `${item.kichThuocDai} x ${item.kichThuocRong} x ${item.kichThuocCao} mm` : 'Tùy chọn',
@@ -34,6 +47,6 @@ export const mapMatHangToPallet = (item) => {
     // Add raw values for exact DB filtering
     rawChatLieu: item.chatLieu,
     rawLoaiMatHang: item.loaiMatHang,
-    rawHinhAnh: item.hinhAnh
+    rawHinhAnh: toAbsoluteImageUrl(item.hinhAnh) || ''
   };
 };

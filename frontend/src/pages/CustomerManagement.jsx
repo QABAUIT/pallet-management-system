@@ -200,11 +200,15 @@ export default function CustomerManagement() {
   ];
 
   if (loading && customerList.length === 0) {
-    return <div>Đang tải danh sách khách hàng...</div>;
+    return (
+      <div className="empty-state">
+        <span className="empty-state-title">Đang tải danh sách khách hàng...</span>
+      </div>
+    );
   }
 
   if (error && customerList.length === 0) {
-    return <div>Lỗi: {error}</div>;
+    return <div className="error-banner">Lỗi: {error}</div>;
   }
 
   return (

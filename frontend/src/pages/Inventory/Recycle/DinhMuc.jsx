@@ -125,7 +125,7 @@ export default function DinhMuc() {
       render: (r) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">
-            <Button type="text" icon={<EyeOutlined />} style={{ color: "#8c8c8c" }} onClick={() => setViewId(r.id)} />
+            <Button type="text" icon={<EyeOutlined />} style={{ color: "var(--text-muted)" }} onClick={() => setViewId(r.id)} />
           </Tooltip>
           {laQuanLy && (
             <>
@@ -133,7 +133,7 @@ export default function DinhMuc() {
                 <Button
                   type="text"
                   icon={<EditOutlined />}
-                  style={{ color: "#8c8c8c" }}
+                  style={{ color: "var(--text-muted)" }}
                   onClick={() => setForm({ id: r.id })}
                 />
               </Tooltip>
@@ -148,7 +148,7 @@ export default function DinhMuc() {
                     type="text"
                     danger={r.dangDung}
                     icon={r.dangDung ? <StopOutlined /> : <CheckOutlined />}
-                    style={r.dangDung ? undefined : { color: "#389e0d" }}
+                    style={r.dangDung ? undefined : { color: "var(--color-green)" }}
                   />
                 </Tooltip>
               </Popconfirm>

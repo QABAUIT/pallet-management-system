@@ -25,24 +25,8 @@ export default function SupplierFilterBar({
   ];
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: 16,
-        marginBottom: 16,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
+    <div className="page-toolbar">
+      <div className="page-toolbar-left">
         <SearchInput
           value={keyword}
           onChange={onKeywordChange}
@@ -57,20 +41,16 @@ export default function SupplierFilterBar({
         />
       </div>
 
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        size="large"
-        style={{
-          backgroundColor: "#d46b08",
-          borderColor: "#d46b08",
-          borderRadius: "6px",
-          fontWeight: 500,
-        }}
-        onClick={onAdd}
-      >
-        Thêm nhà cung cấp
-      </Button>
+      <div className="page-toolbar-actions">
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          size="large"
+          onClick={onAdd}
+        >
+          Thêm nhà cung cấp
+        </Button>
+      </div>
     </div>
   );
 }

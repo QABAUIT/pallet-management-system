@@ -12,7 +12,7 @@ export default function EmployeeStats({ data = [] }) {
   const getPercent = (count) => total === 0 ? 0 : ((count / total) * 100).toFixed(1);
 
   return (
-    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+    <div className="stat-row">
       <StatCard 
         label="TỔNG NHÂN SỰ" 
         value={total.toString()} 

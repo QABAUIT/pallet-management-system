@@ -130,7 +130,7 @@ export default function ReceiptEditModal({ open, hd, saving, onCancel, onSubmit 
                 <div className="rc-line" key={l.matHangId}>
                   <div>
                     <div className="rc-line-name">{l.ten}</div>
-                    {!l.conBan && <div style={{ color: "#dc2626", fontSize: 12 }}>Đã ngừng kinh doanh</div>}
+                    {!l.conBan && <div style={{ color: "var(--color-red)", fontSize: 12 }}>Đã ngừng kinh doanh</div>}
                   </div>
                   <div className="rc-stock">Tối đa<br />{tonToiDa(l.matHangId)}</div>
                   <InputNumber

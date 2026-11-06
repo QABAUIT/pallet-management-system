@@ -59,7 +59,7 @@ export default function ReceiptCreate() {
       render: (r) => (
         <div>
           <b>{formatMoney(r.tongThanhToan)}</b>
-          <div className="muted-text" style={r.quaHan ? { color: "#dc2626" } : undefined}>
+          <div className="muted-text" style={r.quaHan ? { color: "var(--color-red)" } : undefined}>
             {r.quaHan ? `Quá hạn ${r.soNgayQuaHan} ngày` : "Trong kỳ hạn"}
           </div>
         </div>

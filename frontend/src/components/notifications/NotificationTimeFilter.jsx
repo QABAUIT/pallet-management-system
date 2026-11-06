@@ -13,12 +13,7 @@ export function TimeFilterPreset({ value, onChange }) {
       options={PRESET_OPTIONS}
       value={value}
       onChange={onChange}
-      style={{
-        background: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        padding: 2,
-        borderRadius: 8,
-      }}
+      className="notif-time-filter"
     />
   );
 }

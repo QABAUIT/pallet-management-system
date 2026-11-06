@@ -34,19 +34,8 @@ export default function ListToolbar({
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: 16,
-        marginBottom: 16,
-      }}
-    >
-      <div
-        style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 16 }}
-      >
+    <div className="page-toolbar">
+      <div className="page-toolbar-left">
         <SearchInput
           value={keyword}
           onChange={onKeywordChange}
@@ -63,7 +52,7 @@ export default function ListToolbar({
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 12 }}>
+      <div className="page-toolbar-actions">
       {extra}
       {onCreate && (
         <Button
@@ -71,12 +60,6 @@ export default function ListToolbar({
           size="large"
           icon={<PlusOutlined />}
           onClick={onCreate}
-          style={{
-            backgroundColor: "#d46b08",
-            borderColor: "#d46b08",
-            borderRadius: 6,
-            fontWeight: 500,
-          }}
         >
           {createLabel}
         </Button>

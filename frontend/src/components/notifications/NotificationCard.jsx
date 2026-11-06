@@ -36,51 +36,18 @@ export default function NotificationCard({
     }
   };
 
-  const iconBg = isRead ? "#f59e0b" : "#ef4444";
-  const borderColor = isRead ? "#fef08a" : "#fecaca";
-
   return (
     <Card
+      className={"notif-item-card" + (isRead ? " is-read" : " is-unread")}
       styles={{ body: { padding: 16 } }}
-      style={{
-        borderRadius: 12,
-        border: `1px solid ${borderColor}`,
-        background: "#ffffff",
-        transition: "all 0.2s ease",
-      }}
-      className="notif-item-card"
     >
       <Flex gap={16} align="flex-start">
         {/* Cột Icon bên trái */}
-        <div style={{ position: "relative", flexShrink: 0 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 10,
-              background: iconBg,
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+        <div className="notif-icon-wrap">
+          <div className={"notif-icon" + (isRead ? " is-read" : " is-unread")}>
             {renderIcon(item.iconType)}
           </div>
-          {!isRead && (
-            <span
-              style={{
-                position: "absolute",
-                top: -3,
-                right: -3,
-                width: 9,
-                height: 9,
-                background: "#ffffff",
-                border: "2px solid #ef4444",
-                borderRadius: "50%",
-              }}
-            />
-          )}
+          {!isRead && <span className="notif-unread-dot" />}
         </div>
 
         {/* Nội dung thông báo */}
@@ -89,41 +56,43 @@ export default function NotificationCard({
           <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
             <Flex align="center" gap={8} wrap="wrap">
               <Tag
-                color={isRead ? "warning" : "error"}
-                style={{
-                  fontWeight: 700,
-                  fontSize: 11,
-                  borderRadius: 4,
-                  marginRight: 0,
-                  letterSpacing: "0.03em",
-                }}
+                className={
+                  "status-tag " + (isRead ? "status-amber" : "status-red")
+                }
               >
                 {item.type}
               </Tag>
-              <Text strong style={{ fontSize: 13, color: "#0f172a" }}>
+              <Text strong className="notif-code">
                 {item.code}
               </Text>
-              <Text type="secondary" style={{ fontSize: 13 }}>
+              <Text type="secondary" className="notif-subtext">
                 · {item.subtext}
               </Text>
             </Flex>
 
-            <Space size={4} style={{ color: isRead ? "#64748b" : "#ef4444", fontSize: 12, fontWeight: 500 }}>
+            <Space
+              size={4}
+              className={"notif-time" + (isRead ? "" : " is-unread")}
+            >
               <Clock size={13} />
               <span>{item.time}</span>
             </Space>
           </Flex>
 
           {/* Mô tả chi tiết */}
-          <div style={{ fontSize: 14, lineHeight: "1.55", color: "#334155" }}>
-            {item.description}
-          </div>
+          <div className="notif-description">{item.description}</div>
 
           {/* Footer hàng dưới: Chips metadata + Action buttons */}
-          <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginTop: 4 }}>
+          <Flex
+            justify="space-between"
+            align="center"
+            wrap="wrap"
+            gap={12}
+            style={{ marginTop: 4 }}
+          >
             <Flex align="center" gap={16} wrap="wrap">
               {item.meta?.map((m, idx) => (
-                <Space key={idx} size={4} style={{ fontSize: 12.5, color: "#64748b" }}>
+                <Space key={idx} size={4} className="notif-meta">
                   <m.icon size={14} />
                   <span>{m.text}</span>
                 </Space>
@@ -136,15 +105,8 @@ export default function NotificationCard({
                   type={isRead ? "default" : "primary"}
                   size="small"
                   icon={<Eye size={14} />}
+                  className="notif-open-btn"
                   onClick={() => navigate(item.primaryAction.link)}
-                  style={{
-                    borderRadius: 6,
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    height: 32,
-                    background: isRead ? "#ffffff" : "#0f172a",
-                    borderColor: isRead ? "#cbd5e1" : "#0f172a",
-                  }}
                 >
                   {item.primaryAction.label}
                 </Button>
@@ -154,17 +116,10 @@ export default function NotificationCard({
                 <Button
                   type="text"
                   size="small"
+                  className="notif-icon-btn"
+                  aria-label={isRead ? "Đánh dấu chưa đọc" : "Đánh dấu đã đọc"}
                   icon={isRead ? <Mail size={16} /> : <Check size={16} />}
                   onClick={() => onToggleRead(item.id)}
-                  style={{
-                    borderRadius: 6,
-                    height: 32,
-                    width: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#94a3b8",
-                  }}
                 />
               </Tooltip>
 
@@ -173,16 +128,10 @@ export default function NotificationCard({
                   type="text"
                   danger
                   size="small"
+                  className="notif-icon-btn"
+                  aria-label="Xóa thông báo"
                   icon={<Trash2 size={16} />}
                   onClick={() => onDelete(item.id)}
-                  style={{
-                    borderRadius: 6,
-                    height: 32,
-                    width: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
                 />
               </Tooltip>
             </Flex>

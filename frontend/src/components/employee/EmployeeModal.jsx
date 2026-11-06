@@ -1,6 +1,6 @@
 import React from 'react';
-import { Modal, Form, Input, InputNumber, Select, Upload, Button, Avatar, Tag, Space, Typography, Row, Col, DatePicker } from 'antd';
-import { UserOutlined, CloudUploadOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, InputNumber, Select, Button, Avatar, Typography, Row, Col, DatePicker } from 'antd';
+import { UserOutlined, SaveOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -23,14 +23,14 @@ export default function EmployeeModal({
       bodyStyle={{ padding: 0 }}
       destroyOnClose
     >
-      <div style={{ backgroundColor: '#d46b08', padding: '16px 24px', color: 'white', borderTopLeftRadius: '8px', borderTopRightRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ backgroundColor: 'var(--navy)', padding: '16px 24px', color: 'var(--text-inverse)', borderTopLeftRadius: '8px', borderTopRightRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <Title level={4} style={{ color: 'white', margin: 0, fontWeight: 600 }}>
+          <Title level={4} style={{ color: 'var(--text-inverse)', margin: 0, fontWeight: 600 }}>
             {modalMode === 'add' ? 'Thêm nhân viên mới' : 'Cập nhật nhân viên'}
           </Title>
-          <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px' }}>Lưu trữ thông tin nhân viên</Text>
+          <Text style={{ color: 'var(--text-on-dark-muted)', fontSize: '13px' }}>Lưu trữ thông tin nhân viên</Text>
         </div>
-        <Button type="text" icon={<span style={{ fontSize: 20, color: 'white' }}>×</span>} onClick={() => setIsModalVisible(false)} style={{ color: 'white', padding: 0 }} />
+        <Button type="text" icon={<span style={{ fontSize: 20, color: 'var(--text-inverse)' }}>×</span>} onClick={() => setIsModalVisible(false)} style={{ color: 'var(--text-inverse)', padding: 0 }} />
       </div>
 
       <div style={{ padding: '24px' }}>
@@ -38,12 +38,12 @@ export default function EmployeeModal({
           <Row gutter={16}>
             {/* Hàng 1: Thông tin định danh */}
             <Col span={8}>
-              <Form.Item label={<span>MÃ NHÂN VIÊN {modalMode === 'add' && <span style={{ color: 'red' }}>*</span>}</span>} name="maNv">
-                <Input placeholder={modalMode === 'add' ? 'Tự động tạo' : ''} disabled style={{ backgroundColor: '#fafafa' }} />
+              <Form.Item label={<span>MÃ NHÂN VIÊN {modalMode === 'add' && <span style={{ color: 'var(--color-red)' }}>*</span>}</span>} name="maNv">
+                <Input placeholder={modalMode === 'add' ? 'Tự động tạo' : ''} disabled style={{ backgroundColor: 'var(--bg-subtle)' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label={<span>TÊN NHÂN VIÊN <span style={{ color: 'red' }}>*</span></span>} name="hoTen" rules={[{ required: true, message: 'Vui lòng nhập tên nhân viên' }]}>
+              <Form.Item label={<span>TÊN NHÂN VIÊN <span style={{ color: 'var(--color-red)' }}>*</span></span>} name="hoTen" rules={[{ required: true, message: 'Vui lòng nhập tên nhân viên' }]}>
                 <Input placeholder="Nguyễn Văn A" />
               </Form.Item>
             </Col>
@@ -81,7 +81,7 @@ export default function EmployeeModal({
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label={<span>VAI TRÒ <span style={{ color: 'red' }}>*</span></span>} name="vaiTroId" rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}>
+              <Form.Item label={<span>VAI TRÒ <span style={{ color: 'var(--color-red)' }}>*</span></span>} name="vaiTroId" rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}>
                 <Select placeholder="Chọn vai trò">
                   <Option value={1}>Giám đốc</Option>
                   <Option value={2}>Phó giám đốc</Option>
@@ -132,12 +132,12 @@ export default function EmployeeModal({
 
             {/* Hàng 6: Hệ thống */}
             <Col span={8}>
-              <Form.Item label={<span>TÊN ĐĂNG NHẬP <span style={{ color: 'red' }}>*</span></span>} name="tenDangNhap" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}>
+              <Form.Item label={<span>TÊN ĐĂNG NHẬP <span style={{ color: 'var(--color-red)' }}>*</span></span>} name="tenDangNhap" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}>
                 <Input placeholder="Ví dụ: nguyenvana" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label={<span>MẬT KHẨU {modalMode === 'add' && <span style={{ color: 'red' }}>*</span>}</span>} name="matKhau" rules={[{ required: modalMode === 'add', message: 'Vui lòng nhập mật khẩu' }]}>
+              <Form.Item label={<span>MẬT KHẨU {modalMode === 'add' && <span style={{ color: 'var(--color-red)' }}>*</span>}</span>} name="matKhau" rules={[{ required: modalMode === 'add', message: 'Vui lòng nhập mật khẩu' }]}>
                 <Input.Password placeholder={modalMode === 'add' ? 'Nhập mật khẩu' : 'Nhập để đổi MK mới'} />
               </Form.Item>
             </Col>
@@ -153,8 +153,8 @@ export default function EmployeeModal({
           </Row>
 
           <Form.Item label="HÌNH ẢNH NHÂN VIÊN" name="anhDaiDien">
-            <div style={{ border: '1px dashed #d9d9d9', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <Avatar shape="square" size={64} icon={<UserOutlined />} style={{ backgroundColor: '#f5f5f5', color: '#bfbfbf' }} />
+            <div style={{ border: '1px dashed var(--border-mid)', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <Avatar shape="square" size={64} icon={<UserOutlined />} style={{ backgroundColor: 'var(--bg-subtle)', color: 'var(--text-faint)' }} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <Text type="secondary">Chưa hỗ trợ Upload trực tiếp. Nhập URL hình ảnh:</Text>
@@ -166,7 +166,7 @@ export default function EmployeeModal({
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '32px' }}>
             <Button onClick={() => setIsModalVisible(false)} size="large" style={{ borderRadius: '6px' }}>Hủy</Button>
-            <Button type="primary" htmlType="submit" size="large" icon={<SaveOutlined />} style={{ backgroundColor: '#001529', borderColor: '#001529', borderRadius: '6px' }}>
+            <Button type="primary" htmlType="submit" size="large" icon={<SaveOutlined />} style={{ backgroundColor: 'var(--navy)', borderColor: 'var(--navy)', borderRadius: '6px' }}>
               Lưu nhân viên {modalMode === 'add' ? 'mới' : ''}
             </Button>
           </div>

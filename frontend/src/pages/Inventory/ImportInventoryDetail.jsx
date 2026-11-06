@@ -46,7 +46,7 @@ export default function ImportInventoryDetail() {
           <Spin />
         </div>
       ) : (
-        <Card style={{ borderRadius: 8, border: '1px solid #f0f0f0' }}>
+        <Card style={{ borderRadius: 8, border: '1px solid var(--border-light)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
             <Typography.Title level={3} style={{ margin: 0 }}>
               Phiếu nhập kho: {data.maPhieu}

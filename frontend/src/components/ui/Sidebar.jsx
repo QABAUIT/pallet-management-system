@@ -24,19 +24,28 @@ const MENU_ITEMS = [
   { label: "Quản lí tài chính", icon: Wallet, to: "/tai-chinh" },
 ];
 
-export default function Sidebar({ isCollapsed = false, onToggle }) {
+export default function Sidebar({
+  isCollapsed = false,
+  onToggle,
+  mobileOpen = false,
+  onMobileClose,
+}) {
   return (
-    <aside className={"sidebar" + (isCollapsed ? " collapsed" : "")}>
+    <aside
+      className={
+        "sidebar" +
+        (isCollapsed ? " collapsed" : "") +
+        (mobileOpen ? " mobile-open" : "")
+      }
+    >
       <div className="sidebar-logo">
         <div className="logo-icon">
           <Warehouse size={20} color="var(--accent)" />
         </div>
-        {!isCollapsed && (
-          <div className="logo-text">
-            <p className="logo-title">Pallet Út Xíu</p>
-            <p className="logo-subtitle">Kho Tân Bình - TP.HCM</p>
-          </div>
-        )}
+        <div className="logo-text">
+          <p className="logo-title">Pallet Út Xíu</p>
+          <p className="logo-subtitle">Kho Tân Bình - TP.HCM</p>
+        </div>
       </div>
 
       <nav className="sidebar-nav">
@@ -45,13 +54,14 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
             key={label}
             to={to}
             end={to === "/"}
-            title={isCollapsed ? label : undefined}
+            title={label}
+            onClick={onMobileClose}
             className={({ isActive }) =>
               "nav-link" + (isActive ? " active" : "")
             }
           >
             <Icon size={18} className="nav-icon" />
-            {!isCollapsed && <span>{label}</span>}
+            <span>{label}</span>
           </NavLink>
         ))}
       </nav>

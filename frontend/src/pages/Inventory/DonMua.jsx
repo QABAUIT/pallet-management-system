@@ -90,13 +90,13 @@ export default function DonMua() {
         return (
           <Space size="small">
             <Tooltip title="Xem chi tiết">
-              <Button type="text" icon={<EyeOutlined />} style={{ color: "#8c8c8c" }} onClick={() => setViewId(r.id)} />
+              <Button type="text" icon={<EyeOutlined />} style={{ color: "var(--text-muted)" }} onClick={() => setViewId(r.id)} />
             </Tooltip>
             <Tooltip title={laNhap ? "Chỉnh sửa" : "Chỉ sửa được đơn nháp"}>
               <Button
                 type="text"
                 icon={<EditOutlined />}
-                style={{ color: "#8c8c8c" }}
+                style={{ color: "var(--text-muted)" }}
                 disabled={!laNhap}
                 onClick={() => setForm({ id: r.id })}
               />
@@ -106,7 +106,7 @@ export default function DonMua() {
                 <Button
                   type="text"
                   icon={<CheckOutlined />}
-                  style={{ color: "#389e0d" }}
+                  style={{ color: "var(--color-green)" }}
                   onClick={() => run(() => donMuaApi.xacNhan(r.id), "Đã xác nhận đơn mua")}
                 />
               </Tooltip>
@@ -116,7 +116,7 @@ export default function DonMua() {
                 <Button
                   type="text"
                   icon={<InboxOutlined />}
-                  style={{ color: "#1677ff" }}
+                  style={{ color: "var(--color-blue)" }}
                   onClick={() => setNhanId(r.id)}
                 />
               </Tooltip>

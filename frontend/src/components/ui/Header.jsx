@@ -1,4 +1,4 @@
-import { ArrowLeft, Bell, ChevronDown, LogOut } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, LogOut, Menu } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "../layout/style.css";
@@ -139,6 +139,7 @@ export default function Header({
   },
   notificationCount = 0,
   notificationPath = "/notifications",
+  onMenuClick,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -156,6 +157,14 @@ export default function Header({
 
   return (
     <header className="header">
+      <button
+        type="button"
+        className="header-menu-btn"
+        aria-label="Mở menu điều hướng"
+        onClick={onMenuClick}
+      >
+        <Menu size={22} />
+      </button>
       <div className="header-left">
         <h1 className="header-title">{title}</h1>
         {backLink ? (
