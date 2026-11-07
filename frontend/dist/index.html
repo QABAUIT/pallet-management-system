@@ -4,9 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>frontend</title>
-    <script type="module" crossorigin src="/assets/index-HhzskaJw.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CPeR1Fx8.css">
+    <script>
+      // Áp dụng chế độ sáng/tối trước khi React render để tránh nháy trắng.
+      (function () {
+        try {
+          var saved = localStorage.getItem('wecamp-theme');
+          var theme = saved === 'dark' || saved === 'light'
+            ? saved
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-rgSHxs_D.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Chlv-EVD.css">
   </head>
   <body>
     <div id="root"></div>

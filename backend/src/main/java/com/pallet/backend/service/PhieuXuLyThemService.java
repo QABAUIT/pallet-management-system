@@ -9,7 +9,7 @@ import java.util.List;
 public interface PhieuXuLyThemService {
     List<PhieuXuLyThemResponse> layDanhSach(String trangThai, String tenDangNhap);
     PhieuXuLyThemResponse layChiTiet(Long id, String tenDangNhap);
-    TonCanXuLyResponse layTonCanXuLy(String tenDangNhap);
+    TonCanXuLyResponse layTonCanXuLy(String tenDangNhap, Long boQuaPhieuId);
     PhieuXuLyThemResponse taoMoi(TaoPhieuXuLyThemRequest req, String tenDangNhap);
     PhieuXuLyThemResponse capNhat(Long id, TaoPhieuXuLyThemRequest req, String tenDangNhap);
     PhieuXuLyThemResponse duyet(Long id, String tenDangNhap);

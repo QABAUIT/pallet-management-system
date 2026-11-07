@@ -1,8 +1,9 @@
-import { ArrowLeft, Bell, ChevronDown, LogOut, Menu } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, LogOut, Menu, Moon, Sun } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "../layout/style.css";
 import { useAuth } from "../../store/AuthContext";
+import { useTheme } from "../../store/ThemeContext";
 
 
 const titles = {
@@ -144,6 +145,8 @@ export default function Header({
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const [showMenu, setShowMenu] = useState(false);
 
   const title = getPageTitle(location.pathname);
@@ -178,6 +181,17 @@ export default function Header({
       </div>
 
       <div className="header-right">
+        <button
+          type="button"
+          aria-label={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+          title={isDark ? "Chế độ sáng" : "Chế độ tối"}
+          aria-pressed={isDark}
+          onClick={toggleTheme}
+          className="icon-btn theme-toggle"
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
         <button
           type="button"
           aria-label="Thông báo"

@@ -22,13 +22,13 @@ export default function XuLyThemFormModal({ record, onCancel, onSaved }) {
   useEffect(() => {
     let ignore = false;
     xuLyThemApi
-      .ton()
+      .ton(record?.id)
       .then((d) => !ignore && setTon(d?.dong ?? []))
       .catch((err) => !ignore && notifyError(err));
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [record?.id]);
 
   const khoId = isEdit ? record.khoId : KHO_ID;
   const loai = Form.useWatch("loaiNguon", form);
@@ -36,8 +36,12 @@ export default function XuLyThemFormModal({ record, onCancel, onSaved }) {
   const pheLieu = Form.useWatch("soPheLieu", form);
 
   const dongTon = (ton ?? []).find((d) => d.loaiNguon === loai && d.khoId === khoId);
-  // Phiếu nháp chưa trừ tồn (chỉ trừ khi duyệt) nên tồn hiện có chính là mức tối đa
-  const toiDa = dongTon ? dongTon.soLuongTon : null;
+  // Khả dụng = tồn - hàng đã giữ - các phiếu nháp khác (BE đã trừ sẵn, trừ chính phiếu đang sửa)
+  const toiDa = ton == null
+    ? null
+    : dongTon
+      ? (dongTon.soLuongKhaDung ?? dongTon.soLuongTon ?? 0)
+      : 0;
   const tong = sum(datLai, pheLieu);
 
   const handleFinish = async (v) => {
@@ -54,7 +58,7 @@ export default function XuLyThemFormModal({ record, onCancel, onSaved }) {
       return;
     }
     if (toiDa != null && payload.soDatLai + payload.soPheLieu > toiDa) {
-      notifyError(`Nhóm này chỉ còn ${toiDa} chiếc cần xử lý`);
+      notifyError(`Nhóm này chỉ còn ${toiDa} chiếc khả dụng (đã trừ phiếu nháp khác)`);
       return;
     }
     setSaving(true);
@@ -120,7 +124,7 @@ export default function XuLyThemFormModal({ record, onCancel, onSaved }) {
             message={
               ton == null
                 ? "Đang tải tồn..."
-                : `Tồn hiện có: ${toiDa ?? 0} chiếc. Đã chọn xử lý: ${tong}.`
+                : `Khả dụng: ${toiDa ?? 0} chiếc (tồn ${dongTon?.soLuongTon ?? 0}, phiếu nháp khác giữ ${dongTon?.soLuongDangCho ?? 0}). Đã chọn xử lý: ${tong}.`
             }
           />
         )}

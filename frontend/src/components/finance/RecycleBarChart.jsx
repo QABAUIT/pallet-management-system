@@ -1,9 +1,12 @@
 import { Bar } from "react-chartjs-2";
 import "./chartSetup";
 import { formatMoney } from "../../utils/receiptFormat";
+import useChartTheme from "../../hooks/useChartTheme";
 
 /** Biểu đồ cột đơn giản cho báo cáo tái chế. colors: 1 màu hoặc 1 màu mỗi cột. */
 export default function RecycleBarChart({ labels, values, colors, unit = "", horizontal = false }) {
+  const { gridColor, tickColor } = useChartTheme();
+
   const chartData = {
     labels,
     datasets: [
@@ -25,8 +28,8 @@ export default function RecycleBarChart({ labels, values, colors, unit = "", hor
       tooltip: { callbacks: { label: (c) => `${formatMoney(c.parsed[valueAxis])} ${unit}`.trim() } },
     },
     scales: {
-      [valueAxis]: { beginAtZero: true, grid: { color: "#e5e7eb" } },
-      [horizontal ? "y" : "x"]: { grid: { display: false } },
+      [valueAxis]: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor } },
+      [horizontal ? "y" : "x"]: { grid: { display: false }, ticks: { color: tickColor } },
     },
   };
   return (

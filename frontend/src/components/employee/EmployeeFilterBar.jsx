@@ -54,7 +54,7 @@ export default function EmployeeFilterBar({
         type="primary"
         icon={<PlusOutlined />}
         size="large"
-        style={{ backgroundColor: 'var(--color-amber-strong)', borderColor: 'var(--color-amber-strong)', borderRadius: '6px', fontWeight: 500 }}
+        style={{ backgroundColor: 'var(--color-amber-solid)', borderColor: 'var(--color-amber-solid)', color: 'var(--text-inverse)', borderRadius: '6px', fontWeight: 500 }}
         onClick={handleAdd}
       >
         Thêm nhân viên mới

@@ -28,8 +28,9 @@ public class PhieuXuLyThemController {
     }
 
     @GetMapping("/ton")
-    public ApiResponse<TonCanXuLyResponse> tonCanXuLy(Principal principal) {
-        return ApiResponse.success(phieuXuLyThemService.layTonCanXuLy(principal.getName()), "OK");
+    public ApiResponse<TonCanXuLyResponse> tonCanXuLy(
+            @RequestParam(required = false) Long phieuId, Principal principal) {
+        return ApiResponse.success(phieuXuLyThemService.layTonCanXuLy(principal.getName(), phieuId), "OK");
     }
 
     @GetMapping("/{id}")

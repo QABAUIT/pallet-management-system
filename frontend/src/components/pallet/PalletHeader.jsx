@@ -52,7 +52,7 @@ export default function PalletHeader({ searchText, setSearchText, filter, setFil
             onChange={(e) => setFilterTab(e.target.value)}
             style={{ overflowX: 'auto', whiteSpace: 'nowrap', minWidth: 0 }}
           >
-            <Radio.Button value="all">Tất cả <Badge count={totalPallets} style={{ backgroundColor: 'var(--color-blue)', marginLeft: 8 }} /></Radio.Button>
+            <Radio.Button value="all">Tất cả <Badge count={totalPallets} style={{ backgroundColor: 'var(--color-blue-solid)', marginLeft: 8 }} /></Radio.Button>
             <Radio.Button value="pallet">Pallet</Radio.Button>
             <Radio.Button value="linh_kien">Linh kiện</Radio.Button>
           </Radio.Group>

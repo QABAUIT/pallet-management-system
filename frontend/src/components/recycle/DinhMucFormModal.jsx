@@ -14,6 +14,9 @@ const LINE = {
 
 const opt = (m) => ({ value: m.id, label: `${m.maMatHang} - ${m.tenMatHang}` });
 
+// Hàng đang chờ xử lý thêm không được dùng trực tiếp làm vật tư đóng pallet.
+const MA_VAT_TU_TRUNG_GIAN = new Set(["LK-TX-11", "LK-CX-12"]);
+
 /**
  * Tạo / sửa định mức vật tư cho 1 thành phẩm. Khớp TaoDinhMucRequest:
  * tenDinhMuc, thanhPhamId, ghiChu, chiTiet[{matHangId, soLuong}]  (soLuong = vật tư cho 1 thành phẩm).
@@ -44,6 +47,7 @@ export default function DinhMucFormModal({ id, onCancel, onSaved }) {
   const thanhPhamOptions = matHang.filter((m) => m.loaiMatHang === "pallet").map(opt);
   const vatTuOptions = matHang
     .filter((m) => m.loaiMatHang === "linh_kien" && m.id !== thanhPhamId)
+    .filter((m) => !MA_VAT_TU_TRUNG_GIAN.has(m.maMatHang))
     .map(opt);
 
   const handleFinish = async (v) => {

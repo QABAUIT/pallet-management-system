@@ -27,7 +27,7 @@ export default function StatCard({ label, value, unit, note, color = 'var(--colo
     >
       <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 6 }}>
-        <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>
+        <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--brand-ink)', lineHeight: 1.2 }}>
           {loading ? '…' : value}
         </span>
         {unit && <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{unit}</span>}

@@ -77,19 +77,24 @@ public class PhieuXuLyThemServiceImpl implements PhieuXuLyThemService {
 
     @Override
     @Transactional(readOnly = true)
-    public TonCanXuLyResponse layTonCanXuLy(String tenDangNhap) {
+    public TonCanXuLyResponse layTonCanXuLy(String tenDangNhap, Long boQuaPhieuId) {
         NhanVien nv = timNhanVien(tenDangNhap);
+        long boQua = boQuaPhieuId == null ? -1L : boQuaPhieuId;
         List<TonCanXuLyResponse.Dong> dong = new ArrayList<>();
         for (Kho kho : khoRepository.findAll()) {
             if (!phanQuyenKho.duocThaoTac(nv, kho)) continue;
             for (String loai : new String[]{"thanh", "cuc"}) {
                 MatHang mh = layMatHang(QuyTacTaiChe.maNguon(loai));
-                int ton = tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId())
-                        .map(t -> t.getSoLuongTonKho()).orElse(0);
-                if (ton > 0) {
+                var tonKho = tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId());
+                int ton = tonKho.map(t -> t.getSoLuongTonKho()).orElse(0);
+                int daGiu = tonKho.map(t -> t.getSoLuongDaGiuCho()).orElse(0);
+                int dangCho = tongDangCho(kho.getId(), loai, boQua);
+                if (ton > 0 || dangCho > 0) {
                     dong.add(TonCanXuLyResponse.Dong.builder()
                             .khoId(kho.getId()).tenKho(kho.getTenKho())
-                            .loaiNguon(loai).tenMatHang(mh.getTenMatHang()).soLuongTon(ton).build());
+                            .loaiNguon(loai).tenMatHang(mh.getTenMatHang())
+                            .soLuongTon(ton).soLuongDaGiuCho(daGiu).soLuongDangCho(dangCho)
+                            .soLuongKhaDung(Math.max(0, ton - daGiu - dangCho)).build());
                 }
             }
         }
@@ -109,6 +114,7 @@ public class PhieuXuLyThemServiceImpl implements PhieuXuLyThemService {
         int pheLieu = z(req.getSoPheLieu());
         int kg = z(req.getKgPheLieu());
         QuyTacTaiChe.kiemTraXuLyThem(req.getLoaiNguon(), datLai, pheLieu, kg, req.getLyDo());
+        kiemTraDuTon(kho, req.getLoaiNguon(), datLai, pheLieu, -1L);
 
         PhieuXuLyThem x = phieuXuLyThemRepository.save(PhieuXuLyThem.builder()
                 .maPhieu(phieuKhoRepository.getMaChungTu("PTC", "XL-"))
@@ -140,6 +146,7 @@ public class PhieuXuLyThemServiceImpl implements PhieuXuLyThemService {
         int pheLieu = z(req.getSoPheLieu());
         int kg = z(req.getKgPheLieu());
         QuyTacTaiChe.kiemTraXuLyThem(req.getLoaiNguon(), datLai, pheLieu, kg, req.getLyDo());
+        kiemTraDuTon(x.getKho(), req.getLoaiNguon(), datLai, pheLieu, x.getId());
 
         x.setLoaiNguon(req.getLoaiNguon());
         x.setSoDatLai(datLai);
@@ -260,6 +267,27 @@ public class PhieuXuLyThemServiceImpl implements PhieuXuLyThemService {
         return matHangRepository.findByMaMatHang(ma)
                 .orElseThrow(() -> new BusinessException("Thiếu mặt hàng hệ thống mã " + ma
                         + ", hãy kiểm tra lại dữ liệu mặt hàng"));
+    }
+
+    /** Tồn khả dụng = tồn kho - số chiếc đang nằm trong các phiếu nháp khác. */
+    private void kiemTraDuTon(Kho kho, String loaiNguon, int datLai, int pheLieu, Long boQuaPhieuId) {
+        MatHang nguon = layMatHang(QuyTacTaiChe.maNguon(loaiNguon));
+        var tonKho = tonKhoRepository.findByMatHang_IdAndKho_Id(nguon.getId(), kho.getId());
+        int ton = tonKho.map(t -> t.getSoLuongTonKho()).orElse(0);
+        int daGiu = tonKho.map(t -> t.getSoLuongDaGiuCho()).orElse(0);
+        int dangCho = tongDangCho(kho.getId(), loaiNguon, boQuaPhieuId);
+        int khaDung = ton - daGiu - dangCho;
+        int canDung = datLai + pheLieu;
+        if (canDung > khaDung) {
+            throw new BusinessException("Nhóm " + nguon.getTenMatHang() + " chỉ còn "
+                    + Math.max(0, khaDung) + " chiếc khả dụng (tồn " + ton + ", đã giữ " + daGiu
+                    + ", phiếu nháp khác giữ " + dangCho + "), không thể xử lý " + canDung);
+        }
+    }
+
+    private int tongDangCho(Long khoId, String loaiNguon, Long boQuaPhieuId) {
+        Long v = phieuXuLyThemRepository.tongDangCho(khoId, loaiNguon, boQuaPhieuId);
+        return v == null ? 0 : v.intValue();
     }
 
     private PhieuXuLyThem timPhieu(Long id) {

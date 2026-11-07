@@ -46,6 +46,11 @@
   --color-slate-bg:     #f1f5f9;
   --color-slate-border: #cbd5e1;
 
+  /* Màu đặc (nền tô) — tách khỏi màu chữ ngữ nghĩa để chữ trắng luôn đủ tương phản */
+  --color-blue-solid:  #1d4ed8;
+  --color-red-solid:   #b91c1c;
+  --color-amber-solid: #92400e;
+
   /* ── Văn bản (tương phản >= 4.5:1 trên nền sáng) ── */
   --text-primary:   #0f172a;
   --text-secondary: #334155;
@@ -53,6 +58,7 @@
   --text-faint:     #64748b;
   --text-inverse:   #f8fafc;
   --text-on-dark-muted: #cbd5e1;
+  --brand-ink:      var(--navy);
 
   /* ── Nền & Viền ── */
   --bg-page:      #f4f6fa;
@@ -135,6 +141,99 @@
 
   /* ── Focus ── */
   --focus-ring: 0 0 0 3px rgba(29, 78, 216, 0.18);
+  --focus-border: var(--navy);
+}
+
+/* ===========================================================
+   Dark theme — chỉ ghi đè token màu, giữ nguyên toàn bộ logic
+   =========================================================== */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* ── Bảng màu thương hiệu ── */
+  --navy:         #223257;
+  --navy-light:   #2c4374;
+  --navy-soft:    #17223a;
+  --accent:       #f5a623;
+  --accent-hover: #ffb84d;
+  --accent-bg:    rgba(245, 166, 35, 0.14);
+  --accent-border:rgba(245, 166, 35, 0.40);
+  --text-on-accent: #241500;
+
+  /* ── Ngữ nghĩa (Semantic) ── */
+  --color-blue:        #7cb3ff;
+  --color-blue-strong: #a5c8ff;
+  --color-blue-bg:     rgba(37, 99, 235, 0.18);
+  --color-blue-border: rgba(124, 179, 255, 0.40);
+
+  --color-green:        #5bd68f;
+  --color-green-strong: #8ae6b0;
+  --color-green-bg:     rgba(22, 163, 74, 0.16);
+  --color-green-border: rgba(91, 214, 143, 0.38);
+
+  --color-red:        #ff8a8a;
+  --color-red-strong: #ffb3b3;
+  --color-red-bg:     rgba(220, 38, 38, 0.16);
+  --color-red-border: rgba(255, 138, 138, 0.38);
+
+  --color-amber:        #f7b955;
+  --color-amber-strong: #ffd27a;
+  --color-amber-bg:     rgba(245, 166, 35, 0.14);
+  --color-amber-border: rgba(247, 185, 85, 0.38);
+
+  --color-purple:        #c4b5fd;
+  --color-purple-strong: #ddd6fe;
+  --color-purple-bg:     rgba(124, 58, 237, 0.20);
+  --color-purple-border: rgba(196, 181, 253, 0.40);
+
+  --color-slate:        #b6c2d4;
+  --color-slate-bg:     #1e293b;
+  --color-slate-border: #334155;
+
+  /* Màu đặc (nền tô) */
+  --color-blue-solid:  #2f5fa8;
+  --color-red-solid:   #b23a3a;
+  --color-amber-solid: #8a5a0c;
+
+  /* ── Văn bản (tương phản >= 4.5:1 trên nền tối) ── */
+  --text-primary:   #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #9fb0c7;
+  --text-faint:     #8496b1;
+  --text-inverse:   #f8fafc;
+  --text-on-dark-muted: #cbd5e1;
+  --brand-ink:      #9ec5ff;
+
+  /* ── Nền & Viền ── */
+  --bg-page:      #0a101c;
+  --bg-card:      #121a2b;
+  --bg-subtle:    #172033;
+  --bg-tint:      #1a2438;
+  --bg-hover:     #1f2c44;
+  --bg-navy-soft: #17223a;
+  --bg-header:    rgba(13, 20, 35, 0.92);
+  --bg-scrim:     rgba(2, 6, 16, 0.66);
+  --bg-image-caption: rgba(2, 6, 16, 0.72);
+  --bg-on-dark-soft: rgba(255, 255, 255, 0.14);
+  --bg-on-dark-strong: rgba(255, 255, 255, 0.22);
+  --bg-on-dark-hover: rgba(255, 255, 255, 0.10);
+  --login-overlay: linear-gradient(to top, rgba(5, 10, 22, 0.94) 0%, rgba(5, 10, 22, 0.45) 60%);
+  --login-bg-fallback: #0a1424;
+
+  --border-light: #202d45;
+  --border-mid:   #2b3a56;
+  --border-hover: #5f7393;
+
+  /* ── Bóng đổ ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 20px 44px rgba(0, 0, 0, 0.55);
+  --shadow-navy: 0 6px 14px rgba(0, 0, 0, 0.50);
+  --shadow-focus: 0 0 0 3px rgba(245, 166, 35, 0.40);
+
+  /* ── Focus ── */
+  --focus-ring: 0 0 0 3px rgba(124, 179, 255, 0.30);
+  --focus-border: var(--accent);
 }
 
 /* ── Reset toàn cục ── */

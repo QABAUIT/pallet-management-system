@@ -53,6 +53,14 @@ export default function ThaoDoFormModal({ record, onCancel, onSaved }) {
       kgPheLieu: v.kgPheLieu ?? 0,
       ghiChu: v.ghiChu?.trim() || null,
     };
+    if (!payload.soPalletThaoDo || payload.soPalletThaoDo <= 0) {
+      notifyError("Số pallet tháo dỡ phải lớn hơn 0");
+      return;
+    }
+    if (khaDung != null && payload.soPalletThaoDo > khaDung) {
+      notifyError(`Phiếu phân loại này chỉ còn ${khaDung} pallet có thể tháo dỡ`);
+      return;
+    }
     const coKetQua =
       payload.soThanhNguyen + payload.soCucVuong + payload.soThanhCanXuLy +
         payload.soCucCanXuLy + payload.kgPheLieu > 0;

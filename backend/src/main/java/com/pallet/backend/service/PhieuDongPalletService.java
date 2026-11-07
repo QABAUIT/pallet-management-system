@@ -11,7 +11,8 @@ public interface PhieuDongPalletService {
     List<PhieuDongPalletResponse> layDanhSach(String trangThai, String tenDangNhap);
     PhieuDongPalletResponse layChiTiet(Long id, String tenDangNhap);
     DanhMucDongPalletResponse layDanhMuc();
-    DuKienDongPalletResponse duKien(Long dinhMucId, Long khoId, int soLuong, String tenDangNhap);
+    DuKienDongPalletResponse duKien(Long dinhMucId, Long khoId, int soLuong, Long boQuaPhieuId,
+                                    String tenDangNhap);
     PhieuDongPalletResponse taoMoi(TaoPhieuDongPalletRequest req, String tenDangNhap);
     PhieuDongPalletResponse capNhat(Long id, TaoPhieuDongPalletRequest req, String tenDangNhap);
     PhieuDongPalletResponse duyet(Long id, String tenDangNhap);

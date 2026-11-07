@@ -125,7 +125,7 @@
 .login-form .ant-input-affix-wrapper:hover,
 .login-form .ant-input:focus,
 .login-form .ant-input-affix-wrapper-focused {
-  border-color: var(--navy);
+  border-color: var(--focus-border);
 }
 .login-form .ant-input:focus,
 .login-form .ant-input-affix-wrapper-focused {

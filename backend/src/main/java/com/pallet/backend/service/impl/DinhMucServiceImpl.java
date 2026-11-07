@@ -110,12 +110,8 @@ public class DinhMucServiceImpl implements DinhMucService {
     private MatHang kiemTraThanhPham(Long id) {
         MatHang mh = matHangRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Mặt hàng", id));
-        if ("kg".equals(mh.getDonViTinh())) {
-            throw new BusinessException("Thành phẩm không thể là mặt hàng tính theo kg (phế liệu)");
-        }
-        String ma = mh.getMaMatHang();
-        if (QuyTacTaiChe.MA_CHO_PHAN_LOAI.equals(ma) || QuyTacTaiChe.MA_CHO_THAO_DO.equals(ma)) {
-            throw new BusinessException("Thành phẩm không thể là pallet cũ chờ phân loại/tháo dỡ");
+        if (!"pallet".equals(mh.getLoaiMatHang())) {
+            throw new BusinessException("Thành phẩm của định mức phải là mặt hàng loại pallet");
         }
         return mh;
     }
@@ -138,11 +134,12 @@ public class DinhMucServiceImpl implements DinhMucService {
 
     static void kiemTraVatTu(MatHang vt, Long thanhPhamId) {
         String ma = vt.getMaMatHang();
-        if ("kg".equals(vt.getDonViTinh())) {
-            throw new BusinessException("Vật tư " + ma + " tính theo kg (phế liệu), không dùng được trong định mức");
+        if (!"linh_kien".equals(vt.getLoaiMatHang())) {
+            throw new BusinessException("Vật tư " + ma + " phải là mặt hàng loại linh kiện");
         }
-        if (QuyTacTaiChe.MA_CHO_PHAN_LOAI.equals(ma) || QuyTacTaiChe.MA_CHO_THAO_DO.equals(ma)) {
-            throw new BusinessException("Pallet cũ chờ phân loại/tháo dỡ không phải vật tư đóng pallet");
+        if (QuyTacTaiChe.MA_THANH_CAN_XU_LY.equals(ma) || QuyTacTaiChe.MA_CUC_CAN_XU_LY.equals(ma)) {
+            throw new BusinessException("Vật tư " + ma + " là hàng cần xử lý thêm, "
+                    + "phải qua phiếu xử lý thêm trước khi dùng để đóng pallet");
         }
         if (vt.getId().equals(thanhPhamId)) {
             throw new BusinessException("Thành phẩm không thể tự là vật tư của chính nó");

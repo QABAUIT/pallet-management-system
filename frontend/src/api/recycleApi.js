@@ -30,7 +30,9 @@ export const thaoDoApi = {
 // Xử lý hàng cần xử lý thêm (thanh / cục)
 export const xuLyThemApi = {
   ...phieuApi("/xu-ly-them"),
-  ton: () => apiClient.get("/xu-ly-them/ton").then(unwrap),
+  // phieuId: bỏ qua chính phiếu đang sửa khi tính số đang nằm trong phiếu nháp
+  ton: (phieuId) =>
+    apiClient.get("/xu-ly-them/ton", { params: { phieuId: phieuId || undefined } }).then(unwrap),
 };
 
 // Đơn mua

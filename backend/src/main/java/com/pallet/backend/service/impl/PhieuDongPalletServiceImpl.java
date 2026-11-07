@@ -97,10 +97,10 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
     @Transactional(readOnly = true)
     public DanhMucDongPalletResponse layDanhMuc() {
         List<DinhMucResponse> dm = dinhMucService.layDanhSach(true);
-        List<DanhMucDongPalletResponse.VatTu> vatTu = matHangRepository.findByTrangThai("hoat_dong").stream()
-                .filter(m -> !"kg".equals(m.getDonViTinh()))
-                .filter(m -> !QuyTacTaiChe.MA_CHO_PHAN_LOAI.equals(m.getMaMatHang())
-                        && !QuyTacTaiChe.MA_CHO_THAO_DO.equals(m.getMaMatHang()))
+        List<DanhMucDongPalletResponse.VatTu> vatTu = matHangRepository.findByTrangThai("dang_kinh_doanh").stream()
+                .filter(m -> "linh_kien".equals(m.getLoaiMatHang()))
+                .filter(m -> !QuyTacTaiChe.MA_THANH_CAN_XU_LY.equals(m.getMaMatHang())
+                        && !QuyTacTaiChe.MA_CUC_CAN_XU_LY.equals(m.getMaMatHang()))
                 .map(m -> DanhMucDongPalletResponse.VatTu.builder()
                         .id(m.getId()).maMatHang(m.getMaMatHang()).tenMatHang(m.getTenMatHang()).build())
                 .toList();
@@ -109,28 +109,59 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
 
     @Override
     @Transactional(readOnly = true)
-    public DuKienDongPalletResponse duKien(Long dinhMucId, Long khoId, int soLuong, String tenDangNhap) {
+    public DuKienDongPalletResponse duKien(Long dinhMucId, Long khoId, int soLuong, Long boQuaPhieuId,
+                                           String tenDangNhap) {
         NhanVien nv = timNhanVien(tenDangNhap);
         Kho kho = timKho(khoId);
         phanQuyenKho.kiemTra(nv, kho);
         DinhMuc dm = dinhMucRepository.findById(dinhMucId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Định mức", dinhMucId));
+        long boQua = boQuaPhieuId == null ? -1L : boQuaPhieuId;
+
+        // Sửa phiếu nháp mà định mức + số sản xuất không đổi: dự kiến theo số định mức đã chốt
+        // trong phiếu (khớp với form và bước lưu), không theo BOM hiện tại có thể đã bị sửa.
+        List<ChiTietDongPallet> snapshot = boQuaPhieuId == null ? null
+                : phieuDongPalletRepository.findById(boQuaPhieuId)
+                        .filter(p -> NHAP.equals(p.getTrangThai()))
+                        .filter(p -> p.getKho().getId().equals(kho.getId()))
+                        .filter(p -> p.getDinhMuc().getId().equals(dinhMucId))
+                        .filter(p -> p.getSoLuongSanXuat() == soLuong)
+                        .map(p -> chiTietDongPalletRepository.timTheoPhieu(p.getId()))
+                        .orElse(null);
 
         List<DuKienDongPalletResponse.Dong> dong = new ArrayList<>();
         boolean du = true;
-        for (ChiTietDinhMuc c : chiTietDinhMucRepository.timTheoDinhMuc(dm.getId())) {
-            int nhuCau = QuyTacDongPallet.tinhNhuCau(c.getSoLuong(), soLuong);
-            int khaDung = khaDung(c.getMatHang(), kho);
-            int thieu = Math.max(0, nhuCau - khaDung);
-            if (thieu > 0) du = false;
-            dong.add(DuKienDongPalletResponse.Dong.builder()
-                    .matHangId(c.getMatHang().getId()).maMatHang(c.getMatHang().getMaMatHang())
-                    .tenMatHang(c.getMatHang().getTenMatHang())
-                    .nhuCau(nhuCau).khaDung(khaDung).thieu(thieu).build());
+        if (snapshot != null) {
+            for (ChiTietDongPallet c : snapshot) {
+                if (c.getSoLuongDinhMuc() <= 0) continue;
+                du &= themDongDuKien(dong, c.getMatHang(), c.getSoLuongDinhMuc(), kho, boQua);
+            }
+        } else {
+            for (ChiTietDinhMuc c : chiTietDinhMucRepository.timTheoDinhMuc(dm.getId())) {
+                int nhuCau = QuyTacDongPallet.tinhNhuCau(c.getSoLuong(), soLuong);
+                du &= themDongDuKien(dong, c.getMatHang(), nhuCau, kho, boQua);
+            }
         }
         return DuKienDongPalletResponse.builder()
                 .dinhMucId(dm.getId()).khoId(kho.getId()).soLuongSanXuat(soLuong)
                 .duVatTu(du).chiTiet(dong).build();
+    }
+
+    /** Thêm 1 dòng dự kiến vật tư; trả về true nếu dòng này đủ hàng. */
+    private boolean themDongDuKien(List<DuKienDongPalletResponse.Dong> dong, MatHang mh, int nhuCau,
+                                   Kho kho, long boQua) {
+        var tonKho = tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId());
+        int ton = tonKho.map(t -> t.getSoLuongTonKho()).orElse(0);
+        int daGiu = tonKho.map(t -> t.getSoLuongDaGiuCho()).orElse(0);
+        int dangCho = tongDangCho(mh.getId(), kho.getId(), boQua);
+        int khaDung = Math.max(0, ton - daGiu - dangCho);
+        int thieu = Math.max(0, nhuCau - khaDung);
+        dong.add(DuKienDongPalletResponse.Dong.builder()
+                .matHangId(mh.getId()).maMatHang(mh.getMaMatHang())
+                .tenMatHang(mh.getTenMatHang())
+                .nhuCau(nhuCau).soLuongTon(ton).soLuongDaGiuCho(daGiu)
+                .soLuongDangCho(dangCho).khaDung(khaDung).thieu(thieu).build());
+        return thieu == 0;
     }
 
     // ======================= TẠO / SỬA / HỦY =======================
@@ -142,7 +173,8 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
         Kho kho = timKho(req.getKhoId());
         phanQuyenKho.kiemTra(nv, kho);
         DinhMuc dm = layDinhMucHoatDong(req.getDinhMucId());
-        List<ChiTietDongPallet> dong = dungDong(dm, req);
+        List<ChiTietDongPallet> dong = dungDong(dm, req, null);
+        kiemTraKhaDung(dong, kho, -1L);
 
         PhieuDongPallet p = phieuDongPalletRepository.save(PhieuDongPallet.builder()
                 .maPhieu(phieuKhoRepository.getMaChungTu("PTC", "DP-"))
@@ -170,10 +202,20 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
             throw new BusinessException("Không đổi được kho của phiếu, hãy hủy và tạo phiếu mới");
         }
         DinhMuc dm = layDinhMucHoatDong(req.getDinhMucId());
-        List<ChiTietDongPallet> dong = dungDong(dm, req);
+        // Định mức + số sản xuất không đổi: giữ nguyên số định mức đã chốt trong phiếu nháp,
+        // tránh việc sửa định mức sau đó làm thay đổi lịch sử của phiếu đang lập.
+        boolean giuSnapshot = p.getDinhMuc().getId().equals(req.getDinhMucId())
+                && p.getSoLuongSanXuat() == req.getSoLuongSanXuat();
+        List<ChiTietDongPallet> dongCu = giuSnapshot
+                ? chiTietDongPalletRepository.timTheoPhieu(p.getId())
+                : null;
+        List<ChiTietDongPallet> dong = dungDong(dm, req, dongCu);
+        kiemTraKhaDung(dong, p.getKho(), p.getId());
 
         p.setDinhMuc(dm);
-        p.setMatHangThanhPham(dm.getMatHangThanhPham());
+        if (!giuSnapshot) {
+            p.setMatHangThanhPham(dm.getMatHangThanhPham());
+        }
         p.setSoLuongSanXuat(req.getSoLuongSanXuat());
         p.setGhiChu(lamSach(req.getGhiChu()));
         p = phieuDongPalletRepository.save(p);
@@ -267,15 +309,30 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
 
     // ======================= HELPER =======================
 
-    /** Dựng các dòng vật tư: mặc định đúng định mức, cho ghi đè và thêm vật tư ngoài định mức. */
-    private List<ChiTietDongPallet> dungDong(DinhMuc dm, TaoPhieuDongPalletRequest req) {
+    /**
+     * Dựng các dòng vật tư: mặc định đúng định mức, cho ghi đè và thêm vật tư ngoài định mức.
+     * Nếu có dongCu (sửa phiếu mà định mức + số sản xuất không đổi) thì giữ số định mức đã chốt
+     * trong phiếu cũ; số thực tế mặc định quay về đúng định mức đó.
+     */
+    private List<ChiTietDongPallet> dungDong(DinhMuc dm, TaoPhieuDongPalletRequest req,
+                                             List<ChiTietDongPallet> dongCu) {
         int soSx = req.getSoLuongSanXuat();
         Map<Long, ChiTietDongPallet> theoVatTu = new LinkedHashMap<>();
 
-        for (ChiTietDinhMuc c : chiTietDinhMucRepository.timTheoDinhMuc(dm.getId())) {
-            int nhuCau = QuyTacDongPallet.tinhNhuCau(c.getSoLuong(), soSx);
-            theoVatTu.put(c.getMatHang().getId(), ChiTietDongPallet.builder()
-                    .matHang(c.getMatHang()).soLuongDinhMuc(nhuCau).soLuongThucTe(nhuCau).build());
+        if (dongCu != null) {
+            for (ChiTietDongPallet c : dongCu) {
+                if (c.getSoLuongDinhMuc() > 0) {
+                    theoVatTu.put(c.getMatHang().getId(), ChiTietDongPallet.builder()
+                            .matHang(c.getMatHang()).soLuongDinhMuc(c.getSoLuongDinhMuc())
+                            .soLuongThucTe(c.getSoLuongDinhMuc()).build());
+                }
+            }
+        } else {
+            for (ChiTietDinhMuc c : chiTietDinhMucRepository.timTheoDinhMuc(dm.getId())) {
+                int nhuCau = QuyTacDongPallet.tinhNhuCau(c.getSoLuong(), soSx);
+                theoVatTu.put(c.getMatHang().getId(), ChiTietDongPallet.builder()
+                        .matHang(c.getMatHang()).soLuongDinhMuc(nhuCau).soLuongThucTe(nhuCau).build());
+            }
         }
 
         if (req.getChiTiet() != null) {
@@ -313,9 +370,27 @@ public class PhieuDongPalletServiceImpl implements PhieuDongPalletService {
         chiTietDongPalletRepository.saveAll(dong);
     }
 
-    private int khaDung(MatHang mh, Kho kho) {
-        return tonKhoRepository.findByMatHang_IdAndKho_Id(mh.getId(), kho.getId())
-                .map(t -> t.getSoLuongTonKho() - t.getSoLuongDaGiuCho()).orElse(0);
+    /** Mỗi vật tư thực tế không được vượt tồn khả dụng sau khi trừ phiếu nháp khác. */
+    private void kiemTraKhaDung(List<ChiTietDongPallet> dong, Kho kho, Long boQuaPhieuId) {
+        for (ChiTietDongPallet c : dong) {
+            if (c.getSoLuongThucTe() <= 0) continue;
+            var tonKho = tonKhoRepository.findByMatHang_IdAndKho_Id(c.getMatHang().getId(), kho.getId());
+            int ton = tonKho.map(t -> t.getSoLuongTonKho()).orElse(0);
+            int daGiu = tonKho.map(t -> t.getSoLuongDaGiuCho()).orElse(0);
+            int dangCho = tongDangCho(c.getMatHang().getId(), kho.getId(), boQuaPhieuId);
+            int khaDung = ton - daGiu - dangCho;
+            if (c.getSoLuongThucTe() > khaDung) {
+                throw new BusinessException("Vật tư " + c.getMatHang().getMaMatHang() + " - "
+                        + c.getMatHang().getTenMatHang() + " chỉ còn " + Math.max(0, khaDung)
+                        + " khả dụng (tồn " + ton + ", đã giữ " + daGiu + ", phiếu nháp khác giữ "
+                        + dangCho + "), không thể dùng " + c.getSoLuongThucTe());
+            }
+        }
+    }
+
+    private int tongDangCho(Long matHangId, Long khoId, Long boQuaPhieuId) {
+        Long v = chiTietDongPalletRepository.tongDangCho(matHangId, khoId, boQuaPhieuId);
+        return v == null ? 0 : v.intValue();
     }
 
     private DinhMuc layDinhMucHoatDong(Long id) {

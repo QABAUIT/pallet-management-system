@@ -35,8 +35,11 @@ public class PhieuDongPalletController {
 
     @GetMapping("/du-kien")
     public ApiResponse<DuKienDongPalletResponse> duKien(@RequestParam Long dinhMucId, @RequestParam Long khoId,
-                                                        @RequestParam int soLuong, Principal principal) {
-        return ApiResponse.success(phieuDongPalletService.duKien(dinhMucId, khoId, soLuong, principal.getName()), "OK");
+                                                        @RequestParam int soLuong,
+                                                        @RequestParam(required = false) Long phieuId,
+                                                        Principal principal) {
+        return ApiResponse.success(
+                phieuDongPalletService.duKien(dinhMucId, khoId, soLuong, phieuId, principal.getName()), "OK");
     }
 
     @GetMapping("/{id}")

@@ -15,7 +15,14 @@ public interface ChiTietDongPalletRepository extends JpaRepository<ChiTietDongPa
     @Query("SELECT c FROM ChiTietDongPallet c JOIN FETCH c.matHang WHERE c.phieuDongPallet.id = :phieuId ORDER BY c.id")
     List<ChiTietDongPallet> timTheoPhieu(@Param("phieuId") Long phieuId);
 
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query("DELETE FROM ChiTietDongPallet c WHERE c.phieuDongPallet.id = :phieuId")
     void xoaTheoPhieu(@Param("phieuId") Long phieuId);
+
+    /** Tổng vật tư đang nằm trong các phiếu đóng pallet NHÁP khác của cùng kho. */
+    @Query("SELECT COALESCE(SUM(c.soLuongThucTe), 0) FROM ChiTietDongPallet c "
+            + "WHERE c.matHang.id = :matHangId AND c.phieuDongPallet.kho.id = :khoId "
+            + "AND c.phieuDongPallet.trangThai = 'nhap' AND c.phieuDongPallet.id <> :boQuaPhieuId")
+    Long tongDangCho(@Param("matHangId") Long matHangId, @Param("khoId") Long khoId,
+                     @Param("boQuaPhieuId") Long boQuaPhieuId);
 }

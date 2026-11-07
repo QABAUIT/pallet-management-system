@@ -55,13 +55,29 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
   const ready = dm && (!isEdit || detail);
   const dinhMucId = Form.useWatch("dinhMucId", form);
   const soLuong = Form.useWatch("soLuongSanXuat", form);
+  const chiTietRows = Form.useWatch("chiTiet", form);
   const dinhMuc = (dm?.dinhMuc ?? []).find((d) => d.id === dinhMucId);
 
-  // Định mức cho từng vật tư với số lượng sản xuất hiện tại: { matHangId: số cần }
+  // Nếu sửa phiếu mà định mức + số sản xuất không đổi thì dùng số định mức đã chốt
+  // trong phiếu (snapshot), tránh lệch khi BOM bị sửa sau khi lập phiếu.
+  const snapshotRows = (dinhMucIdValue, soLuongValue) => {
+    if (!isEdit || !detail) return null;
+    if (detail.dinhMucId !== dinhMucIdValue) return null;
+    if (Number(detail.soLuongSanXuat) !== Number(soLuongValue)) return null;
+    return detail.chiTiet ?? [];
+  };
+
   const dinhMucQty = {};
-  (dinhMuc?.chiTiet ?? []).forEach((c) => {
-    dinhMucQty[c.matHangId] = c.soLuong * (Number(soLuong) || 0);
-  });
+  const snapshot = snapshotRows(dinhMucId, soLuong);
+  if (snapshot) {
+    snapshot.forEach((c) => {
+      dinhMucQty[c.matHangId] = c.soLuongDinhMuc;
+    });
+  } else {
+    (dinhMuc?.chiTiet ?? []).forEach((c) => {
+      dinhMucQty[c.matHangId] = c.soLuong * (Number(soLuong) || 0);
+    });
+  }
 
   // Gọi dự kiến vật tư sau khi ngừng nhập 0,4s
   useEffect(() => {
@@ -72,7 +88,7 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
     let ignore = false;
     const t = setTimeout(() => {
       dongPalletApi
-        .duKien({ dinhMucId, khoId, soLuong })
+        .duKien({ dinhMucId, khoId, soLuong, phieuId: isEdit ? record.id : undefined })
         .then((d) => !ignore && setDuKien(d))
         .catch(() => !ignore && setDuKien(null));
     }, 400);
@@ -80,18 +96,28 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
       ignore = true;
       clearTimeout(t);
     };
-  }, [dinhMucId, soLuong, khoId]);
+  }, [dinhMucId, soLuong, khoId, isEdit, record?.id]);
 
-  const buildRows = (dmx, sl) =>
-    (dmx?.chiTiet ?? []).map((c) => ({
+  const buildRows = (dmx, sl, snap) => {
+    if (snap) {
+      return snap
+        .filter((c) => c.soLuongDinhMuc > 0)
+        .map((c) => ({
+          matHangId: c.matHangId,
+          soLuongThucTe: c.soLuongDinhMuc,
+          lyDoChenhLech: undefined,
+        }));
+    }
+    return (dmx?.chiTiet ?? []).map((c) => ({
       matHangId: c.matHangId,
       soLuongThucTe: c.soLuong * (Number(sl) || 0),
     }));
+  };
 
   const toggleDieuChinh = (on) => {
     setDieuChinh(on);
     if (on && !(form.getFieldValue("chiTiet") ?? []).length) {
-      form.setFieldValue("chiTiet", buildRows(dinhMuc, soLuong));
+      form.setFieldValue("chiTiet", buildRows(dinhMuc, soLuong, snapshot));
     }
   };
 
@@ -99,7 +125,10 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
   const handleValuesChange = (changed, all) => {
     if (dieuChinh && ("dinhMucId" in changed || "soLuongSanXuat" in changed)) {
       const dmx = (dm?.dinhMuc ?? []).find((d) => d.id === all.dinhMucId);
-      form.setFieldValue("chiTiet", buildRows(dmx, all.soLuongSanXuat));
+      form.setFieldValue(
+        "chiTiet",
+        buildRows(dmx, all.soLuongSanXuat, snapshotRows(all.dinhMucId, all.soLuongSanXuat))
+      );
     }
   };
 
@@ -256,9 +285,10 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...rest }) => {
-                    const row = (form.getFieldValue("chiTiet") ?? [])[name] ?? {};
+                    const row = (chiTietRows ?? [])[name] ?? {};
                     const base = dinhMucQty[row.matHangId] ?? 0;
                     const lech = Number(row.soLuongThucTe) !== base;
+                    const laDongDinhMuc = base > 0;
                     return (
                       <div key={key} style={LINE}>
                         <Form.Item
@@ -267,7 +297,13 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
                           rules={[{ required: true, message: "Chọn vật tư" }]}
                           style={{ marginBottom: 12 }}
                         >
-                          <Select showSearch optionFilterProp="label" placeholder="Vật tư" options={vatTuOptions} />
+                          <Select
+                            showSearch
+                            optionFilterProp="label"
+                            placeholder="Vật tư"
+                            options={vatTuOptions}
+                            disabled={laDongDinhMuc}
+                          />
                         </Form.Item>
                         <Form.Item
                           {...rest}
@@ -300,7 +336,18 @@ export default function DongPalletFormModal({ record, onCancel, onSaved }) {
                         >
                           <Input placeholder={lech ? "Lý do lệch (bắt buộc)" : "Lý do"} maxLength={255} />
                         </Form.Item>
-                        <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} />
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          disabled={laDongDinhMuc}
+                          title={
+                            laDongDinhMuc
+                              ? "Vật tư trong định mức không xóa được; nhập thực tế 0 và ghi lý do"
+                              : "Xóa vật tư ngoài định mức"
+                          }
+                          onClick={() => remove(name)}
+                        />
                       </div>
                     );
                   })}

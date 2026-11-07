@@ -56,7 +56,7 @@
 
 .cust-code {
   font-weight: 700;
-  color: var(--navy);
+  color: var(--brand-ink);
 }
 
 .cust-name {
@@ -93,7 +93,7 @@
   position: relative;
   padding: var(--space-lg);
   background: var(--navy);
-  color: var(--bg-card);
+  color: var(--text-inverse);
 }
 
 .detail-header-top {
@@ -128,7 +128,7 @@
 
 .detail-close-btn:hover {
   background: var(--bg-on-dark-hover);
-  color: var(--bg-card);
+  color: var(--text-inverse);
 }
 
 .detail-company-name {
@@ -171,7 +171,7 @@
   gap: var(--space-xs);
   font-size: 12px;
   font-weight: 600;
-  color: var(--navy);
+  color: var(--brand-ink);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -283,8 +283,8 @@
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--bg-card);
-  background: var(--color-amber-strong);
+  color: var(--text-inverse);
+  background: var(--color-amber-solid);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -338,7 +338,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--bg-card);
+  color: var(--text-inverse);
   background: var(--bg-on-dark-soft);
   border-radius: var(--radius-lg);
 }
@@ -352,7 +352,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: var(--bg-card);
+  color: var(--text-inverse);
 }
 
 .modal-subtitle {
@@ -370,7 +370,7 @@
   justify-content: center;
   border: none;
   background: transparent;
-  color: var(--bg-card);
+  color: var(--text-inverse);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background var(--duration-sm) var(--ease-out);
@@ -436,7 +436,7 @@
 }
 
 .form-input:focus {
-  border-color: var(--navy);
+  border-color: var(--focus-border);
   box-shadow: var(--focus-ring);
 }
 

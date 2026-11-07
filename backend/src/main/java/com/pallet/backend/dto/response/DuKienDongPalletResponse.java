@@ -21,7 +21,10 @@ public class DuKienDongPalletResponse {
         private String maMatHang;
         private String tenMatHang;
         private int nhuCau;
-        private int khaDung;
-        private int thieu;   // > 0 nghĩa là cần mua thêm hoặc tháo thêm
+        private int soLuongTon;      // tồn thực tế trong kho
+        private int soLuongDaGiuCho; // đã giữ cho đơn hàng/việc khác
+        private int soLuongDangCho;  // đang nằm trong các phiếu đóng pallet nháp khác
+        private int khaDung;         // = tồn - đã giữ - đang chờ
+        private int thieu;           // > 0 nghĩa là cần mua thêm hoặc tháo thêm
     }
 }

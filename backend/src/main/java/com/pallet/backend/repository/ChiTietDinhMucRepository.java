@@ -15,7 +15,7 @@ public interface ChiTietDinhMucRepository extends JpaRepository<ChiTietDinhMuc, 
     @Query("SELECT c FROM ChiTietDinhMuc c JOIN FETCH c.matHang WHERE c.dinhMuc.id = :dinhMucId ORDER BY c.id")
     List<ChiTietDinhMuc> timTheoDinhMuc(@Param("dinhMucId") Long dinhMucId);
 
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query("DELETE FROM ChiTietDinhMuc c WHERE c.dinhMuc.id = :dinhMucId")
     void xoaTheoDinhMuc(@Param("dinhMucId") Long dinhMucId);
 }

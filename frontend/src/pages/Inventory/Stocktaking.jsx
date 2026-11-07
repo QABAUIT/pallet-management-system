@@ -230,8 +230,9 @@ export default function Stocktaking() {
               icon={<PlusOutlined />}
               onClick={() => setOpenCreate(true)}
               style={{
-                backgroundColor: "var(--color-amber-strong)",
-                borderColor: "var(--color-amber-strong)",
+                backgroundColor: "var(--color-amber-solid)",
+                borderColor: "var(--color-amber-solid)",
+                color: "var(--text-inverse)",
                 borderRadius: 6,
               }}
             >
@@ -325,8 +326,9 @@ export default function Stocktaking() {
                   icon={<CheckOutlined />}
                   loading={finishing}
                   style={{
-                    backgroundColor: "var(--color-amber-strong)",
-                    borderColor: "var(--color-amber-strong)",
+                    backgroundColor: "var(--color-amber-solid)",
+                    borderColor: "var(--color-amber-solid)",
+                    color: "var(--text-inverse)",
                     borderRadius: 6,
                     fontWeight: 500,
                   }}

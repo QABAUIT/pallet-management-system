@@ -25,4 +25,11 @@ public interface PhieuXuLyThemRepository extends JpaRepository<PhieuXuLyThem, Lo
     @Query("SELECT x FROM PhieuXuLyThem x JOIN FETCH x.kho JOIN FETCH x.nhanVienThucHien "
             + "WHERE x.trangThai = :trangThai ORDER BY x.createdAt DESC")
     List<PhieuXuLyThem> timTheoTrangThai(@Param("trangThai") String trangThai);
+
+    /** Tổng số chiếc đang nằm trong các phiếu NHÁP khác của cùng kho + nhóm nguồn. */
+    @Query("SELECT COALESCE(SUM(x.soDatLai + x.soPheLieu), 0) FROM PhieuXuLyThem x "
+            + "WHERE x.kho.id = :khoId AND x.loaiNguon = :loaiNguon "
+            + "AND x.trangThai = 'nhap' AND x.id <> :boQuaPhieuId")
+    Long tongDangCho(@Param("khoId") Long khoId, @Param("loaiNguon") String loaiNguon,
+                     @Param("boQuaPhieuId") Long boQuaPhieuId);
 }

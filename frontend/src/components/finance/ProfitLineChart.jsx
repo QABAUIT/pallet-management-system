@@ -1,8 +1,11 @@
 import { Line } from "react-chartjs-2";
 import "./chartSetup";
 import { formatMoney } from "../../utils/receiptFormat";
+import useChartTheme from "../../hooks/useChartTheme";
 
 export default function ProfitLineChart({ data }) {
+  const { gridColor, tickColor, legendColor } = useChartTheme();
+
   const chartData = {
     labels: data.map((d) => d.nhan),
     datasets: [
@@ -27,12 +30,19 @@ export default function ProfitLineChart({ data }) {
     maintainAspectRatio: false,
     interaction: { mode: "index", intersect: false },
     plugins: {
-      legend: { position: "bottom", labels: { usePointStyle: true } },
+      legend: {
+        position: "bottom",
+        labels: { usePointStyle: true, color: legendColor },
+      },
       tooltip: { callbacks: { label: (c) => `${c.dataset.label.split(" (")[0]}: ${formatMoney(c.parsed.y)} đ` } },
     },
     scales: {
-      y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { callback: (v) => `${Math.round(v / 1e6)}M` } },
-      x: { grid: { display: false } },
+      y: {
+        beginAtZero: true,
+        grid: { color: gridColor },
+        ticks: { color: tickColor, callback: (v) => `${Math.round(v / 1e6)}M` },
+      },
+      x: { grid: { display: false }, ticks: { color: tickColor } },
     },
   };
   return (

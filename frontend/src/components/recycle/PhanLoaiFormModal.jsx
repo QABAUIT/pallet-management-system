@@ -52,6 +52,10 @@ export default function PhanLoaiFormModal({ record, onCancel, onSaved }) {
 
   const handleFinish = async (v) => {
     const soXuLy = Number(v.soLuongXuLy) || 0;
+    if (soXuLy <= 0) {
+      notifyError("Số pallet xử lý phải lớn hơn 0");
+      return;
+    }
     if (sum(v.soBanLai, v.soThaoDo, v.soLoaiBo) !== soXuLy) {
       notifyError("Bán lại + tháo dỡ + loại bỏ phải đúng bằng số pallet xử lý");
       return;
@@ -131,6 +135,7 @@ export default function PhanLoaiFormModal({ record, onCancel, onSaved }) {
             placeholder="Chọn lô pallet cũ cần phân loại"
             options={loOptions}
             loading={!dm}
+            disabled={isEdit}
           />
         </Form.Item>
 
