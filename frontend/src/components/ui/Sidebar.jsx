@@ -12,16 +12,19 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import "../layout/style.css";
+import { useAuth } from "../../store/AuthContext";
 
+// roles: các mã vai trò được thấy menu. Bỏ trống = mọi vai trò.
+// Chỉ ẩn/hiện cho gọn; backend vẫn chặn thật bằng @PreAuthorize.
 const MENU_ITEMS = [
   { label: "About us", icon: Info, to: "/" },
-  { label: "Quản lí hóa đơn", icon: FileText, to: "/hoa-don" },
+  { label: "Quản lí hóa đơn", icon: FileText, to: "/hoa-don", roles: ["GD", "PGD", "NVBANHANG"] },
   { label: "Quản lí pallet", icon: Package, to: "/pallet" },
-  { label: "Nhà cung cấp", icon: Truck, to: "/nha-cung-cap" },
-  { label: "Quản lí nhân viên", icon: Users, to: "/nhan-vien" },
-  { label: "Quản lí khách hàng", icon: UserRound, to: "/khach-hang" },
-  { label: "Quản lí kho", icon: Warehouse, to: "/kho" },
-  { label: "Quản lí tài chính", icon: Wallet, to: "/tai-chinh" },
+  { label: "Nhà cung cấp", icon: Truck, to: "/nha-cung-cap", roles: ["GD", "PGD", "NVKHO"] },
+  { label: "Quản lí nhân viên", icon: Users, to: "/nhan-vien", roles: ["GD", "PGD"] },
+  { label: "Quản lí khách hàng", icon: UserRound, to: "/khach-hang", roles: ["GD", "PGD", "NVBANHANG"] },
+  { label: "Quản lí kho", icon: Warehouse, to: "/kho", roles: ["GD", "PGD", "NVKHO"] },
+  { label: "Quản lí tài chính", icon: Wallet, to: "/tai-chinh", roles: ["GD", "PGD"] },
 ];
 
 export default function Sidebar({
@@ -30,6 +33,12 @@ export default function Sidebar({
   mobileOpen = false,
   onMobileClose,
 }) {
+  const { user } = useAuth();
+  const maVaiTro = String(user?.maVaiTro ?? "").replace(/^ROLE_/, "");
+  const menuItems = MENU_ITEMS.filter(
+    (item) => !item.roles || item.roles.includes(maVaiTro),
+  );
+
   return (
     <aside
       className={
@@ -49,7 +58,7 @@ export default function Sidebar({
       </div>
 
       <nav className="sidebar-nav">
-        {MENU_ITEMS.map(({ label, icon: Icon, to }) => (
+        {menuItems.map(({ label, icon: Icon, to }) => (
           <NavLink
             key={label}
             to={to}

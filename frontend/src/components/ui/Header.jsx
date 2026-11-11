@@ -132,22 +132,28 @@ const getBackLink = (pathname, search) => {
   return { to, label: route.backLabel };
 };
 
+const VAI_TRO_LABEL = {
+  GD: "Giám đốc",
+  PGD: "Phó giám đốc",
+  NVKHO: "Nhân viên kho",
+  NVBANHANG: "Nhân viên bán hàng",
+};
+
 export default function Header({
-  user = {
-    name: "Trần Hải Nam",
-    role: "Quản trị viên kho",
-    avatarUrl: "",
-  },
   notificationCount = 0,
   notificationPath = "/notifications",
   onMenuClick,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [showMenu, setShowMenu] = useState(false);
+
+  const maVaiTro = String(user?.maVaiTro ?? "").replace(/^ROLE_/, "");
+  const tenHienThi = user?.hoTen || "Người dùng";
+  const nhanVaiTro = VAI_TRO_LABEL[maVaiTro] || "Nhân viên";
 
   const title = getPageTitle(location.pathname);
   const subtitle = getPageSubtitle(location.pathname);
@@ -212,21 +218,21 @@ export default function Header({
             onClick={() => setShowMenu(!showMenu)}
             className="user-btn"
           >
-            {user.avatarUrl ? (
+            {user?.anhDaiDien ? (
               <img
-                src={user.avatarUrl}
-                alt={user.name}
+                src={user.anhDaiDien}
+                alt={tenHienThi}
                 className="avatar"
               />
             ) : (
               <div className="avatar-fallback">
-                {user.name?.charAt(0)}
+                {tenHienThi.charAt(0).toUpperCase()}
               </div>
             )}
 
             <div className="user-info">
-              <p className="user-name">{user.name}</p>
-              <p className="user-role">{user.role}</p>
+              <p className="user-name">{tenHienThi}</p>
+              <p className="user-role">{nhanVaiTro}</p>
             </div>
 
             <ChevronDown size={16} className="chevron" />

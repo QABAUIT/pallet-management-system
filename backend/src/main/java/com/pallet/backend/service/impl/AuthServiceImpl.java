@@ -9,13 +9,18 @@ import com.pallet.backend.repository.NhanVienRepository;
 import com.pallet.backend.repository.PhienDangNhapRepository;
 import com.pallet.backend.security.JwtUtil;
 import com.pallet.backend.service.AuthService;
+import com.pallet.backend.service.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.UUID;
 
 @Service
@@ -26,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final PhienDangNhapRepository phienDangNhapRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final LoginAttemptService loginAttemptService;
 
     @Value("${app.jwt.access-token-expiration-minutes}")
     private long accessTokenExpirationMinutes;
@@ -36,10 +42,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        NhanVien nv = nhanVienRepository.findByTenDangNhap(request.getTenDangNhap())
-                .orElseThrow(() -> new BusinessException("Tên đăng nhập hoặc mật khẩu không đúng"));
+        String attemptKey = request.getTenDangNhap() + "|" + ipAddress;
+        loginAttemptService.checkBlocked(attemptKey);
 
-        if (!passwordEncoder.matches(request.getMatKhau(), nv.getMatKhauHash())) {
+        NhanVien nv = nhanVienRepository.findByTenDangNhap(request.getTenDangNhap())
+                .orElse(null);
+
+        if (nv == null || !passwordEncoder.matches(request.getMatKhau(), nv.getMatKhauHash())) {
+            loginAttemptService.loginFailed(attemptKey);
             throw new BusinessException("Tên đăng nhập hoặc mật khẩu không đúng");
         }
 
@@ -49,15 +59,17 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Tài khoản đã nghỉ việc, không thể đăng nhập");
         }
 
+        loginAttemptService.loginSucceeded(attemptKey);
+
         String accessToken = jwtUtil.generateAccessToken(
                 nv.getTenDangNhap(), nv.getId(), nv.getVaiTro().getMaVaiTro());
 
-        String refreshToken = UUID.randomUUID().toString();
+        String rawRefreshToken = UUID.randomUUID().toString();
         long expireDays = request.isGhiNhoDangNhap() ? refreshTokenExpirationDays : 1;
 
         PhienDangNhap phien = PhienDangNhap.builder()
                 .nhanVien(nv)
-                .refreshToken(refreshToken)
+                .refreshToken(hashToken(rawRefreshToken))
                 .ghiNhoDangNhap(request.isGhiNhoDangNhap())
                 .thietBi(userAgent)
                 .ipAddress(ipAddress)
@@ -68,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(rawRefreshToken)
                 .nhanVienId(nv.getId())
                 .hoTen(nv.getHoTen())
                 .maVaiTro(nv.getVaiTro().getMaVaiTro())
@@ -77,28 +89,38 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-        @Transactional(noRollbackFor = BusinessException.class)
-        public LoginResponse refreshToken(String refreshToken) {
-        PhienDangNhap phien = phienDangNhapRepository.findByRefreshToken(refreshToken)
+    @Transactional(noRollbackFor = BusinessException.class)
+    public LoginResponse refreshToken(String refreshToken) {
+        PhienDangNhap phien = phienDangNhapRepository.findByRefreshToken(hashToken(refreshToken))
                 .orElseThrow(() -> new BusinessException("Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại"));
 
         if (phien.getThoiGianHetHan().isBefore(LocalDateTime.now())) {
-                phienDangNhapRepository.delete(phien);
-                throw new BusinessException("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+            phienDangNhapRepository.delete(phien);
+            throw new BusinessException("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
         }
 
         NhanVien nv = phien.getNhanVien();
 
         if ("da_nghi_viec".equals(nv.getTrangThai())) {
-                phienDangNhapRepository.delete(phien);
-                throw new BusinessException("Tài khoản đã nghỉ việc, không thể đăng nhập");
+            phienDangNhapRepository.delete(phien);
+            throw new BusinessException("Tài khoản đã nghỉ việc, không thể đăng nhập");
         }
+
         String newAccessToken = jwtUtil.generateAccessToken(
                 nv.getTenDangNhap(), nv.getId(), nv.getVaiTro().getMaVaiTro());
 
+        // Rotate refresh token: token cũ bị vô hiệu ngay sau khi dùng.
+        String newRawRefreshToken = UUID.randomUUID().toString();
+        LocalDateTime now = LocalDateTime.now();
+        phien.setRefreshToken(hashToken(newRawRefreshToken));
+        phien.setThoiGianTao(now);
+        phien.setThoiGianHetHan(now.plusDays(
+                Boolean.TRUE.equals(phien.getGhiNhoDangNhap()) ? refreshTokenExpirationDays : 1));
+        phienDangNhapRepository.save(phien);
+
         return LoginResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(newRawRefreshToken)
                 .nhanVienId(nv.getId())
                 .hoTen(nv.getHoTen())
                 .maVaiTro(nv.getVaiTro().getMaVaiTro())
@@ -109,7 +131,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void logout(String refreshToken) {
-        phienDangNhapRepository.findByRefreshToken(refreshToken)
+        phienDangNhapRepository.findByRefreshToken(hashToken(refreshToken))
                 .ifPresent(phienDangNhapRepository::delete);
+    }
+
+    /** Refresh token chỉ lưu dạng hash SHA-256, không lưu plaintext trong DB. */
+    private String hashToken(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(rawToken.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Không hỗ trợ SHA-256", e);
+        }
     }
 }

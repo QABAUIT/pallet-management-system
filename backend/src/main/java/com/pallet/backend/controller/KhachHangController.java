@@ -7,15 +7,15 @@ import com.pallet.backend.service.KhachHangService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO: thêm @PreAuthorize khi có Spring Security, để giới hạn nhân viên nào
-// được xem/sửa khách hàng (vd chỉ GD/PGD/sales, không phải mọi nhân viên kho).
 @RestController
 @RequestMapping("/api/v1/khach-hang")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('GD','PGD','NVBANHANG')")
 public class KhachHangController {
 
     private final KhachHangService khachHangService;

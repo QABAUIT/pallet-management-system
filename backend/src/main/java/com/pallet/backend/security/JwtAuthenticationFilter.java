@@ -28,10 +28,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain chain) throws ServletException, IOException {
         String token = null;
         String header = request.getHeader("Authorization");
+        // Chỉ chấp nhận Authorization header. Không nhận token qua query param
+        // vì token sẽ bị lộ trong log, lịch sử trình duyệt và Referer.
         if (header != null && header.startsWith("Bearer ")) {
             token = header.substring(7);
-        } else if (request.getParameter("token") != null && !request.getParameter("token").isBlank()) {
-            token = request.getParameter("token");
         }
 
         if (token != null) {

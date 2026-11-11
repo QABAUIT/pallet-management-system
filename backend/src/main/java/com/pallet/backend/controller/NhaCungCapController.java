@@ -9,12 +9,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/nha-cung-cap")
 @RequiredArgsConstructor
-@CrossOrigin("*")
+@PreAuthorize("hasAnyRole('GD','PGD','NVKHO')")
 public class NhaCungCapController {
 
     private final NhaCungCapService nhaCungCapService;

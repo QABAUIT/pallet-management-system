@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { User } from 'lucide-react'
 import { thongBaoApi } from '../api/thongBaoApi'
 import { useNotificationBadge } from '../store/NotificationContext'
+import { matchTime } from '../utils/matchTime'
+
+const PAGE_SIZE = 8
 
 // ---------------------------------------------------------------------------
 // Helper: chuyển đổi bản ghi backend thành định dạng hiển thị UI
@@ -36,12 +39,29 @@ function transformBackendItem(item) {
     time: item.thoiGianTao
       ? new Date(item.thoiGianTao).toLocaleString('vi-VN')
       : 'Vừa xong',
+    createdAt: item.thoiGianTao ?? null,
     isRead: Boolean(item.daDoc),
     description: item.noiDung,
     meta: [{ icon: User, text: `Đối tượng: ${item.doiTuongLoai ?? 'Chung'}` }],
     primaryAction: { label: actionLabel, link },
     iconType,
   }
+}
+
+/** Đổi preset của trang thông báo sang cấu trúc matchTime hiểu được. */
+function thanhLocThoiGian(preset) {
+  const now = new Date()
+
+  if (preset === 'today') {
+    return { preset: 'custom', from: now, to: now }
+  }
+  if (preset === '7days') {
+    const from = new Date(now)
+    from.setDate(from.getDate() - 6)
+    return { preset: 'custom', from, to: now }
+  }
+  // Mặc định: tháng này
+  return { preset: 'month', from: null, to: null }
 }
 
 // ---------------------------------------------------------------------------
@@ -58,51 +78,53 @@ export function useNotifications() {
   const { refreshBadge, decrementBadge, clearBadge } = useNotificationBadge()
 
   // ----- Fetch danh sách -----
-  const fetchNotifications = useCallback(async (isSilent = false) => {
-    if (!isSilent) {
-      setLoading(true)
-    }
-    try {
-      const params = {}
-      if (statusFilter === 'unread') params.daDoc = false
-      if (statusFilter === 'read') params.daDoc = true
-
-      const [resList, resStats] = await Promise.allSettled([
-        thongBaoApi.danhSach(params),
-        thongBaoApi.thongKe(),
-      ])
-
-      if (resList.status === 'fulfilled' && resList.value?.data) {
-        setNotifications(resList.value.data.map(transformBackendItem))
+  const fetchNotifications = useCallback(
+    async (isSilent = false) => {
+      if (!isSilent) {
+        setLoading(true)
       }
+      try {
+        const params = {}
+        if (statusFilter === 'unread') params.daDoc = false
+        if (statusFilter === 'read') params.daDoc = true
 
-      if (resStats.status === 'fulfilled' && resStats.value?.data) {
-        const s = resStats.value.data
-        setStats(s)
-        // Đồng bộ badge header với kết quả thực từ server
-        if (s.chuaDoc !== undefined) {
+        const [resList, resStats] = await Promise.allSettled([
+          thongBaoApi.danhSach(params),
+          thongBaoApi.thongKe(),
+        ])
+
+        if (resList.status === 'fulfilled' && resList.value?.data) {
+          setNotifications(resList.value.data.map(transformBackendItem))
+        }
+
+        if (resStats.status === 'fulfilled' && resStats.value?.data) {
+          setStats(resStats.value.data)
+          // Đồng bộ badge header với kết quả thực từ server
           refreshBadge()
         }
+      } catch (err) {
+        console.error('Lỗi tải thông báo:', err)
+      } finally {
+        if (!isSilent) {
+          setLoading(false)
+        }
       }
-    } catch (err) {
-      console.error('Lỗi tải thông báo:', err)
-    } finally {
-      if (!isSilent) {
-        setLoading(false)
-      }
-    }
-  }, [statusFilter, refreshBadge])
+    },
+    [statusFilter, refreshBadge],
+  )
 
+  // Tải lại khi đổi bộ lọc trạng thái
   useEffect(() => {
     fetchNotifications(false)
+  }, [fetchNotifications])
 
-    // Lắng nghe sự kiện SSE khi có thông báo mới đẩy từ backend về
+  // Lắng nghe SSE một lần duy nhất (không phụ thuộc bộ lọc)
+  useEffect(() => {
     const handleNewNotification = (e) => {
       const raw = e.detail
       if (!raw) return
       const newItem = transformBackendItem(raw)
       setNotifications((prev) => {
-        // Tránh trùng lặp id
         if (prev.some((x) => x.id === newItem.id)) return prev
         return [newItem, ...prev]
       })
@@ -114,22 +136,45 @@ export function useNotifications() {
     }
 
     window.addEventListener('app:new-notification', handleNewNotification)
-    return () => {
-      window.removeEventListener('app:new-notification', handleNewNotification)
-    }
-  }, [fetchNotifications])
+    return () => window.removeEventListener('app:new-notification', handleNewNotification)
+  }, [])
 
-  // ----- Lọc client-side -----
+  // Đổi bộ lọc thì quay về trang 1
+  const doiStatusFilter = useCallback((next) => {
+    setStatusFilter(next)
+    setCurrentPage(1)
+  }, [])
+
+  const doiTimePreset = useCallback((next) => {
+    setTimePreset(next)
+    setCurrentPage(1)
+  }, [])
+
+  // ----- Lọc client-side theo trạng thái + thời gian -----
   const filteredNotifications = useMemo(() => {
+    const time = thanhLocThoiGian(timePreset)
+
     return notifications.filter((item) => {
-      if (statusFilter === 'unread') return !item.isRead
-      if (statusFilter === 'read') return item.isRead
+      if (statusFilter === 'unread' && item.isRead) return false
+      if (statusFilter === 'read' && !item.isRead) return false
+      if (item.createdAt && !matchTime(item.createdAt, time)) return false
       return true
     })
-  }, [notifications, statusFilter])
+  }, [notifications, statusFilter, timePreset])
 
-  const unreadList = filteredNotifications.filter((n) => !n.isRead)
-  const readList = filteredNotifications.filter((n) => n.isRead)
+  // ----- Phân trang -----
+  const totalFiltered = filteredNotifications.length
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE))
+  // Nếu xóa bớt làm trang hiện tại vượt quá số trang -> tự hiển thị trang cuối
+  const safePage = Math.min(currentPage, totalPages)
+
+  const pagedNotifications = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE
+    return filteredNotifications.slice(start, start + PAGE_SIZE)
+  }, [filteredNotifications, safePage])
+
+  const unreadList = pagedNotifications.filter((n) => !n.isRead)
+  const readList = pagedNotifications.filter((n) => n.isRead)
 
   // ----- Actions -----
 
@@ -178,6 +223,14 @@ export function useNotifications() {
         const target = notifications.find((n) => n.id === id)
         await thongBaoApi.xoa(id)
         setNotifications((prev) => prev.filter((item) => item.id !== id))
+        if (target) {
+          setStats((prev) => ({
+            ...prev,
+            tongSo: Math.max(0, prev.tongSo - 1),
+            chuaDoc: Math.max(0, prev.chuaDoc - (target.isRead ? 0 : 1)),
+            daDoc: Math.max(0, prev.daDoc - (target.isRead ? 1 : 0)),
+          }))
+        }
         // Nếu thông báo bị xóa chưa đọc → giảm badge
         if (target && !target.isRead) {
           decrementBadge(1)
@@ -193,6 +246,7 @@ export function useNotifications() {
     // Data
     notifications,
     filteredNotifications,
+    pagedNotifications,
     unreadList,
     readList,
     stats,
@@ -200,16 +254,17 @@ export function useNotifications() {
 
     // Filters & pagination
     statusFilter,
-    setStatusFilter,
+    setStatusFilter: doiStatusFilter,
     timePreset,
-    setTimePreset,
-    currentPage,
+    setTimePreset: doiTimePreset,
+    currentPage: safePage,
     setCurrentPage,
 
     // Derived counts
     totalCount: stats.tongSo ?? 0,
-    unreadCount: stats.chuaDoc ?? unreadList.length,
-    readCount: stats.daDoc ?? readList.length,
+    unreadCount: stats.chuaDoc ?? 0,
+    readCount: stats.daDoc ?? 0,
+    filteredCount: totalFiltered,
 
     // Actions
     fetchNotifications,

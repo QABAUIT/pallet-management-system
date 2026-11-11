@@ -54,6 +54,7 @@ apiClient.interceptors.response.use(
           hangDoi.push({ resolve, reject })
         }).then((tokenMoi) => {
           original._daThuLai = true
+          original.headers = original.headers || {}
           original.headers.Authorization = `Bearer ${tokenMoi}`
           return apiClient(original)
         })
@@ -62,13 +63,19 @@ apiClient.interceptors.response.use(
       original._daThuLai = true
       dangLamMoiToken = true
       try {
+        // Dùng axios gốc (không qua interceptor) để tránh vòng lặp refresh vô hạn.
         const res = await axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, { refreshToken })
-        const moi = res.data.data
+        // Hỗ trợ cả ApiResponse bọc ngoài lẫn response thô.
+        const moi = res.data?.data ?? res.data
+        if (!moi?.accessToken) {
+          throw new Error('Refresh token không hợp lệ')
+        }
         tokenStore.setSession({ ...tokenStore.getUserInfo(), ...moi })
         giaiPhongHangDoi(null, moi.accessToken)
+        original.headers = original.headers || {}
         original.headers.Authorization = `Bearer ${moi.accessToken}`
         return apiClient(original)
-      } catch (refreshError) {
+      } catch {
         const loi = { message: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại', status: 401 }
         giaiPhongHangDoi(loi)
         veTrangDangNhap()

@@ -67,12 +67,12 @@ export default function AppRoutes() {
         <Route path="/" element={<AboutUs />} />
 
         {/* Hoá đơn */}
-      <Route path="/hoa-don" element={<Navigate to="/hoa-don/lich-su" replace />} />
-      <Route path="/hoa-don/lich-su" element={<TransactionHistory />} />
-      <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
-      <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
-      <Route path="/hoa-don/bao-gia" element={<BaoGia />} />
-      <Route path="/hoa-don/ban-phe-lieu" element={<BanPheLieu />} /> 
+        <Route path="/hoa-don" element={<Navigate to="/hoa-don/lich-su" replace />} />
+        <Route path="/hoa-don/lich-su" element={<TransactionHistory />} />
+        <Route path="/hoa-don/tao-moi" element={<ReceiptCreate />} />
+        <Route path="/hoa-don/:id" element={<ReceiptDetail />} />
+        <Route path="/hoa-don/bao-gia" element={<BaoGia />} />
+        <Route path="/hoa-don/ban-phe-lieu" element={<BanPheLieu />} />
 
         {/* Pallet */}
         <Route path="/pallet" element={<PalletManagement />} />
@@ -99,7 +99,7 @@ export default function AppRoutes() {
         <Route path="/kho/tai-che/dinh-muc" element={<DinhMuc />} />
         <Route path="/kho/tai-che/dong-pallet" element={<DongPallet />} />
 
-        <Route path="/kho/tai-che/dich-vu-khach" element={<DichVuKhach />} /> 
+        <Route path="/kho/tai-che/dich-vu-khach" element={<DichVuKhach />} />
 
         {/* Tài chính */}
         <Route path="/tai-chinh" element={<Revenue />} />

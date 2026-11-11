@@ -22,6 +22,7 @@ export default function Notifications() {
     totalCount,
     unreadCount,
     readCount,
+    filteredCount,
     fetchNotifications,
     handleMarkAllRead,
     handleToggleRead,
@@ -88,7 +89,7 @@ export default function Notifications() {
       <div style={{ marginTop: 12 }}>
         <Pagination
           currentPage={currentPage}
-          totalItems={totalCount}
+          totalItems={filteredCount}
           itemsPerPage={8}
           itemLabel="thông báo"
           onPageChange={setCurrentPage}

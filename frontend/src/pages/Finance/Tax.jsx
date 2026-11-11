@@ -21,12 +21,12 @@ export default function Tax() {
   const label = nhanKy(time, range);
   const tyLe = data ? Number(data.tyLeVatMacDinh) : 0;
 
-  const rows = data?.chiTiet ?? [];
+  const rows = useMemo(() => data?.chiTiet ?? [], [data]);
   const pagedRows = useMemo(() => rows.slice((page - 1) * PER_PAGE, page * PER_PAGE), [rows, page]);
 
   const xuatExcel = () => {
     if (rows.length === 0) return notifyWarning("Không có hóa đơn nào để xuất");
-    xuatCsv(`thue-gtgt-${label.replace(/[\/\s]/g, "-")}.csv`, [
+    xuatCsv(`thue-gtgt-${label.replace(/[/\s]/g, "-")}.csv`, [
       ["Số HĐ", "Ngày lập", "Khách hàng", "Doanh thu (chưa thuế)", "Thuế suất %", "Thuế GTGT"],
       ...rows.map((r) => [r.maHoaDon, formatDate(r.ngayLap), r.tenKhachHang, r.doanhThuChuaThue, r.tyLeVat, r.tienVat]),
       [],

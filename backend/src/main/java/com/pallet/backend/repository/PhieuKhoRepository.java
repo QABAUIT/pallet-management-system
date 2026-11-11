@@ -1,8 +1,12 @@
 package com.pallet.backend.repository;
 
 import com.pallet.backend.entity.PhieuKho;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // Import thêm cái này
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,6 +27,10 @@ public interface PhieuKhoRepository extends JpaRepository<PhieuKho, Long>, JpaSp
     List<PhieuKho> findByNguoiDuyet_Id(Long nguoiDuyetId);
     List<PhieuKho> findByPhuongTien_Id(Long phuongTienId);
 
-    @org.springframework.data.jpa.repository.Query(value = "SELECT fn_lay_ma_chung_tu(:loaiChungTu, :tienTo)", nativeQuery = true)
-    String getMaChungTu(@org.springframework.data.repository.query.Param("loaiChungTu") String loaiChungTu, @org.springframework.data.repository.query.Param("tienTo") String tienTo);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PhieuKho p WHERE p.id = :id")
+    Optional<PhieuKho> findForUpdate(@Param("id") Long id);
+
+    @Query(value = "SELECT fn_lay_ma_chung_tu(:loaiChungTu, :tienTo)", nativeQuery = true)
+    String getMaChungTu(@Param("loaiChungTu") String loaiChungTu, @Param("tienTo") String tienTo);
 }

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { message } from "antd";
 import { BadgeInfo, Banknote, AlertTriangle, Eye, UserPlus, Pencil } from "lucide-react";
 import StatCard from "../components/common/StatCard";
 import SearchInput from "../components/common/SearchInput";
@@ -68,11 +69,7 @@ export default function CustomerManagement() {
     [editingCustomer]
   );
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -84,7 +81,11 @@ export default function CustomerManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
 
   const handleCreate = async (payload) => {
     try {
@@ -92,8 +93,9 @@ export default function CustomerManagement() {
       setShowAddModal(false);
       setPage(1);
       await loadCustomers();
+      message.success("Thêm khách hàng thành công");
     } catch (err) {
-      alert(getErrorMessage(err));
+      message.error(getErrorMessage(err));
     }
   };
 
@@ -102,8 +104,9 @@ export default function CustomerManagement() {
       await khachHangApi.capNhat(editingCustomer.id, payload);
       setEditingCustomer(null);
       await loadCustomers();
+      message.success("Cập nhật khách hàng thành công");
     } catch (err) {
-      alert(getErrorMessage(err));
+      message.error(getErrorMessage(err));
     }
   };
 

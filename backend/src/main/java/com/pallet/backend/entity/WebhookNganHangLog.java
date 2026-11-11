@@ -29,7 +29,8 @@ public class WebhookNganHangLog {
     @JoinColumn(name = "thanh_toan_id")
     private ThanhToan thanhToan;
 
-    @Column(name = "payload_tho", columnDefinition = "jsonb")
+    // @JdbcTypeCode(SqlTypes.JSON) tự map sang jsonb trên PostgreSQL và json trên H2.
+    @Column(name = "payload_tho")
     @JdbcTypeCode(SqlTypes.JSON)
     private String payloadTho;
 

@@ -68,7 +68,7 @@ export default function LoginPage() {
               label="Tên đăng nhập"
               rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập tên đăng nhập' }]}
             >
-              <Input placeholder="admin" autoFocus autoComplete="username" />
+              <Input placeholder="Nhập tên đăng nhập" autoFocus autoComplete="username" />
             </Form.Item>
 
             <Form.Item
@@ -85,7 +85,7 @@ export default function LoginPage() {
               rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
             >
               <Input.Password
-                placeholder="0123456789"
+                placeholder="Nhập mật khẩu"
                 autoComplete="current-password"
                 visibilityToggle={false}
               />

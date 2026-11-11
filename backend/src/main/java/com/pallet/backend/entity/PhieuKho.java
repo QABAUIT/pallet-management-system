@@ -79,4 +79,9 @@ public class PhieuKho {
     @Column(name = "la_he_thong", nullable = false)
     private boolean laHeThong = false;
 
+    /** Phiếu nhập đã được xếp vị trí lưu trữ — chặn xếp lặp gây cộng/trừ tồn 2 lần. */
+    @Builder.Default
+    @Column(name = "da_xep_vi_tri", nullable = false)
+    private boolean daXepViTri = false;
+
 }

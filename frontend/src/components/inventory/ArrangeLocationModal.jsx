@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Modal, Form, Select, Table, message } from "antd";
 import { phieuNhapApi } from "../../api/phieuNhapApi";
 import { tonKhoApi } from "../../api/tonKhoApi";
@@ -10,44 +10,57 @@ export default function ArrangeLocationModal({ record, onCancel, onSuccess }) {
   const [warehouses, setWarehouses] = useState([]);
   const [locationsByKho, setLocationsByKho] = useState({});
 
+  const fetchLocations = useCallback(async (khoId) => {
+    if (!khoId) return;
+    try {
+      const locs = await tonKhoApi.layDanhSachViTri(khoId);
+      setLocationsByKho((prev) => ({ ...prev, [khoId]: locs || [] }));
+    } catch {
+      message.error("Lỗi lấy vị trí lưu trữ");
+    }
+  }, []);
+
   useEffect(() => {
-    if (record) {
-      setLoading(true);
-      Promise.all([phieuNhapApi.chiTiet(record.id), tonKhoApi.layDanhSachKho()])
-        .then(([resChiTiet, resKho]) => {
-          setItems(resChiTiet.chiTiet || []);
-          setWarehouses(resKho || []);
+    if (!record) return undefined;
 
-          // Mặc định thiết lập sẵn dòng "Kho" vào Form bằng Kho đầu tiên (nếu có)
-          const initialValues = {};
-          const defaultKhoId = resKho.length > 0 ? resKho[0].id : null;
+    let daHuy = false;
+    setLoading(true);
 
-          (resChiTiet.chiTiet || []).forEach((it) => {
-            initialValues[`khoId_${it.matHangId}`] = defaultKhoId;
-          });
-          form.setFieldsValue(initialValues);
+    Promise.all([phieuNhapApi.chiTiet(record.id), tonKhoApi.layDanhSachKho()])
+      .then(([resChiTiet, resKho]) => {
+        if (daHuy) return;
 
-          if (defaultKhoId) {
-            fetchLocations(defaultKhoId);
-          }
-        })
-        .catch(() =>
-          message.error("Lỗi khi tải dữ liệu phiếu hoặc danh sách kho"),
-        )
-        .finally(() => setLoading(false));
-    }
-  }, [record, form]);
+        const danhSachKho = Array.isArray(resKho) ? resKho : [];
+        const danhSachChiTiet = resChiTiet?.chiTiet || [];
 
-  const fetchLocations = async (khoId) => {
-    if (!locationsByKho[khoId]) {
-      try {
-        const locs = await tonKhoApi.layDanhSachViTri(khoId);
-        setLocationsByKho((prev) => ({ ...prev, [khoId]: locs }));
-      } catch (e) {
-        message.error("Lỗi lấy vị trí lưu trữ");
-      }
-    }
-  };
+        setItems(danhSachChiTiet);
+        setWarehouses(danhSachKho);
+
+        // Mặc định chọn sẵn Kho đầu tiên cho từng dòng
+        const initialValues = {};
+        const defaultKhoId = danhSachKho.length > 0 ? danhSachKho[0].id : null;
+        danhSachChiTiet.forEach((it) => {
+          initialValues[`khoId_${it.matHangId}`] = defaultKhoId;
+        });
+        form.setFieldsValue(initialValues);
+
+        if (defaultKhoId) {
+          fetchLocations(defaultKhoId);
+        }
+      })
+      .catch(() => {
+        if (!daHuy) {
+          message.error("Lỗi khi tải dữ liệu phiếu hoặc danh sách kho");
+        }
+      })
+      .finally(() => {
+        if (!daHuy) setLoading(false);
+      });
+
+    return () => {
+      daHuy = true;
+    };
+  }, [record, form, fetchLocations]);
 
   const handleKhoChange = (khoId, matHangId) => {
     fetchLocations(khoId);

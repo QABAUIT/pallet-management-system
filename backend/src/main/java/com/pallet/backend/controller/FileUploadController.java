@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,6 +29,7 @@ import com.pallet.backend.exception.BusinessException;
  */
 @RestController
 @RequestMapping("/api/v1/files")
+@PreAuthorize("hasAnyRole('GD','PGD','NVKHO','NVBANHANG')")
 public class FileUploadController {
 
     private static final long MAX_IMAGE_SIZE = 5L * 1024 * 1024;

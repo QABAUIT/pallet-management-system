@@ -75,7 +75,7 @@ export default function NotificationToolbar({
                 className="notif-icon-btn"
                 aria-label="Làm mới thông báo"
                 icon={<RotateCw size={15} className={loading ? "animate-spin" : ""} />}
-                onClick={onRefresh}
+                onClick={() => onRefresh()}
               />
             </Tooltip>
           </Space>

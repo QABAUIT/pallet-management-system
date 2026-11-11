@@ -18,10 +18,12 @@ import com.pallet.backend.service.MatHangService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/mat-hang")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('GD','PGD','NVKHO','NVBANHANG')")
 public class MatHangController {
 
     private final MatHangService matHangService;
