@@ -84,7 +84,7 @@ export default function ImportInventory() {
             <Button
               type="text"
               icon={<EyeOutlined />}
-              style={{ color: "#8c8c8c" }}
+              style={{ color: "var(--text-muted)" }}
               onClick={() => navigate(`/kho/nhap-kho/${r.id}`)}
             />
           </Tooltip>
@@ -99,7 +99,7 @@ export default function ImportInventory() {
             <Button
               type="text"
               icon={<EditOutlined />}
-              style={{ color: "#8c8c8c" }}
+              style={{ color: "var(--text-muted)" }}
               disabled={r.trangThai !== "cho_xu_ly"}
               onClick={() => setEditing(r)}
             />
@@ -116,7 +116,7 @@ export default function ImportInventory() {
               type="text"
               icon={<AppstoreAddOutlined />}
               style={{
-                color: r.trangThai === "da_hoan_thanh" ? "#1677ff" : "#8c8c8c",
+                color: r.trangThai === "da_hoan_thanh" ? "var(--color-blue)" : "var(--text-muted)",
               }}
               disabled={r.trangThai !== "da_hoan_thanh"}
               onClick={() => setArranging(r)}

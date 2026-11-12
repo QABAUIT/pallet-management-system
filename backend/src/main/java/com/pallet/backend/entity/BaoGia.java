@@ -63,4 +63,11 @@ public class BaoGia {
     @Column(name = "ghi_chu", length = 255)
     private String ghiChu;
 
+    
+    @Column(name = "han_hieu_luc", nullable = false)
+    private LocalDate hanHieuLuc;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hoa_don_id")
+    private HoaDon hoaDon;
 }

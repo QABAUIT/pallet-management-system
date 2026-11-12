@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 
 import { useServerTable } from "../hooks/useServerTable";
@@ -114,14 +114,7 @@ export default function SupplierManagement() {
   }));
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        backgroundColor: "#fcfcfc",
-        minHeight: "100vh",
-        textAlign: "left",
-      }}
-    >
+    <div className="page-shell">
       <SupplierFilterBar
         keyword={keyword}
         onKeywordChange={setKeyword}

@@ -53,7 +53,8 @@ export default function ReceiptDetail() {
   if (!hd) return <p className="muted-text">Không tìm thấy hóa đơn</p>;
 
   const dangCho = hd.trangThai === "cho_thanh_toan";
-  const khoaSua = hd.daChotSo || hd.trangThai === "da_huy";
+  const LOAI_KHONG_SUA = ["thu_dich_vu_thao_do", "thu_ban_phe_lieu", "chi_mua_phe_lieu_khach"];
+  const khoaSua = hd.daChotSo || hd.trangThai === "da_huy" || LOAI_KHONG_SUA.includes(hd.loaiGiaoDich);
   const thoiLai = phuongThuc === "tien_mat" ? Math.max(0, (tienKhachDua || 0) - hd.tongThanhToan) : 0;
   const dt = hd.doiTac;
   const nv = hd.nhanVienLap;

@@ -3,6 +3,22 @@ import { Form, message } from 'antd';
 import { matHangApi } from '../api/matHangApi';
 import { mapMatHangToPallet } from '../utils/palletMapper';
 
+// Mặt hàng nội bộ của quy trình tái chế: không hiển thị trong danh mục bán hàng
+const LOAI_NOI_BO = new Set(['cho_tai_che', 'phe_lieu', 'dich_vu']);
+const MA_NOI_BO = new Set(['LK-TX-11', 'LK-CX-12']); // thanh / cục cần xử lý thêm (hàng trung gian)
+
+// Pallet "kích thước tuỳ chỉnh" không có số đo: phải gửi null, không được gửi 0
+// vì DB có check constraint kích thước > 0.
+const soDuongHoacNull = (value) => {
+  const so = Number.parseInt(value, 10);
+  return Number.isFinite(so) && so > 0 ? so : null;
+};
+
+const soKhongAmHoacNull = (value) => {
+  const so = Number.parseInt(value, 10);
+  return Number.isFinite(so) && so >= 0 ? so : null;
+};
+
 export function usePallets(itemsPerPage = 8) {
   const [pallets, setPallets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +39,11 @@ export function usePallets(itemsPerPage = 8) {
     try {
       const res = await matHangApi.danhSach();
       if (res.data) {
-        setPallets(res.data.map(mapMatHangToPallet));
+        setPallets(
+          res.data
+            .filter((m) => !LOAI_NOI_BO.has(m.loaiMatHang) && !MA_NOI_BO.has(m.maMatHang))
+            .map(mapMatHangToPallet),
+        );
       }
     } catch (err) {
       console.error("Fetch pallets error", err);
@@ -63,11 +83,11 @@ export function usePallets(itemsPerPage = 8) {
       tieuChuan: pallet.specs?.sizeNote || '',
       hinhAnh: pallet.rawHinhAnh || '',
       // Parse numeric from specs? A bit hacky but works for demo
-      kichThuocDai: parseInt(pallet.specs.size.split(' x ')[0]) || 0,
-      kichThuocRong: parseInt(pallet.specs.size.split(' x ')[1]) || 0,
-      kichThuocCao: parseInt(pallet.specs.size.split(' x ')[2]) || 0,
-      taiTrongTinh: parseInt(pallet.specs.staticLoad) || 0,
-      taiTrongDong: parseInt(pallet.specs.dynamicLoad) || 0,
+      kichThuocDai: soDuongHoacNull(pallet.specs.size.split(' x ')[0]),
+      kichThuocRong: soDuongHoacNull(pallet.specs.size.split(' x ')[1]),
+      kichThuocCao: soDuongHoacNull(pallet.specs.size.split(' x ')[2]),
+      taiTrongTinh: soKhongAmHoacNull(pallet.specs.staticLoad),
+      taiTrongDong: soKhongAmHoacNull(pallet.specs.dynamicLoad),
     });
     setIsModalVisible(true);
   };
@@ -100,7 +120,7 @@ export function usePallets(itemsPerPage = 8) {
       }
     } catch (error) {
       console.error(error);
-      message.error("Có lỗi xảy ra, vui lòng thử lại");
+      message.error(error?.message || "Có lỗi xảy ra, vui lòng thử lại");
     }
   };
 

@@ -99,7 +99,7 @@ export default function ExportInventory() {
           <Button
             type="text"
             icon={<EyeOutlined />}
-            style={{ color: "#8c8c8c" }}
+            style={{ color: "var(--text-muted)" }}
             onClick={() => navigate(`/kho/xuat-kho/${r.id}`)}
           />
           <Tooltip
@@ -112,7 +112,7 @@ export default function ExportInventory() {
             <Button
               type="text"
               icon={<EditOutlined />}
-              style={{ color: "#8c8c8c" }}
+              style={{ color: "var(--text-muted)" }}
               disabled={r.trangThai !== "cho_xu_ly"}
               onClick={() => setEditing(r)}
             />

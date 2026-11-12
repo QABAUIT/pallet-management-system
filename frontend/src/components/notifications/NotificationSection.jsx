@@ -15,45 +15,32 @@ export default function NotificationSection({
 }) {
   if (!items || items.length === 0) return null;
 
-  const dotColor = isReadSection ? "#f59e0b" : "#dc2626";
-  const titleColor = isReadSection ? "#d97706" : "#dc2626";
-
   return (
-    <Flex vertical gap={12} style={{ marginBottom: 20 }}>
+    <Flex vertical gap={12} className="notif-section">
       {/* Section Header */}
-      <Flex justify="space-between" align="center" style={{ padding: "0 4px" }}>
-        <Flex align="center" gap={8}>
+      <div className="notif-section-head">
+        <div className="notif-section-title-wrap">
           <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: dotColor,
-              display: "inline-block",
-              boxShadow: isReadSection ? "none" : "0 0 0 3px rgba(220, 38, 38, 0.2)",
-            }}
+            className={
+              "notif-section-dot" + (isReadSection ? " is-read" : " is-unread")
+            }
           />
           <Title
             level={5}
-            style={{
-              margin: 0,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.04em",
-              color: titleColor,
-              textTransform: "uppercase",
-            }}
+            className={
+              "notif-section-title" + (isReadSection ? " is-read" : " is-unread")
+            }
           >
             {title} ({count})
           </Title>
-        </Flex>
+        </div>
 
         {subtitle && (
-          <Text type="secondary" style={{ fontSize: 12, fontStyle: "italic" }}>
+          <Text type="secondary" className="notif-section-sub">
             {subtitle}
           </Text>
         )}
-      </Flex>
+      </div>
 
       {/* Cards List */}
       <Flex vertical gap={12}>

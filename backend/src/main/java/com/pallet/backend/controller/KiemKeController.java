@@ -6,8 +6,10 @@ import com.pallet.backend.dto.response.ChiTietKiemKeResponse;
 import com.pallet.backend.dto.response.ThongKeKiemKeResponse;
 import com.pallet.backend.entity.PhienKiemKe;
 import com.pallet.backend.service.KiemKeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,12 +18,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/kiem-ke")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('GD','PGD','NVKHO')")
 public class KiemKeController {
 
     private final KiemKeService kiemKeService;
 
     @PostMapping("/phien")
-public ResponseEntity<Map<String, Object>> taoPhienKiemKe(@RequestBody TaoPhienKiemKeRequest request) {
+public ResponseEntity<Map<String, Object>> taoPhienKiemKe(@Valid @RequestBody TaoPhienKiemKeRequest request) {
     PhienKiemKe p = kiemKeService.taoPhienKiemKe(request);
     return ResponseEntity.ok(Map.of(
             "id", p.getId(),
@@ -47,11 +50,7 @@ public ResponseEntity<Map<String, Object>> taoPhienKiemKe(@RequestBody TaoPhienK
 
     @PostMapping("/phien/{id}/hoan-tat")
     public ResponseEntity<?> hoanTatKiemKe(@PathVariable Long id, @RequestParam Long nguoiChotId) {
-        try {
-            kiemKeService.hoanTatKiemKe(id, nguoiChotId);
-            return ResponseEntity.ok(Map.of("message", "Chốt phiên kiểm kê thành công!"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        kiemKeService.hoanTatKiemKe(id, nguoiChotId);
+        return ResponseEntity.ok(Map.of("message", "Chốt phiên kiểm kê thành công!"));
     }
 }

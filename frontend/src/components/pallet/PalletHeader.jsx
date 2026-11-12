@@ -7,14 +7,15 @@ import OtherTypeFilter from '../common/OtherTypeFilter';
 export default function PalletHeader({ searchText, setSearchText, filter, setFilter, filterTab, setFilterTab, defaultFilter, totalPallets, onAdd, onExport }) {
   return (
     <Card
+      className="pallet-toolbar-card"
       styles={{ body: { padding: '16px 24px' } }}
-      style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: 'none' }}
+      style={{ marginBottom: 24, borderRadius: 12, boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-light)' }}
     >
       <Flex vertical gap="middle">
         {/* Row 1: Search + Filter (Left) - RadioGroup (Right) */}
-        <Flex justify="space-between" align="center" gap="middle" style={{ overflow: 'hidden' }}>
-          <Flex align="center" gap="small">
-            <div style={{ width: 280, maxWidth: '100%' }}>
+        <Flex className="pallet-toolbar-row" justify="space-between" align="center" gap="middle" wrap="wrap">
+          <Flex className="pallet-search-row" align="center" gap="small">
+            <div className="pallet-search-wrap">
               <SearchInput
                 value={searchText}
                 onChange={setSearchText}
@@ -51,17 +52,16 @@ export default function PalletHeader({ searchText, setSearchText, filter, setFil
             onChange={(e) => setFilterTab(e.target.value)}
             style={{ overflowX: 'auto', whiteSpace: 'nowrap', minWidth: 0 }}
           >
-            <Radio.Button value="all">Tất cả <Badge count={totalPallets} style={{ backgroundColor: '#1677ff', marginLeft: 8 }} /></Radio.Button>
+            <Radio.Button value="all">Tất cả <Badge count={totalPallets} style={{ backgroundColor: 'var(--color-blue-solid)', marginLeft: 8 }} /></Radio.Button>
             <Radio.Button value="pallet">Pallet</Radio.Button>
             <Radio.Button value="linh_kien">Linh kiện</Radio.Button>
-            <Radio.Button value="cho_tai_che">Chờ tái chế</Radio.Button>
           </Radio.Group>
         </Flex>
 
         {/* Row 2: Actions (Left) */}
         <Flex gap="small" wrap="wrap">
           <Button icon={<DownloadOutlined />} onClick={onExport}>Xuất danh mục</Button>
-          <Button type="primary" icon={<PlusOutlined />} style={{ background: '#d97706' }} onClick={onAdd}>Thêm pallet mới</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>Thêm pallet mới</Button>
         </Flex>
 
         {/* Row 3: Filter (Left) */}

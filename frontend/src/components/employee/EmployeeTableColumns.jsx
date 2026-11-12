@@ -34,16 +34,14 @@ export const getEmployeeColumns = (handleEdit, handleDelete) => [
     header: 'VAI TRÒ',
     render: (record) => {
       const role = record.tenVaiTro;
-      let color = 'default';
-      let bg = '#f5f5f5';
-      let borderColor = '#d9d9d9';
+      let tone = 'slate';
 
-      if (role === 'Quản lí kho' || role === 'Nhân viên kho') { color = '#1d39c4'; bg = '#f0f5ff'; borderColor = '#adc6ff'; }
-      else if (role === 'Admin' || role === 'Giám đốc' || role === 'Phó giám đốc') { color = '#531dab'; bg = '#f9f0ff'; borderColor = '#d3adf7'; }
-      else if (role === 'Bán hàng' || role === 'Nhân viên bán hàng' || role === 'Sales') { color = '#08979c'; bg = '#e6fffb'; borderColor = '#87e8de'; }
-      else if (role) { color = '#d46b08'; bg = '#fff7e6'; borderColor = '#ffd591'; }
+      if (role === 'Quản lí kho' || role === 'Nhân viên kho') tone = 'blue';
+      else if (role === 'Admin' || role === 'Giám đốc' || role === 'Phó giám đốc') tone = 'purple';
+      else if (role === 'Bán hàng' || role === 'Nhân viên bán hàng' || role === 'Sales') tone = 'green';
+      else if (role) tone = 'amber';
 
-      return <Tag style={{ color, background: bg, borderColor, borderRadius: 4, fontWeight: 500 }}>{role || 'N/A'}</Tag>;
+      return <Tag className={`status-tag status-${tone}`}>{role || 'N/A'}</Tag>;
     },
   },
   {
@@ -70,21 +68,19 @@ export const getEmployeeColumns = (handleEdit, handleDelete) => [
     header: 'TRẠNG THÁI',
     render: (record) => {
       let status = record.trangThai;
-      let color = '#595959';
-      let bg = '#fafafa';
-      let borderColor = '#d9d9d9';
+      let tone = 'slate';
 
       if (status === 'Đang làm việc' || status === 'dang_lam_viec') {
-        color = '#389e0d'; bg = '#f6ffed'; borderColor = '#b7eb8f';
+        tone = 'green';
         status = 'Đang làm việc';
       } else if (status === 'Đã nghỉ việc' || status === 'da_nghi_viec') {
-        color = '#cf1322'; bg = '#fff1f0'; borderColor = '#ffa39e';
+        tone = 'red';
         status = 'Đã nghỉ việc';
       } else if (status === 'Nghỉ phép') {
-        color = '#d48806'; bg = '#fffbe6'; borderColor = '#ffe58f';
+        tone = 'amber';
       }
 
-      return <Tag style={{ color, background: bg, borderColor, borderRadius: 4, fontWeight: 500 }}>{status || 'N/A'}</Tag>;
+      return <Tag className={`status-tag status-${tone}`}>{status || 'N/A'}</Tag>;
     },
   },
   {
@@ -93,7 +89,7 @@ export const getEmployeeColumns = (handleEdit, handleDelete) => [
     align: 'center',
     render: (record) => (
       <Space size="middle">
-        <Button type="text" icon={<EditOutlined />} style={{ color: '#8c8c8c' }} onClick={() => handleEdit(record)} />
+        <Button type="text" className="table-action-btn" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
         <ConfirmDeleteButton onConfirm={() => handleDelete(record.id)} />
       </Space>
     ),

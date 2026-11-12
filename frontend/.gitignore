@@ -1,22 +1,12 @@
-# Java / Spring Boot (Backend)
-backend/target/
-backend/.mvn/
-backend/*.log
-backend/.classpath
-backend/.project
-backend/.settings/
-backend/bin/
+# Node / ReactJS
+node_modules/
+dist/
+dist-zip/
+*.local
 
-# Node / ReactJS (Frontend)
-frontend/node_modules/
-frontend/dist/
-frontend/dist-zip/
-frontend/*.local
-
-# IDEs & OS
+# IDE & OS
 .vscode/
 .idea/
 *.swp
 *.DS_Store
 Thumbs.db
-node_modules

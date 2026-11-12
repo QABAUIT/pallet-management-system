@@ -3,6 +3,12 @@ node_modules/
 **/node_modules/
 target/
 **/target/
+frontend/dist/
+frontend/dist-zip/
+
+# Ảnh upload runtime
+uploads/
+backend/uploads/
 
 # Bỏ qua dữ liệu PostgreSQL
 postgres_data/

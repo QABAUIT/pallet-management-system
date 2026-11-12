@@ -1,8 +1,9 @@
-import { ArrowLeft, Bell, ChevronDown, LogOut } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, LogOut, Menu, Moon, Sun } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "../layout/style.css";
 import { useAuth } from "../../store/AuthContext";
+import { useTheme } from "../../store/ThemeContext";
 
 
 const titles = {
@@ -11,6 +12,8 @@ const titles = {
   "/hoa-don": "Quản lí hóa đơn",
   "/hoa-don/tao-moi": "Quản lí hóa đơn",
   "/hoa-don/lich-su": "Quản lí hóa đơn",
+  "/hoa-don/bao-gia": "Quản lí hóa đơn",
+  "/hoa-don/ban-phe-lieu": "Quản lí hóa đơn",
 
   "/pallet": "Quản lí pallet",
   "/nha-cung-cap": "Quản lí nhà cung cấp",
@@ -21,12 +24,22 @@ const titles = {
   "/kho/nhap-kho": "Quản lí kho",
   "/kho/xuat-kho": "Quản lí kho",
   "/kho/kiem-ke": "Quản lí kho",
+  "/kho/don-mua": "Quản lí kho",
+  "/kho/tai-che/phan-loai": "Quản lí kho",
+  "/kho/tai-che/thao-do": "Quản lí kho",
+  "/kho/tai-che/xu-ly-them": "Quản lí kho",
+  "/kho/tai-che/dinh-muc": "Quản lí kho",
+  "/kho/tai-che/dong-pallet": "Quản lí kho",
+  "/kho/tai-che/dich-vu-khach": "Quản lí kho",
 
   "/tai-chinh": "Quản lí tài chính",
   "/tai-chinh/thue": "Quản lí tài chính",
   "/tai-chinh/loi-nhuan": "Quản lí tài chính",
+  "/tai-chinh/tai-che": "Báo cáo tái chế",
 
   "/notifications": "Trung tâm Thông báo",
+
+ 
 };
 
 const subtitles = {
@@ -35,6 +48,8 @@ const subtitles = {
   "/hoa-don": "Lập phiếu bán hàng pallet, tính chiết khấu và theo dõi các đơn hàng công nợ chưa thanh toán",
   "/hoa-don/tao-moi": "Lập phiếu bán hàng pallet, tính chiết khấu và theo dõi các đơn hàng công nợ chưa thanh toán",
   "/hoa-don/lich-su": "Theo dõi lịch sử dòng tiền, đối soát giao dịch",
+  "/hoa-don/bao-gia": "Lập báo giá, gửi khách, ghi nhận kết quả và chuyển thành hóa đơn",
+  "/hoa-don/ban-phe-lieu": "Bán phế liệu gỗ theo kg từ kho cho khách hàng",
 
   "/pallet": "Quản lý danh mục quy cách, tiêu chuẩn kỹ thuật và số lượng pallet trong kho",
   "/nha-cung-cap": "Quản lý đối tác cung ứng",
@@ -45,12 +60,21 @@ const subtitles = {
   "/kho/nhap-kho": "Điều phối luân chuyển pallet, nhập xuất kho và kiểm kê",
   "/kho/xuat-kho": "Điều phối luân chuyển pallet, nhập xuất kho và kiểm kê",
   "/kho/kiem-ke": "Điều phối luân chuyển pallet, nhập xuất kho và kiểm kê",
+  "/kho/don-mua": "Đặt hàng nhà cung cấp, theo dõi nhận hàng từng phần và đơn trễ hạn",
+  "/kho/tai-che/phan-loai": "Phân loại lô pallet cũ thành bán lại, tháo dỡ hoặc loại bỏ",
+  "/kho/tai-che/thao-do": "Tháo dỡ pallet thành thanh, cục và phế liệu theo từng đợt",
+  "/kho/tai-che/xu-ly-them": "Xử lý thanh, cục cần xử lý thêm: dùng lại hoặc loại bỏ",
+  "/kho/tai-che/dinh-muc": "Định mức vật tư để đóng pallet từ linh kiện tháo dỡ",
+  "/kho/tai-che/dong-pallet": "Lập phiếu đóng pallet theo định mức, ghi lý do khi số thực tế lệch",
+  "/kho/tai-che/dich-vu-khach": "Tháo dỡ pallet cho khách, thu phí dịch vụ và mua lại phế liệu của khách",
 
   "/tai-chinh": "Theo dõi doanh thu và dòng tiền thu về theo từng kỳ",
   "/tai-chinh/thue": "Quản lý thuế phải nộp và theo dõi hạn kê khai",
   "/tai-chinh/loi-nhuan": "Phân tích lợi nhuận và hiệu quả kinh doanh theo kỳ",
 
   "/notifications": "Theo dõi và cập nhật theo thời gian thực các biến động xuất hóa đơn, giao dịch nhập kho, xuất kho",
+
+
 };
 
 // Các trang chi tiết (URL có thêm /:id). Muốn thêm trang chi tiết mới
@@ -108,19 +132,28 @@ const getBackLink = (pathname, search) => {
   return { to, label: route.backLabel };
 };
 
+const VAI_TRO_LABEL = {
+  GD: "Giám đốc",
+  PGD: "Phó giám đốc",
+  NVKHO: "Nhân viên kho",
+  NVBANHANG: "Nhân viên bán hàng",
+};
+
 export default function Header({
-  user = {
-    name: "Trần Hải Nam",
-    role: "Quản trị viên kho",
-    avatarUrl: "",
-  },
   notificationCount = 0,
   notificationPath = "/notifications",
+  onMenuClick,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const [showMenu, setShowMenu] = useState(false);
+
+  const maVaiTro = String(user?.maVaiTro ?? "").replace(/^ROLE_/, "");
+  const tenHienThi = user?.hoTen || "Người dùng";
+  const nhanVaiTro = VAI_TRO_LABEL[maVaiTro] || "Nhân viên";
 
   const title = getPageTitle(location.pathname);
   const subtitle = getPageSubtitle(location.pathname);
@@ -133,6 +166,14 @@ export default function Header({
 
   return (
     <header className="header">
+      <button
+        type="button"
+        className="header-menu-btn"
+        aria-label="Mở menu điều hướng"
+        onClick={onMenuClick}
+      >
+        <Menu size={22} />
+      </button>
       <div className="header-left">
         <h1 className="header-title">{title}</h1>
         {backLink ? (
@@ -146,6 +187,17 @@ export default function Header({
       </div>
 
       <div className="header-right">
+        <button
+          type="button"
+          aria-label={isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+          title={isDark ? "Chế độ sáng" : "Chế độ tối"}
+          aria-pressed={isDark}
+          onClick={toggleTheme}
+          className="icon-btn theme-toggle"
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+
         <button
           type="button"
           aria-label="Thông báo"
@@ -166,21 +218,21 @@ export default function Header({
             onClick={() => setShowMenu(!showMenu)}
             className="user-btn"
           >
-            {user.avatarUrl ? (
+            {user?.anhDaiDien ? (
               <img
-                src={user.avatarUrl}
-                alt={user.name}
+                src={user.anhDaiDien}
+                alt={tenHienThi}
                 className="avatar"
               />
             ) : (
               <div className="avatar-fallback">
-                {user.name?.charAt(0)}
+                {tenHienThi.charAt(0).toUpperCase()}
               </div>
             )}
 
             <div className="user-info">
-              <p className="user-name">{user.name}</p>
-              <p className="user-role">{user.role}</p>
+              <p className="user-name">{tenHienThi}</p>
+              <p className="user-role">{nhanVaiTro}</p>
             </div>
 
             <ChevronDown size={16} className="chevron" />

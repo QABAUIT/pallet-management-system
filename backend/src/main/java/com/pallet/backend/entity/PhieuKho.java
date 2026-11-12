@@ -34,6 +34,14 @@ public class PhieuKho {
     private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "don_mua_id")
+    private DonMua donMua;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "phieu_tai_che_id")
+    private PhieuTaiChe phieuTaiChe;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nhan_vien_giao_nhan_id")
     private NhanVien nhanVienGiaoNhan;
 
@@ -65,5 +73,15 @@ public class PhieuKho {
 
     @Column(name = "trang_thai", nullable = false, length = 20)
     private String trangThai;
+
+    /** Phiếu do hệ thống tự sinh khi tái chế/đóng pallet/dịch vụ; không tính vào thống kê nhập xuất kho. */
+    @Builder.Default
+    @Column(name = "la_he_thong", nullable = false)
+    private boolean laHeThong = false;
+
+    /** Phiếu nhập đã được xếp vị trí lưu trữ — chặn xếp lặp gây cộng/trừ tồn 2 lần. */
+    @Builder.Default
+    @Column(name = "da_xep_vi_tri", nullable = false)
+    private boolean daXepViTri = false;
 
 }

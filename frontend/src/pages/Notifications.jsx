@@ -22,6 +22,7 @@ export default function Notifications() {
     totalCount,
     unreadCount,
     readCount,
+    filteredCount,
     fetchNotifications,
     handleMarkAllRead,
     handleToggleRead,
@@ -49,7 +50,7 @@ export default function Notifications() {
         <Skeleton
           active
           paragraph={{ rows: 6 }}
-          style={{ padding: 24, background: '#ffffff', borderRadius: 12 }}
+          style={{ padding: 24, background: 'var(--bg-card)', borderRadius: 12 }}
         />
       ) : (
         <>
@@ -88,7 +89,7 @@ export default function Notifications() {
       <div style={{ marginTop: 12 }}>
         <Pagination
           currentPage={currentPage}
-          totalItems={totalCount}
+          totalItems={filteredCount}
           itemsPerPage={8}
           itemLabel="thông báo"
           onPageChange={setCurrentPage}

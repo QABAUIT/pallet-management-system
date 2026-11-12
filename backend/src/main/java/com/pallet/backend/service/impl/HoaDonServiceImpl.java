@@ -192,8 +192,10 @@ public class HoaDonServiceImpl implements HoaDonService {
                 .toList();
 
         var matHang = matHangRepository.findByTrangThai("dang_kinh_doanh").stream()
-                .filter(m -> !"cho_tai_che".equals(m.getLoaiMatHang()))
-                .map(m -> DanhMucBanHangResponse.MatHangOption.builder()
+                    .filter(m -> !"cho_tai_che".equals(m.getLoaiMatHang())
+                        && !"dich_vu".equals(m.getLoaiMatHang())
+                        && !"phe_lieu".equals(m.getLoaiMatHang()))
+                    .map(m -> DanhMucBanHangResponse.MatHangOption.builder()
                         .id(m.getId()).maMatHang(m.getMaMatHang()).tenMatHang(m.getTenMatHang())
                         .moTa(m.getMoTa()).kichThuoc(kichThuoc(m)).donGia(m.getDonGiaBan())
                         .tonKhaDung(Math.max(0, ton.getOrDefault(m.getId(), 0)))
@@ -402,6 +404,9 @@ public class HoaDonServiceImpl implements HoaDonService {
             if ("cho_tai_che".equals(mh.getLoaiMatHang())) {
                 throw new BusinessException(mh.getTenMatHang() + " đang chờ tái chế, không thể bán");
             }
+            if ("dich_vu".equals(mh.getLoaiMatHang()) || "phe_lieu".equals(mh.getLoaiMatHang())) {
+                throw new BusinessException(mh.getTenMatHang() + " không bán ở màn bán hàng thông thường");
+            }
             if ("pallet".equals(mh.getLoaiMatHang())) coPallet = true;
 
             BigDecimal rate = d.getTyLeChietKhau() == null ? BigDecimal.ZERO : d.getTyLeChietKhau();
@@ -480,7 +485,8 @@ public class HoaDonServiceImpl implements HoaDonService {
     }
 
     private void apDungTonKho(HoaDon hd, List<ChiTietHoaDon> lines, CheDoTon che) {
-        List<ChiTietHoaDon> sorted = lines.stream()
+            List<ChiTietHoaDon> sorted = lines.stream()
+                .filter(l -> !"dich_vu".equals(l.getMatHang().getLoaiMatHang())) // dịch vụ không có tồn kho
                 .sorted(Comparator.comparing(l -> l.getMatHang().getId())).toList();
         for (ChiTietHoaDon l : sorted) {
             MatHang mh = l.getMatHang();
@@ -513,7 +519,10 @@ public class HoaDonServiceImpl implements HoaDonService {
         return new BusinessException("Tồn kho khả dụng của " + mh.getTenMatHang() + " chỉ còn " + con);
     }
 
-    private void taoPhieuXuatKho(HoaDon hd, List<ChiTietHoaDon> lines, NhanVien nv) {
+    private void taoPhieuXuatKho(HoaDon hd, List<ChiTietHoaDon> tatCaDong, NhanVien nv) {
+        List<ChiTietHoaDon> lines = tatCaDong.stream()
+                .filter(l -> !"dich_vu".equals(l.getMatHang().getLoaiMatHang())).toList();
+        if (lines.isEmpty()) return; // hóa đơn chỉ gồm dịch vụ: không có hàng để xuất
         PhieuKho pk = phieuKhoRepository.save(PhieuKho.builder()
                 .maPhieu(hoaDonRepository.layMaChungTu("PX", "PX-"))
                 .loaiPhieu("xuat_kho")

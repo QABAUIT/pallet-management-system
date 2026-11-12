@@ -18,7 +18,7 @@ export default function EmployeeFilterBar({
       <Space size="middle">
         <Input
           placeholder="Tìm theo mã NV, họ tên, số điện thoại..."
-          prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+          prefix={<SearchOutlined style={{ color: 'var(--text-faint)' }} />}
           style={{ width: 320, borderRadius: '6px' }}
           size="large"
           value={searchText}
@@ -54,7 +54,7 @@ export default function EmployeeFilterBar({
         type="primary"
         icon={<PlusOutlined />}
         size="large"
-        style={{ backgroundColor: '#d46b08', borderColor: '#d46b08', borderRadius: '6px', fontWeight: 500 }}
+        style={{ backgroundColor: 'var(--color-amber-solid)', borderColor: 'var(--color-amber-solid)', color: 'var(--text-inverse)', borderRadius: '6px', fontWeight: 500 }}
         onClick={handleAdd}
       >
         Thêm nhân viên mới

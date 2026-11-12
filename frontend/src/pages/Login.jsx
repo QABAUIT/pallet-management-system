@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Alert, Button, Checkbox, ConfigProvider, Form, Input, message } from 'antd'
+import { Alert, Button, Checkbox, ConfigProvider, Form, Input, message, theme as antdTheme } from 'antd'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../store/AuthContext'
+import { useTheme } from '../store/ThemeContext'
 import bgLogin from '../assets/login-bg.jpg'
 import '../components/layout/Login.css';
 
 export default function LoginPage() {
   const { daDangNhap, login } = useAuth()
+  const { isDark } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [dangGui, setDangGui] = useState(false)
@@ -40,7 +42,13 @@ export default function LoginPage() {
   return (
     // Ô checkbox trong thiết kế màu navy, kích thước 20px (khác màu chủ đạo cam của app)
     <ConfigProvider
-      theme={{ token: { colorPrimary: '#0f2942', controlInteractiveSize: 20 } }}
+      theme={{
+        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        token: {
+          colorPrimary: isDark ? '#5b82c7' : '#101a33',
+          controlInteractiveSize: 20,
+        },
+      }}
     >
       <div className="login-page" style={{ '--login-bg': `url(${bgLogin})` }}>
         <div className="login-card">
@@ -60,7 +68,7 @@ export default function LoginPage() {
               label="Tên đăng nhập"
               rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập tên đăng nhập' }]}
             >
-              <Input placeholder="admin" autoFocus autoComplete="username" />
+              <Input placeholder="Nhập tên đăng nhập" autoFocus autoComplete="username" />
             </Form.Item>
 
             <Form.Item
@@ -77,7 +85,7 @@ export default function LoginPage() {
               rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
             >
               <Input.Password
-                placeholder="0123456789"
+                placeholder="Nhập mật khẩu"
                 autoComplete="current-password"
                 visibilityToggle={false}
               />

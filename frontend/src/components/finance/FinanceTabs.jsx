@@ -5,6 +5,7 @@ const TABS = [
   { to: "/tai-chinh", label: "Doanh thu" },
   { to: "/tai-chinh/thue", label: "Thuế" },
   { to: "/tai-chinh/loi-nhuan", label: "Lợi nhuận" },
+  { to: "/tai-chinh/tai-che", label: "Tái chế" },
 ];
 
 export default function FinanceTabs() {

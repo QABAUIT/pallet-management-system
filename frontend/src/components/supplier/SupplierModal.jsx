@@ -87,9 +87,9 @@ export default function SupplierModal({
     >
       <div
         style={{
-          backgroundColor: "#d46b08",
+          backgroundColor: "var(--navy)",
           padding: "16px 24px",
-          color: "white",
+          color: "var(--text-inverse)",
           borderTopLeftRadius: "8px",
           borderTopRightRadius: "8px",
           display: "flex",
@@ -100,19 +100,19 @@ export default function SupplierModal({
         <div>
           <Title
             level={4}
-            style={{ color: "white", margin: 0, fontWeight: 600 }}
+            style={{ color: "var(--text-inverse)", margin: 0, fontWeight: 600 }}
           >
             {isEdit ? "Cập nhật nhà cung cấp" : "Thêm nhà cung cấp mới"}
           </Title>
-          <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: "13px" }}>
+          <Text style={{ color: "var(--text-on-dark-muted)", fontSize: "13px" }}>
             Lưu trữ thông tin nhà cung cấp
           </Text>
         </div>
         <Button
           type="text"
-          icon={<span style={{ fontSize: 20, color: "white" }}>×</span>}
+          icon={<span style={{ fontSize: 20, color: "var(--text-inverse)" }}>×</span>}
           onClick={onCancel}
-          style={{ color: "white", padding: 0 }}
+          style={{ color: "var(--text-inverse)", padding: 0 }}
         />
       </div>
 
@@ -130,7 +130,7 @@ export default function SupplierModal({
                 <Input
                   placeholder="Tự động tạo"
                   disabled
-                  style={{ backgroundColor: "#fafafa" }}
+                  style={{ backgroundColor: "var(--bg-subtle)" }}
                 />
               </Form.Item>
             </Col>
@@ -138,7 +138,7 @@ export default function SupplierModal({
               <Form.Item
                 label={
                   <span>
-                    TÊN NHÀ CUNG CẤP <span style={{ color: "red" }}>*</span>
+                    TÊN NHÀ CUNG CẤP <span style={{ color: "var(--color-red)" }}>*</span>
                   </span>
                 }
                 name="tenNcc"
@@ -258,8 +258,8 @@ export default function SupplierModal({
               icon={<SaveOutlined />}
               loading={saving}
               style={{
-                backgroundColor: "#001529",
-                borderColor: "#001529",
+                backgroundColor: "var(--navy)",
+                borderColor: "var(--navy)",
                 borderRadius: "6px",
               }}
             >

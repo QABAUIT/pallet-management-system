@@ -60,3 +60,25 @@ export const TRANG_THAI_HOAT_DONG = {
 export function resolveStatus(map, value) {
   return map[value] || { label: value ?? '-', color: 'default' };
 }
+
+// Phiếu tái chế / tháo dỡ / xử lý thêm
+export const PHIEU_TAI_CHE_TRANG_THAI = {
+  nhap: { label: "Nháp", color: "default" },
+  da_phan_loai: { label: "Đã phân loại", color: "blue" },
+  da_hoan_tat: { label: "Hoàn tất", color: "green" },
+  da_huy: { label: "Đã huỷ", color: "red" },
+};
+// Đơn mua. Chỉ "nhap" và "da_huy" được code dùng để xét nút; các nhãn còn lại để hiển thị.
+export const DON_MUA_TRANG_THAI = {
+  nhap: { label: "Nháp", color: "default" },
+  da_xac_nhan: { label: "Đã xác nhận", color: "blue" },
+  da_nhan_mot_phan: { label: "Nhận một phần", color: "orange" },
+  da_nhan_du: { label: "Đã nhận đủ", color: "green" },
+  da_huy: { label: "Đã hủy", color: "red" },
+};
+
+export const PHIEU_DUYET_TRANG_THAI = {
+  nhap: { label: "Nháp", color: "default" },
+  da_duyet: { label: "Đã duyệt", color: "green" },
+  da_huy: { label: "Đã huỷ", color: "red" },
+};

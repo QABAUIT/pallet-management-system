@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -72,6 +73,10 @@ public class MatHang {
     @Column(name = "don_gia_ban", nullable = false)
     private BigDecimal donGiaBan;
 
+    // cai | kg  (phe_lieu luôn là kg)
+    @Column(name = "don_vi_tinh", nullable = false, length = 10)
+    private String donViTinh;
+
     @Column(name = "hinh_anh", length = 255)
     private String hinhAnh;
 
@@ -86,5 +91,12 @@ public class MatHang {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    void macDinh() {
+        if (donViTinh == null) {
+            donViTinh = "phe_lieu".equals(loaiMatHang) ? "kg" : "cai";
+        }
+    }
 
 }

@@ -200,8 +200,9 @@ export default function StocktakingReport() {
           loading={exporting}
           onClick={handleExport}
           style={{
-            backgroundColor: "#d46b08",
-            borderColor: "#d46b08",
+            backgroundColor: "var(--color-amber-solid)",
+            borderColor: "var(--color-amber-solid)",
+            color: "var(--text-inverse)",
             borderRadius: 6,
             fontWeight: 500,
           }}

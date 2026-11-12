@@ -13,6 +13,9 @@ export const LOAI_GD = {
   chi_sua_chua: 'Chi sửa chữa',
   chi_van_chuyen: 'Chi vận chuyển',
   chi_khac: 'Chi khác',
+  thu_dich_vu_thao_do: "Thu dịch vụ tháo dỡ",
+  thu_ban_phe_lieu: "Thu bán phế liệu",
+  chi_mua_phe_lieu_khach: "Chi mua phế liệu của khách",
 }
 
 export const PHUONG_THUC = {

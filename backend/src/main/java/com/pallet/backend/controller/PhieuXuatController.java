@@ -4,7 +4,9 @@ import com.pallet.backend.dto.request.TaoPhieuXuatRequest;
 import com.pallet.backend.dto.response.PhieuXuatResponse;
 import com.pallet.backend.dto.response.ThongKePhieuXuatResponse;
 import com.pallet.backend.service.PhieuXuatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/v1/phieu-xuat")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('GD','PGD','NVKHO')")
 public class PhieuXuatController {
 
     // khoId không gửi lên thì mặc định kho 1 (khớp KHO_ID trong frontend/src/config/kho.js)
@@ -52,12 +55,12 @@ public class PhieuXuatController {
     }
 
     @PostMapping
-    public ResponseEntity<PhieuXuatResponse> taoPhieuXuat(@RequestBody TaoPhieuXuatRequest request) {
+    public ResponseEntity<PhieuXuatResponse> taoPhieuXuat(@Valid @RequestBody TaoPhieuXuatRequest request) {
         return ResponseEntity.ok(phieuXuatService.taoPhieuXuat(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PhieuXuatResponse> capNhatPhieuXuat(@PathVariable Long id, @RequestBody TaoPhieuXuatRequest request) {
+    public ResponseEntity<PhieuXuatResponse> capNhatPhieuXuat(@PathVariable Long id, @Valid @RequestBody TaoPhieuXuatRequest request) {
         return ResponseEntity.ok(phieuXuatService.capNhatPhieuXuat(id, request));
     }
 

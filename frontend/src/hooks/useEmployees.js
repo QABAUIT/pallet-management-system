@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Form, message } from 'antd';
 import dayjs from 'dayjs';
 import { nhanVienService } from '../services/nhanVienService';
@@ -13,11 +13,7 @@ export function useEmployees() {
   const [editingId, setEditingId] = useState(null);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await nhanVienService.getAll();
@@ -29,7 +25,11 @@ export function useEmployees() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAdd = () => {
     setModalMode('add');
@@ -82,7 +82,7 @@ export function useEmployees() {
         ngayVaoLam: values.ngayVaoLam ? values.ngayVaoLam.format('YYYY-MM-DD') : null,
         ngaySinh: values.ngaySinh ? values.ngaySinh.format('YYYY-MM-DD') : null,
         ngayNghiViec: values.ngayNghiViec ? values.ngayNghiViec.format('YYYY-MM-DD') : null,
-        tenDangNhap: values.tenDangNhap || form.getFieldValue('tenDangNhap') || (values.sdt ? values.sdt : `nv${Math.floor(Math.random() * 100000)}`)
+        tenDangNhap: values.tenDangNhap?.trim() || '',
       };
 
       if (modalMode === 'add') {

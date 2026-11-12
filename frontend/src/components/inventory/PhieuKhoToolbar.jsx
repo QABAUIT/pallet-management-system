@@ -33,24 +33,8 @@ export default function PhieuKhoToolbar({
   createLabel,
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: 16,
-        marginBottom: 16,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
+    <div className="page-toolbar">
+      <div className="page-toolbar-left">
         <SearchInput
           value={keyword}
           onChange={onKeywordChange}
@@ -66,13 +50,12 @@ export default function PhieuKhoToolbar({
         <TimeFilter value={time} onChange={onTimeChange} />
       </div>
 
-      <div style={{ display: "flex", gap: 12 }}>
+      <div className="page-toolbar-actions">
         <Button
           size="large"
           icon={<DownloadOutlined />}
           loading={exporting}
           onClick={onExport}
-          style={{ borderRadius: 6 }}
         >
           Xuất file Excel
         </Button>
@@ -81,12 +64,6 @@ export default function PhieuKhoToolbar({
           size="large"
           icon={<PlusOutlined />}
           onClick={onCreate}
-          style={{
-            backgroundColor: "#d46b08",
-            borderColor: "#d46b08",
-            borderRadius: 6,
-            fontWeight: 500,
-          }}
         >
           {createLabel}
         </Button>

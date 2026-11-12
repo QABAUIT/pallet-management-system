@@ -1,5 +1,6 @@
 import React from "react";
 import { Skeleton, Flex, Typography } from "antd";
+import { Lightbulb } from "lucide-react";
 import Pagination from "../components/common/Pagination";
 import PalletHeader from "../components/pallet/PalletHeader";
 import PalletCard from "../components/pallet/PalletCard";
@@ -8,7 +9,7 @@ import PalletModal from "../components/pallet/PalletModal";
 import { usePallets } from "../hooks/usePallets";
 import { exportToCsv } from "../utils/exportCsv";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function PalletManagement() {
   const {
@@ -44,7 +45,7 @@ export default function PalletManagement() {
   };
 
   return (
-    <Flex vertical style={{ padding: 24, minHeight: "calc(100vh - 64px)" }}>
+    <Flex vertical className="page-shell">
       <PalletHeader
         searchText={searchText}
         setSearchText={setSearchText}
@@ -59,34 +60,20 @@ export default function PalletManagement() {
       />
 
       <Flex vertical style={{ flex: 1 }}>
-        <Flex align="center" gap="small" style={{ marginBottom: 16 }}>
-          <Text strong style={{ fontSize: 14 }}>
+        <div className="pallet-heading-row">
+          <Text strong className="page-heading-title">
             DANH MỤC SẢN PHẨM
           </Text>
-          <Text
-            style={{
-              background: "#e2e8f0",
-              padding: "2px 8px",
-              borderRadius: 12,
-              fontSize: 12,
-              color: "#64748b",
-            }}
-          >
+          <span className="count-badge">
             Hiển thị {paginatedPallets.length}/{totalItems}
-          </Text>
-          <Text type="secondary" style={{ marginLeft: "auto", fontSize: 13 }}>
-            💡 Bấm thẻ để xem chi tiết đầy đủ bên phải
-          </Text>
-        </Flex>
+          </span>
+          <span className="page-hint pallet-hint">
+            <Lightbulb size={15} aria-hidden />
+            Bấm thẻ để xem chi tiết đầy đủ bên phải
+          </span>
+        </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 16,
-            marginBottom: 24,
-          }}
-        >
+        <div className="pallet-grid">
           {loading ? (
             <Skeleton active paragraph={{ rows: 4 }} />
           ) : (
@@ -105,7 +92,7 @@ export default function PalletManagement() {
           )}
         </div>
 
-        <div style={{ width: "100%", marginTop: "16px" }}>
+        <div className="pagination-row">
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}

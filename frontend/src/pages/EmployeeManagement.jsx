@@ -6,7 +6,6 @@ import EmployeeModal from '../components/employee/EmployeeModal';
 import { getEmployeeColumns } from '../components/employee/EmployeeTableColumns';
 import { useEmployees } from '../hooks/useEmployees';
 
-import PageHeader from '../components/common/PageHeader';
 import SearchInput from '../components/common/SearchInput';
 import OtherTypeFilter from '../components/common/OtherTypeFilter';
 import AppTable from '../components/common/AppTable';
@@ -59,56 +58,59 @@ export default function EmployeeManagement() {
   }, [searchText, filterStatus, filterRole]);
 
   return (
-    <div style={{ padding: '24px', backgroundColor: '#fcfcfc', minHeight: '100vh', textAlign: 'left' }}>
+    <div className="page-shell">
       
       <EmployeeStats data={data} />
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', alignItems: 'center' }}>
-        <SearchInput 
-          value={searchText} 
-          onChange={setSearchText} 
-          placeholder="Tìm theo mã NV, họ tên, số điện thoại..." 
-        />
-        <OtherTypeFilter
-          label="Lọc nhân viên"
-          groups={[
-            {
-              key: 'status',
-              label: 'Trạng thái',
-              type: 'radio',
-              options: [
-                { value: 'dang_lam_viec', label: 'Đang làm việc' },
-                { value: 'da_nghi_viec', label: 'Đã nghỉ việc' }
-              ]
-            },
-            {
-              key: 'role',
-              label: 'Vai trò',
-              type: 'radio',
-              options: [
-                { value: 'Giám đốc', label: 'Giám đốc' },
-                { value: 'Phó giám đốc', label: 'Phó giám đốc' },
-                { value: 'Nhân viên kho', label: 'Nhân viên kho' },
-                { value: 'Nhân viên bán hàng', label: 'Nhân viên bán hàng' }
-              ]
-            }
-          ]}
-          value={{ status: filterStatus, role: filterRole }}
-          defaultValue={{ status: null, role: null }}
-          onApply={(val) => {
-            setFilterStatus(val.status);
-            setFilterRole(val.role);
-          }}
-        />
+      <div className="page-toolbar">
+        <div className="page-toolbar-left">
+          <SearchInput 
+            value={searchText} 
+            onChange={setSearchText} 
+            placeholder="Tìm theo mã NV, họ tên, số điện thoại..." 
+          />
+          <OtherTypeFilter
+            label="Lọc nhân viên"
+            groups={[
+              {
+                key: 'status',
+                label: 'Trạng thái',
+                type: 'radio',
+                options: [
+                  { value: 'dang_lam_viec', label: 'Đang làm việc' },
+                  { value: 'da_nghi_viec', label: 'Đã nghỉ việc' }
+                ]
+              },
+              {
+                key: 'role',
+                label: 'Vai trò',
+                type: 'radio',
+                options: [
+                  { value: 'Giám đốc', label: 'Giám đốc' },
+                  { value: 'Phó giám đốc', label: 'Phó giám đốc' },
+                  { value: 'Nhân viên kho', label: 'Nhân viên kho' },
+                  { value: 'Nhân viên bán hàng', label: 'Nhân viên bán hàng' }
+                ]
+              }
+            ]}
+            value={{ status: filterStatus, role: filterRole }}
+            defaultValue={{ status: null, role: null }}
+            onApply={(val) => {
+              setFilterStatus(val.status);
+              setFilterRole(val.role);
+            }}
+          />
+        </div>
+        <div className="page-toolbar-actions">
           <Button
             type="primary"
             icon={<PlusOutlined />}
             size="large"
-            style={{ backgroundColor: '#d46b08', borderColor: '#d46b08', borderRadius: '6px', fontWeight: 500 }}
             onClick={handleAdd}
           >
             Thêm nhân viên mới
           </Button>
+        </div>
       </div>
 
       <AppTable
