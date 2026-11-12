@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Form, Input, InputNumber, Modal } from 'antd'
 import { kiemKeApi } from '../../api/kiemKeApi'
-import { useAuth } from '../../store/AuthContext'
 import { KHO_ID } from '../../config/kho'
 import { notifyError, notifySuccess } from '../../utils/notify'
 
 /** Tạo phiên kiểm kê mới. BE sẽ chụp snapshot tồn kho hiện tại của kho vào phiên. */
 export function CreateStocktakeModal({ onCancel, onCreated }) {
-  const { user } = useAuth()
   const [form] = Form.useForm()
   const [saving, setSaving] = useState(false)
 
@@ -16,7 +14,6 @@ export function CreateStocktakeModal({ onCancel, onCreated }) {
     try {
       const phien = await kiemKeApi.taoPhien({
         khoId: KHO_ID,
-        nguoiTaoId: user?.nhanVienId,
         ghiChu: values.ghiChu?.trim() || null,
       })
       if (!phien?.id) throw new Error('Không nhận được mã phiên kiểm kê từ máy chủ')
@@ -52,7 +49,6 @@ export function CreateStocktakeModal({ onCancel, onCreated }) {
 
 /** Nhập tồn thực tế cho 1 dòng kiểm kê. Để trống số lượng = đưa dòng về "Chờ kiểm". */
 export function EditStocktakeModal({ row, onCancel, onSaved }) {
-  const { user } = useAuth()
   const [form] = Form.useForm()
   const [saving, setSaving] = useState(false)
 
@@ -62,7 +58,6 @@ export function EditStocktakeModal({ row, onCancel, onSaved }) {
       await kiemKeApi.capNhatChiTiet(row.id, {
         tonThucTe: values.tonThucTe ?? null,
         ghiChuGiaiTrinh: values.ghiChuGiaiTrinh?.trim() || null,
-        nguoiKiemId: user?.nhanVienId,
       })
       notifySuccess('Cập nhật tồn thực tế thành công')
       onSaved()

@@ -11,6 +11,7 @@ import com.pallet.backend.exception.BusinessException;
 import com.pallet.backend.repository.*;
 import com.pallet.backend.repository.specification.PhieuKhoSpecifications;
 import com.pallet.backend.service.PhieuNhapService;
+import com.pallet.backend.service.PhanQuyenKho;
 import com.pallet.backend.service.TonKhoNghiepVu;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -26,9 +27,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +53,7 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
     private final ViTriLuuTruRepository viTriLuuTruRepository;
     private final TonKhoNghiepVu tonKhoNghiepVu;
     private final com.pallet.backend.service.ThongBaoTriggerService thongBaoTrigger;
+    private final PhanQuyenKho phanQuyenKho;
 
     private static int orZero(Integer v) {
         return v != null ? v : 0;
@@ -125,16 +129,24 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         if (items == null || items.isEmpty()) {
             throw new BusinessException("Phiếu nhập cần ít nhất 1 mặt hàng");
         }
+        Set<Long> daCo = new HashSet<>();
         for (ChiTietPhieuNhapItemRequest it : items) {
             if (it.getMatHangId() == null || it.getSoLuong() == null || it.getSoLuong() <= 0) {
                 throw new BusinessException("Mỗi dòng hàng cần chọn mặt hàng và số lượng lớn hơn 0");
+            }
+            if (!daCo.add(it.getMatHangId())) {
+                String tenMatHang = matHangRepository.findById(it.getMatHangId())
+                        .map(MatHang::getTenMatHang)
+                        .orElse("ID " + it.getMatHangId());
+                throw new BusinessException("Mặt hàng " + tenMatHang
+                        + " xuất hiện 2 lần trong phiếu nhập, hãy gộp thành 1 dòng");
             }
         }
     }
 
     @Override
     @Transactional
-    public PhieuNhapResponse taoPhieuNhap(TaoPhieuNhapRequest request) {
+    public PhieuNhapResponse taoPhieuNhap(TaoPhieuNhapRequest request, String tenDangNhap) {
         if (request.getKhoId() == null) throw new BusinessException("Thiếu thông tin kho");
         kiemTraChiTiet(request.getChiTiet());
 
@@ -145,6 +157,8 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
 
         Kho kho = khoRepository.findById(request.getKhoId())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy kho"));
+        NhanVien nguoiDangNhap = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiDangNhap, kho);
         NhanVien nv = request.getNhanVienTiepNhanId() == null ? null
                 : nhanVienRepository.findById(request.getNhanVienTiepNhanId()).orElse(null);
         NhaCungCap ncc = request.getNccId() == null ? null
@@ -174,10 +188,12 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
 
     @Override
     @Transactional
-    public PhieuNhapResponse capNhatPhieuNhap(Long id, TaoPhieuNhapRequest request) {
+    public PhieuNhapResponse capNhatPhieuNhap(Long id, TaoPhieuNhapRequest request, String tenDangNhap) {
         PhieuKho pk = phieuKhoRepository.findForUpdate(id)
                 .filter(p -> LOAI_PHIEU.equals(p.getLoaiPhieu()))
                 .orElseThrow(() -> new BusinessException("Không tìm thấy phiếu nhập"));
+        NhanVien nguoiDangNhap = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiDangNhap, pk.getKho());
         if (!CHO_XU_LY.equals(pk.getTrangThai())) {
             throw new BusinessException("Chỉ được sửa phiếu đang ở trạng thái Chờ xử lý");
         }
@@ -193,6 +209,9 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
             for (ChiTietPhieuKho ct : chiTietCu) {
                 LoHang lo = ct.getLo();
                 if (lo != null) {
+                    // Hủy phiếu nhập thủ công: đặt lô về 0 vì lô gắn với phiếu bị hủy.
+                    // Đây là ngoại lệ của quy ước chỉ giảm soLuongConLai ở phân loại/xuất kho thủ công;
+                    // không phản ánh tồn kho thực tế (tồn nằm ở ton_kho).
                     lo.setSoLuongConLai(0);
                     lo.setTrangThai("da_het");
                     loHangRepository.save(lo);
@@ -226,11 +245,20 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         return mapToResponse(pk);
     }
 
+    /**
+     * Ghi chi tiết phiếu nhập, tạo lô và cộng tồn kho (nếu phiếu đã hoàn thành).
+     *
+     * <p>Lô mới khởi tạo {@code soLuongConLai = soLuongNhap}. Sau đó giá trị này chỉ giảm khi
+     * duyệt phân loại hoặc xuất kho thủ công có chọn lô; không phản ánh tồn sau khi bán, tháo dỡ
+     * hoặc đóng pallet. Tồn kho thực tế nằm ở {@code ton_kho}.</p>
+     */
     private void ghiChiTietVaCapNhatTon(PhieuKho pk, Kho kho, NhaCungCap ncc, List<ChiTietPhieuNhapItemRequest> items) {
         for (ChiTietPhieuNhapItemRequest item : items) {
             MatHang mh = matHangRepository.findById(item.getMatHangId())
                     .orElseThrow(() -> new BusinessException("Không tìm thấy mặt hàng ID " + item.getMatHangId()));
 
+            // Lô mới: soLuongConLai bắt đầu bằng số lượng nhập; đây chưa phải tồn kho thực tế.
+            // Giá trị này chỉ giảm khi duyệt phân loại hoặc xuất kho thủ công có chọn lô.
             LoHang lo = LoHang.builder()
                     .maLo(phieuKhoRepository.getMaChungTu("LO", "LO-"))
                     .matHang(mh)
@@ -267,9 +295,11 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
      */
     @Override
     @Transactional
-    public void xepViTri(Long id, XepViTriRequest request) {
+    public void xepViTri(Long id, XepViTriRequest request, String tenDangNhap) {
         PhieuKho pk = phieuKhoRepository.findForUpdate(id)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy phiếu"));
+        NhanVien nguoiDangNhap = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiDangNhap, pk.getKho());
         if (!DA_HOAN_THANH.equals(pk.getTrangThai())) {
             throw new BusinessException("Chỉ có thể xếp vị trí cho phiếu nhập đã hoàn thành");
         }
@@ -314,6 +344,7 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
                     .orElseThrow(() -> new BusinessException("Không tìm thấy mặt hàng ID " + item.getMatHangId()));
             Kho khoDich = khoRepository.findById(item.getKhoId())
                     .orElseThrow(() -> new BusinessException("Không tìm thấy kho đích"));
+            phanQuyenKho.kiemTra(nguoiDangNhap, khoDich);
             ViTriLuuTru viTriDich = viTriLuuTruRepository.findById(item.getViTriId())
                     .orElseThrow(() -> new BusinessException("Không tìm thấy vị trí đích"));
             if (!viTriDich.getKho().getId().equals(khoDich.getId())) {
@@ -390,6 +421,11 @@ public class PhieuNhapServiceImpl implements PhieuNhapService {
         } catch (Exception e) {
             throw new BusinessException("Lỗi xuất Excel Lịch sử nhập kho");
         }
+    }
+
+    private NhanVien timNhanVien(String tenDangNhap) {
+        return nhanVienRepository.findByTenDangNhap(tenDangNhap)
+                .orElseThrow(() -> new BusinessException("Không xác định được người dùng đang đăng nhập"));
     }
 
     private PhieuNhapResponse mapToResponse(PhieuKho pk) {

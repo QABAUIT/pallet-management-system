@@ -5,6 +5,18 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.*;
 
+/**
+ * Lô hàng theo dõi số lượng nhập và số lượng còn lại của một lần nhập.
+ *
+ * <p>Quy ước: {@code soLuongConLai} chỉ được giảm khi duyệt phân loại
+ * ({@code PhieuTaiCheServiceImpl.duyetPhanLoai}) và khi xuất kho thủ công có chọn lô
+ * ({@code PhieuXuatServiceImpl.ghiChiTietVaTruTon}). Giá trị này <b>không phản ánh tồn kho</b>
+ * sau khi bán, tháo dỡ hoặc đóng pallet; tồn kho thực tế được theo dõi riêng trong
+ * {@code ton_kho}.</p>
+ *
+ * <p>Ngoại lệ: khi hủy phiếu nhập thủ công, lô bị đặt về 0; khi sửa phiếu nhập, lô cũ
+ * bị xóa cùng chi tiết phiếu.</p>
+ */
 @Entity
 @Table(name = "lo_hang")
 @Getter
@@ -40,6 +52,10 @@ public class LoHang {
     @Column(name = "so_luong_nhap", nullable = false)
     private Integer soLuongNhap;
 
+    /**
+     * Số lượng còn lại của lô theo quy ước nghiệp vụ (không phải tồn kho thực tế).
+     * Chỉ giảm khi duyệt phân loại hoặc xuất kho thủ công có chọn lô.
+     */
     @Column(name = "so_luong_con_lai", nullable = false)
     private Integer soLuongConLai;
 

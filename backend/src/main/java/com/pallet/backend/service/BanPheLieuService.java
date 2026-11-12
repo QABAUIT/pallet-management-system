@@ -53,6 +53,7 @@ public class BanPheLieuService {
     private final TonKhoRepository tonKhoRepository;
     private final NhanVienRepository nhanVienRepository;
     private final KhoRepository khoRepository;
+    private final PhanQuyenKho phanQuyenKho;
     private final PhieuKhoRepository phieuKhoRepository;
     private final ChiTietPhieuKhoRepository chiTietPhieuKhoRepository;
     private final NhatKyService nhatKyService;
@@ -82,6 +83,7 @@ public class BanPheLieuService {
             throw new BusinessException("Khách hàng đã ngừng hợp tác");
         }
         Kho kho = xacDinhKho(req.getKhoId(), nv);
+        phanQuyenKho.kiemTra(nv, kho);
         MatHang pl = layPheLieu();
 
         BigDecimal giaKg = req.getDonGiaKg() != null ? req.getDonGiaKg() : pl.getDonGiaBan();

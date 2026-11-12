@@ -10,6 +10,7 @@ import com.pallet.backend.exception.BusinessException;
 import com.pallet.backend.repository.*;
 import com.pallet.backend.repository.specification.PhieuKhoSpecifications;
 import com.pallet.backend.service.PhieuXuatService;
+import com.pallet.backend.service.PhanQuyenKho;
 import com.pallet.backend.service.TonKhoNghiepVu;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -44,6 +45,7 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
     private final LoHangRepository loHangRepository;
     private final TonKhoNghiepVu tonKhoNghiepVu;
     private final com.pallet.backend.service.ThongBaoTriggerService thongBaoTrigger;
+    private final PhanQuyenKho phanQuyenKho;
 
     private static int orZero(Integer v) {
         return v != null ? v : 0;
@@ -138,7 +140,7 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
 
     @Override
     @Transactional
-    public PhieuXuatResponse taoPhieuXuat(TaoPhieuXuatRequest request) {
+    public PhieuXuatResponse taoPhieuXuat(TaoPhieuXuatRequest request, String tenDangNhap) {
         if (request.getKhoId() == null) throw new BusinessException("Thiếu thông tin kho");
         kiemTraDauVao(request);
 
@@ -148,6 +150,8 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         }
 
         Kho kho = khoRepository.findById(request.getKhoId()).orElseThrow(() -> new BusinessException("Không tìm thấy kho"));
+        NhanVien nguoiDangNhap = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiDangNhap, kho);
         NhanVien nv = request.getNhanVienXuatId() == null ? null
                 : nhanVienRepository.findById(request.getNhanVienXuatId()).orElse(null);
 
@@ -175,10 +179,12 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
 
     @Override
     @Transactional
-    public PhieuXuatResponse capNhatPhieuXuat(Long id, TaoPhieuXuatRequest request) {
+    public PhieuXuatResponse capNhatPhieuXuat(Long id, TaoPhieuXuatRequest request, String tenDangNhap) {
         PhieuKho pk = phieuKhoRepository.findForUpdate(id)
                 .filter(p -> LOAI_PHIEU.equals(p.getLoaiPhieu()))
                 .orElseThrow(() -> new BusinessException("Không tìm thấy phiếu xuất"));
+        NhanVien nguoiDangNhap = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiDangNhap, pk.getKho());
         if (!CHO_XU_LY.equals(pk.getTrangThai())) {
             throw new BusinessException("Chỉ được sửa phiếu đang ở trạng thái Chờ xử lý");
         }
@@ -211,6 +217,13 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         return mapToResponse(pk);
     }
 
+    /**
+     * Ghi chi tiết phiếu xuất và trừ tồn kho.
+     *
+     * <p>Nếu dòng xuất có chọn lô và phiếu đã hoàn thành, đây là một trong hai luồng được phép
+     * giảm {@code LoHang.soLuongConLai}. Số còn lại của lô không phản ánh tồn sau khi bán,
+     * tháo dỡ hoặc đóng pallet; tồn thực tế nằm ở {@code ton_kho}.</p>
+     */
     private void ghiChiTietVaTruTon(PhieuKho pk, Kho kho, List<ChiTietPhieuXuatItemRequest> items) {
         for (ChiTietPhieuXuatItemRequest item : items) {
             MatHang mh = matHangRepository.findById(item.getMatHangId())
@@ -244,6 +257,8 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
                 tonKhoNghiepVu.tru(mh, kho, item.getSoLuong());
 
                 if (lo != null) {
+                    // Chỉ trừ soLuongConLai khi xuất kho thủ công có chọn lô.
+                    // Không phản ánh tồn sau khi bán, tháo dỡ hoặc đóng pallet; tồn thực tế nằm ở ton_kho.
                     if (lo.getSoLuongConLai() < item.getSoLuong()) {
                         throw new BusinessException("Số lượng trong lô " + lo.getMaLo() + " không đủ!");
                     }
@@ -303,6 +318,11 @@ public class PhieuXuatServiceImpl implements PhieuXuatService {
         } catch (Exception e) {
             throw new BusinessException("Lỗi xuất Excel Lịch sử xuất kho");
         }
+    }
+
+    private NhanVien timNhanVien(String tenDangNhap) {
+        return nhanVienRepository.findByTenDangNhap(tenDangNhap)
+                .orElseThrow(() -> new BusinessException("Không xác định được người dùng đang đăng nhập"));
     }
 
     private PhieuXuatResponse mapToResponse(PhieuKho pk) {

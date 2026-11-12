@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 @RestController
@@ -55,13 +56,16 @@ public class PhieuXuatController {
     }
 
     @PostMapping
-    public ResponseEntity<PhieuXuatResponse> taoPhieuXuat(@Valid @RequestBody TaoPhieuXuatRequest request) {
-        return ResponseEntity.ok(phieuXuatService.taoPhieuXuat(request));
+    public ResponseEntity<PhieuXuatResponse> taoPhieuXuat(@Valid @RequestBody TaoPhieuXuatRequest request,
+                                                          Principal principal) {
+        return ResponseEntity.ok(phieuXuatService.taoPhieuXuat(request, principal.getName()));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PhieuXuatResponse> capNhatPhieuXuat(@PathVariable Long id, @Valid @RequestBody TaoPhieuXuatRequest request) {
-        return ResponseEntity.ok(phieuXuatService.capNhatPhieuXuat(id, request));
+    public ResponseEntity<PhieuXuatResponse> capNhatPhieuXuat(@PathVariable Long id,
+                                                              @Valid @RequestBody TaoPhieuXuatRequest request,
+                                                              Principal principal) {
+        return ResponseEntity.ok(phieuXuatService.capNhatPhieuXuat(id, request, principal.getName()));
     }
 
     @GetMapping("/export")

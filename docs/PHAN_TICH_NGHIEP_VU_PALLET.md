@@ -3,7 +3,7 @@
   > Mục đích: mô tả **đúng những gì mã nguồn đang làm**, làm cơ sở cấu hình một hệ thống ERP tương đương.
   > Không đề xuất cải tiến, không suy đoán. Chỗ nào không có xử lý trong code được ghi rõ **"không có trong code"**.
 
-  - Mã nguồn tại thời điểm lập: nhánh `taiche`, commit `00283b1` (2026-11-07).
+  - Mã nguồn tại thời điểm lập: nhánh `fixing`, commit `5d0dbe4` (2026-11-11).
   - Backend: Spring Boot, `backend/src/main/java/com/pallet/backend`.
   - Cơ sở dữ liệu: PostgreSQL, migration Flyway `backend/src/main/resources/db/migration/V1..V12`.
   - Frontend: React, `frontend/src`.
@@ -42,7 +42,7 @@
   - `ton_kho` chỉ có **một dòng cho mỗi cặp (mặt hàng, kho)**, UNIQUE `(mat_hang_id, kho_id)`; số lượng là `INTEGER`, có `so_luong_ton_kho`, `so_luong_da_giu_cho`, `so_luong_toi_thieu`.
   - Ràng buộc DB: `so_luong_ton_kho >= 0` và `so_luong_ton_kho >= so_luong_da_giu_cho` (`V1__initial_schema.sql` dòng 220–230).
   - Mọi nghiệp vụ cộng/trừ tồn đi qua `TonKhoNghiepVu.cong` / `TonKhoNghiepVu.tru`. Hàm `tru` tính khả dụng = `ton_kho - da_giu_cho` và chặn nếu không đủ (`service/TonKhoNghiepVu.java` dòng 24–53).
-  - Lô hàng (`lo_hang`) lưu `so_luong_nhap`, `so_luong_con_lai`, `don_gia_nhap`, `muc_dich_nhap` (`ban_thanh_pham` hoặc `cho_tai_che`). Lô **không phải** là chiều lưu trữ tồn kho: tồn vẫn gộp theo mặt hàng + kho. `chi_tiet_phieu_kho.lo_id` là tùy chọn.
+  - Lô hàng (`lo_hang`) lưu `so_luong_nhap`, `so_luong_con_lai`, `don_gia_nhap`, `muc_dich_nhap` (`ban_thanh_pham` hoặc `cho_tai_che`). Lô **không phải** là chiều lưu trữ tồn kho: tồn vẫn gộp theo mặt hàng + kho. `chi_tiet_phieu_kho.lo_id` là tùy chọn. `so_luong_con_lai` chỉ được giảm khi duyệt phân loại và khi xuất kho thủ công có chọn lô; giá trị này **không phản ánh tồn sau khi bán, tháo dỡ, đóng pallet** — tồn thực tế luôn lấy từ `ton_kho`.
   - Phiếu kho (`phieu_kho`) có 4 loại: `nhap_kho`, `xuat_kho`, `chuyen_kho`, `dieu_chinh_kiem_ke`; trạng thái `cho_xu_ly`, `da_hoan_thanh`, `da_huy`; cột `la_he_thong` đánh dấu phiếu do hệ thống tự sinh (`V1__initial_schema.sql` dòng 349–368).
   - Các bước "duyệt" của phân loại/tháo dỡ/xử lý thêm/đóng pallet **không tạo phiếu nháp**: chúng tạo ngay một phiếu xuất và một phiếu nhập `da_hoan_thanh`, `la_he_thong = true`, rồi gọi trực tiếp `TonKhoNghiepVu` để đổi tồn.
 
@@ -169,7 +169,7 @@
   3. **GD/PGD/NVKHO** nhận hàng; hệ thống tạo phiếu nhập `PN` hoàn thành ngay và lô hàng với `muc_dich_nhap = ban_thanh_pham` (vì mặt hàng không phải `cho_tai_che`).
   4. Hàng vào tồn kho ngay, **không có bước kiểm tra chất lượng, không có trạng thái "chờ kiểm tra"** cho pallet mới/vật tư.
   5. Có một đường nhập khác: **nhập kho thủ công** tại màn hình nhập kho (`PhieuNhapServiceImpl.taoPhieuNhap`), dùng khi không lập đơn mua:
-    - Chọn kho, nhà cung cấp (tùy chọn), nhân viên tiếp nhận (tùy chọn), trạng thái `cho_xu_ly` hoặc `da_hoan_thanh`, ghi chú, biển số xe; thêm dòng mặt hàng + số lượng.
+    - Chọn kho, nhà cung cấp (tùy chọn), nhân viên tiếp nhận (tùy chọn), trạng thái `cho_xu_ly` hoặc `da_hoan_thanh`, ghi chú, biển số xe; thêm dòng mặt hàng + số lượng. Hệ thống kiểm tra người đang đăng nhập được thao tác kho đã chọn (`PhanQuyenKho.kiemTra`, dòng 161).
     - Nếu chọn `da_hoan_thanh`, hệ thống tạo lô và cộng tồn ngay; nếu `cho_xu_ly`, chỉ tạo lô, chưa cộng tồn cho đến khi cập nhật sang `da_hoan_thanh`.
     - Phiếu nhập thủ công **không có đơn giá**, nên `lo_hang.don_gia_nhap` để trống.
   6. **Không có hóa đơn mua/thanh toán nhà cung cấp** (xem quy trình 12).
@@ -191,7 +191,7 @@
 
   | Trường | Kiểu | Bắt buộc | Mặc định | Ghi chú |
   |---|---|---|---|---|
-  | `khoId` | Long | Có (service kiểm tra) | — | Không kiểm tra quyền kho |
+  | `khoId` | Long | Có (service kiểm tra) | — | Kiểm tra quyền kho theo người đang đăng nhập (`PhanQuyenKho.kiemTra`, dòng 161) |
   | `nccId` | Long | Không | null | Chỉ lưu tham chiếu, không có công nợ |
   | `nhanVienTiepNhanId` | Long | Không | null | Lưu vào `nhan_vien_giao_nhan_id` |
   | `trangThai` | String | Không | `cho_xu_ly` | Chỉ `cho_xu_ly` hoặc `da_hoan_thanh` khi tạo |
@@ -207,17 +207,17 @@
   ### (d) Công thức
 
   - Không có tổng tiền trên phiếu nhập thủ công.
-  - `ton_kho += so_luong` cho từng dòng khi phiếu `da_hoan_thanh` — `PhieuNhapServiceImpl.ghiChiTietVaCapNhatTon`, dòng 229–259.
-  - Lô: `so_luong_nhap = so_luong_con_lai = so_luong`; `don_gia_nhap` không được gán — cùng hàm, dòng 234–245.
-  - Khi sửa phiếu nháp: xóa toàn bộ dòng và lô cũ, tạo lại dòng/lô mới (`capNhatPhieuNhap`, dòng 210–220). Khi chuyển `da_hoan_thanh`, cộng tồn theo dòng mới.
-  - Khi hủy phiếu nháp: đặt các lô về `so_luong_con_lai = 0`, `da_het`, không đụng tồn (vì chưa cộng) — dòng 192–203.
+  - `ton_kho += so_luong` cho từng dòng khi phiếu `da_hoan_thanh` — `PhieuNhapServiceImpl.ghiChiTietVaCapNhatTon`, dòng 255–288.
+  - Lô: `so_luong_nhap = so_luong_con_lai = so_luong`; `don_gia_nhap` không được gán — cùng hàm, dòng 262–273.
+  - Khi sửa phiếu nháp: xóa toàn bộ dòng và lô cũ, tạo lại dòng/lô mới (`capNhatPhieuNhap`, dòng 229–239). Khi chuyển `da_hoan_thanh`, cộng tồn theo dòng mới.
+  - Khi hủy phiếu nháp: đặt các lô về `so_luong_con_lai = 0`, `da_het`, không đụng tồn (vì chưa cộng) — dòng 208–223.
 
   ### (e) Ràng buộc
 
-  - Phiếu nhập thủ công phải có ít nhất 1 mặt hàng; mỗi dòng có mặt hàng và số lượng > 0 (`kiemTraChiTiet`, dòng 124–133).
-  - Chỉ sửa phiếu `cho_xu_ly`; không sửa/hủy phiếu đã `da_hoan_thanh` (`capNhatPhieuNhap`, dòng 181–183).
-  - Khi tạo, chỉ nhận trạng thái `cho_xu_ly`/`da_hoan_thanh`; khi sửa, thêm `da_huy` (dòng 141–143, 185–188).
-  - Không kiểm tra nhà cung cấp còn hợp tác, không kiểm tra mặt hàng đang kinh doanh, **không kiểm tra quyền kho** ở service nhập thủ công; controller chỉ chặn theo role GD/PGD/NVKHO.
+  - Phiếu nhập thủ công phải có ít nhất 1 mặt hàng; mỗi dòng có mặt hàng và số lượng > 0, không được trùng mặt hàng trong cùng phiếu (`kiemTraChiTiet`, dòng 128–145).
+  - Chỉ sửa phiếu `cho_xu_ly`; không sửa/hủy phiếu đã `da_hoan_thanh` (`capNhatPhieuNhap`, dòng 197–199).
+  - Khi tạo, chỉ nhận trạng thái `cho_xu_ly`/`da_hoan_thanh`; khi sửa, thêm `da_huy` (dòng 153–156, 201–204).
+  - Không kiểm tra nhà cung cấp còn hợp tác, không kiểm tra mặt hàng đang kinh doanh; service kiểm tra quyền kho của người đang đăng nhập khi tạo/sửa (`taoPhieuNhap` dòng 161, `capNhatPhieuNhap` dòng 196), controller chỉ chặn theo role GD/PGD/NVKHO.
   - DB: `chi_tiet_phieu_kho.so_luong > 0`; `lo_hang.so_luong_con_lai >= 0` và `<= so_luong_nhap`.
 
   ### (f) Ngoại lệ
@@ -225,7 +225,7 @@
   - Nhập thủ công `cho_xu_ly` rồi mới chuyển `da_hoan_thanh`: tồn chỉ tăng ở lần chuyển; nếu sửa danh sách trước khi chuyển, lô cũ bị xóa và tạo lại.
   - Hủy phiếu nháp: lô bị vô hiệu hóa, không có phiếu xuất bù vì chưa cộng tồn.
   - Phiếu đã hoàn thành: không có thao tác sửa/hủy/đảo; **không có** nghiệp vụ trả hàng nhập.
-  - Nhập trùng mặt hàng trong cùng phiếu: **không bị chặn**; hệ thống tạo 2 dòng, 2 lô và cộng tồn 2 lần (khác với đơn mua có chặn trùng).
+  - Nhập trùng mặt hàng trong cùng phiếu: **bị chặn** với lỗi "xuất hiện 2 lần trong phiếu nhập, hãy gộp thành 1 dòng" (`kiemTraChiTiet`, dòng 137–145).
   - Nhập vượt nhu cầu/không theo đơn: được phép, không có kiểm soát.
 
   ---
@@ -323,10 +323,10 @@
 
   **Kiểm kê:**
 
-  1. **GD/PGD/NVKHO** tạo phiên kiểm kê cho một kho: chọn kho, người tạo, ghi chú.
+  1. **GD/PGD/NVKHO** tạo phiên kiểm kê cho một kho: chọn kho, ghi chú; người tạo lấy từ tài khoản đang đăng nhập và phải có quyền kho (`PhanQuyenKho.kiemTra`, dòng 49).
   2. Hệ thống chụp snapshot toàn bộ dòng `ton_kho` của kho, **bỏ qua mặt hàng loại `cho_tai_che`**, tạo các dòng `cho_kiem` với `ton_he_thong`.
-  3. Nhân viên nhập `ton_thuc_te` và ghi chú giải trình cho từng dòng; có thể gán người kiểm. Dòng có thực tế = hệ thống → `khop`; khác → `lech`; chưa nhập → `cho_kiem`.
-  4. Bấm hoàn tất: bắt buộc không còn dòng `cho_kiem`; nếu có lệch, hệ thống tạo **một phiếu điều chỉnh `dieu_chinh_kiem_ke`** `da_hoan_thanh`, `la_he_thong=true`, `nguoi_duyet` = người chốt, và đặt tồn kho bằng đúng `ton_thuc_te`; dòng chênh lệch được ghi vào phiếu điều chỉnh với số lượng tuyệt đối và ghi chú tăng/giảm.
+  3. Nhân viên nhập `ton_thuc_te` và ghi chú giải trình cho từng dòng; người kiểm lấy từ tài khoản đang đăng nhập và phải có quyền kho (`capNhatChiTiet`, dòng 156–157). Dòng có thực tế = hệ thống → `khop`; khác → `lech`; chưa nhập → `cho_kiem`.
+  4. Bấm hoàn tất: bắt buộc không còn dòng `cho_kiem`; nếu có lệch, hệ thống tạo **một phiếu điều chỉnh `dieu_chinh_kiem_ke`** `da_hoan_thanh`, `la_he_thong=true`, `nguoi_duyet` = người chốt (tài khoản đang đăng nhập, phải có quyền kho), và đặt tồn kho bằng đúng `ton_thuc_te`; dòng chênh lệch được ghi vào phiếu điều chỉnh với số lượng tuyệt đối và ghi chú tăng/giảm.
   5. Phiên chuyển `da_hoan_tat`.
 
   ### (b) Chứng từ/record tạo ra và trạng thái
@@ -354,8 +354,7 @@
 
   | Trường | Kiểu | Bắt buộc | Ghi chú |
   |---|---|---|---|
-  | `khoId` | Long | Có (service kiểm tra) | — |
-  | `nguoiTaoId` | Long | Có (service kiểm tra) | Không đối chiếu với người đang đăng nhập |
+  | `khoId` | Long | Có (service kiểm tra) | — | Kiểm tra quyền kho theo người đang đăng nhập (`taoPhienKiemKe`, dòng 49) |
   | `ghiChu` | String | Không | — |
 
   **Cập nhật dòng kiểm kê — `CapNhatChiTietKiemKeRequest`:**
@@ -363,14 +362,13 @@
   | Trường | Kiểu | Bắt buộc | Ghi chú |
   |---|---|---|---|
   | `tonThucTe` | Integer | Không | null = chưa kiểm; < 0 bị chặn |
-  | `ghiChuGiaiTrinh` | String | Không | — |
-  | `nguoiKiemId` | Long | Không | Nếu không tìm thấy thì để null |
+  | `ghiChuGiaiTrinh` | String | Không | Người kiểm lấy từ tài khoản đang đăng nhập (`capNhatChiTiet`, dòng 156–157) |
 
-  **Hoàn tất:** `nguoiChotId` là query param, bắt buộc; không kiểm tra người này có phải người đang đăng nhập hay không.
+  **Hoàn tất:** không còn query param; người chốt lấy từ tài khoản đang đăng nhập và phải có quyền kho (`hoanTatKiemKe`, dòng 182–183).
 
   ### (d) Công thức
 
-  - Chuyển kho: `ton_kho(nguồn) -= tổng số lượng đã nhập của mặt hàng`; `ton_kho(đích) += đúng số đó`; toàn bộ, không chọn phần (`PhieuNhapServiceImpl.xepViTri`, dòng 302–343).
+  - Chuyển kho: `ton_kho(nguồn) -= tổng số lượng đã nhập của mặt hàng`; `ton_kho(đích) += đúng số đó`; toàn bộ, không chọn phần (`PhieuNhapServiceImpl.xepViTri`, dòng 298–378).
   - Kiểm kê:
     - `chenh_lech = ton_thuc_te − ton_he_thong` (`KiemKeServiceImpl.layDanhSachChiTiet`, dòng 96–99).
     - Tỷ lệ tiến độ = `số dòng đã kiểm / tổng số dòng × 100`, làm tròn 1 chữ số (`layThongKe`, dòng 135–140).
@@ -379,19 +377,19 @@
 
   ### (e) Ràng buộc
 
-  - Xếp vị trí chỉ cho phiếu nhập `da_hoan_thanh`, chưa `da_xep_vi_tri`, phải chọn đủ tất cả mặt hàng, vị trí thuộc kho đích (`xepViTri`, dòng 270–321).
+  - Xếp vị trí chỉ cho phiếu nhập `da_hoan_thanh`, chưa `da_xep_vi_tri`, phải chọn đủ tất cả mặt hàng, vị trí thuộc kho đích; người đang đăng nhập phải có quyền ở cả kho nguồn và kho đích (`xepViTri`, dòng 298–378).
   - Mỗi kho chỉ có một phiên kiểm kê `dang_dien_ra` (`taoPhienKiemKe`, dòng 52–55).
-  - Không sửa dòng kiểm kê sau khi phiên `da_hoan_tat`; `ton_thuc_te >= 0` (`capNhatChiTiet`, dòng 150–155).
-  - Không chốt khi còn dòng `cho_kiem` (`hoanTatKiemKe`, dòng 190–193).
-  - Khi chốt, nếu tồn thực tế < số đang giữ chỗ thì chặn (`hoanTatKiemKe`, dòng 235–238).
+  - Không sửa dòng kiểm kê sau khi phiên `da_hoan_tat`; `ton_thuc_te >= 0` (`capNhatChiTiet`, dòng 149–154).
+  - Không chốt khi còn dòng `cho_kiem` (`hoanTatKiemKe`, dòng 187–190).
+  - Khi chốt, nếu tồn thực tế < số đang giữ chỗ thì chặn (`hoanTatKiemKe`, dòng 232–235).
   - Snapshot **bỏ qua `cho_tai_che`**, nên pallet cũ chờ phân loại/chờ tháo dỡ không được kiểm kê.
-  - Không kiểm tra quyền kho ở service kiểm kê; controller chỉ chặn role. `nguoiTaoId`/`nguoiChotId` do client gửi, không đối chiếu danh tính.
+  - Service kiểm kê kiểm tra quyền kho của người đang đăng nhập khi tạo phiên, cập nhật dòng và chốt phiên (`KiemKeServiceImpl` dòng 49, 157, 183); controller chặn role GD/PGD/NVKHO. Người tạo/người kiểm/người chốt lấy từ tài khoản đang đăng nhập, không do client gửi.
   - DB: `phien_kiem_ke.trang_thai` chỉ `dang_dien_ra/da_hoan_tat`; `chi_tiet_kiem_ke` ràng buộc `khop/lech` phải có `ton_thuc_te`, `cho_kiem` thì `ton_thuc_te` null (`V1` dòng 410–436).
 
   ### (f) Ngoại lệ
 
   - Phiếu nhập đã xếp vị trí: chặn xếp lần 2.
-  - Kho đích chưa có dòng tồn: `xepViTri` báo lỗi "Chưa có tồn kho ... tại kho đích" (dòng 338–340). Trong khi đó kiểm kê có thể tạo dòng tồn mới nếu thực tế > 0 (dòng 221–233).
+  - Kho đích chưa có dòng tồn: khi chuyển khác kho, `xepViTri` gọi `TonKhoNghiepVu.cong`, hàm này tạo dòng `ton_kho` mới nếu chưa có (dòng 356; `TonKhoNghiepVu.cong` dòng 23–36). Kiểm kê cũng có thể tạo dòng tồn mới nếu thực tế > 0 (dòng 218–230).
   - Chuyển kho khác kho làm lô đổi kho, nhưng **không tạo chứng từ xuất/nhập**; chỉ phiếu nhập gốc được đánh dấu.
   - Kiểm kê thiếu dòng: không chốt được.
   - Kiểm kê thực tế thấp hơn giữ chỗ: chặn chốt, phiên vẫn mở.
@@ -425,7 +423,7 @@
   | Phiếu nhập hệ thống | `phieu_kho` (`nhap_kho`) | tạo thẳng `da_hoan_thanh` | Nhập 4 loại linh kiện + phế liệu |
   | Dòng phiếu kho | `chi_tiet_phieu_kho` | — | Dòng xuất gán `lo_id` của lô nguồn; dòng nhập cũng gán cùng `lo_id` |
   | Tồn kho | `ton_kho` | — | `PL-CTD-06` giảm; `LK-*`, `PE-GO-15` tăng |
-  | Lô hàng | `lo_hang` | không đổi | **Không tạo lô mới, không trừ `so_luong_con_lai`** ở bước tháo dỡ; lô chỉ được tham chiếu |
+  | Lô hàng | `lo_hang` | không đổi | **Không tạo lô mới, không trừ `so_luong_con_lai`** ở bước tháo dỡ; lô chỉ được tham chiếu. Đúng quy ước: `so_luong_con_lai` chỉ giảm ở phân loại và xuất kho thủ công có chọn lô |
   | Phiếu tái chế cha | `phieu_tai_che` | `da_phan_loai` → `da_hoan_tat` khi đủ | Không có trạng thái riêng cho "đang tháo dỡ" |
 
   ### (c) Dữ liệu đầu vào
@@ -657,14 +655,14 @@
 
   **Đường trực tiếp — lập hóa đơn:**
 
-  1. **GD/PGD/NVBANHANG** mở màn hình bán hàng. Danh mục trả về: kho của nhân viên đang đăng nhập (không có bộ chọn kho trên danh mục), khách hàng `dang_hop_tac`, mặt hàng `dang_kinh_doanh` **trừ** `cho_tai_che`, `dich_vu`, `phe_lieu`; mỗi mặt hàng kèm `donGiaBan` và tồn khả dụng = `ton − da_giu_cho` (`HoaDonServiceImpl.layDanhMucBanHang`, dòng 176–211).
-  2. Chọn khách hàng, thêm dòng hàng (mặt hàng + số lượng + chiết khấu % dòng). **Đơn giá không gửi từ client**: hệ thống lấy `mat_hang.don_gia_ban` tại thời điểm lập (`tinhDong`, dòng 398–421). Nhập chiết khấu tổng %, phí giao hàng, VAT (mặc định 8%), hạn thanh toán (mặc định hôm nay +15 ngày), ghi chú; chọn thanh toán ngay hoặc để sau.
-  3. Bấm lưu → `POST /api/v1/hoa-don`. Hệ thống gộp dòng trùng mặt hàng, tính tiền, tạo hóa đơn `HD-...` trạng thái `cho_thanh_toan`, `loai_giao_dich = thu_ban_pallet` nếu có ít nhất một dòng loại `pallet`, ngược lại `thu_ban_linh_kien` (`taoMoi`, dòng 215–258).
-  4. Nếu **không thanh toán ngay**: hệ thống chỉ **giữ chỗ** tồn (`so_luong_da_giu_cho += số lượng`), chưa xuất kho, chưa tạo phiếu xuất (`apDungTonKho` chế độ `GIU_CHO`, dòng 499–502).
-  5. Nếu **thanh toán ngay**: hệ thống trừ tồn ngay (`XUAT`), ghi nhận thanh toán, tạo phiếu xuất kho `PX-...` `da_hoan_thanh`, ghi lịch sử (`taoMoi` dòng 242–250).
-  6. Với hóa đơn chờ thanh toán, **GD/PGD/NVBANHANG** bấm thanh toán → `POST /api/v1/hoa-don/{id}/thanh-toan`. Hệ thống chuyển phần giữ chỗ thành xuất kho (`XUAT_TU_GIU_CHO`), ghi một bản ghi `thanh_toan`, tạo phiếu xuất kho, chuyển hóa đơn `da_thanh_toan` (`thanhToan`, dòng 262–281).
-  7. Sửa hóa đơn khi `cho_thanh_toan`: được đổi khách hàng, danh sách mặt hàng, hạn thanh toán, ghi chú; khi đổi danh sách, hệ thống **nhả giữ chỗ cũ → xóa dòng cũ → tính lại → giữ chỗ danh sách mới**. Hóa đơn `da_thanh_toan` chỉ được sửa ghi chú (`capNhat`, dòng 288–342).
-  8. Hủy hóa đơn: **GD/PGD** bấm xóa → `DELETE /api/v1/hoa-don/{id}?lyDo=...`; chỉ hóa đơn `cho_thanh_toan`, bắt buộc lý do; hệ thống nhả giữ chỗ và chuyển `da_huy`, không xóa cứng (`huy`, dòng 344–363).
+  1. **GD/PGD/NVBANHANG** mở màn hình bán hàng. Danh mục trả về: kho của nhân viên đang đăng nhập (không có bộ chọn kho trên danh mục), khách hàng `dang_hop_tac`, mặt hàng `dang_kinh_doanh` **trừ** `cho_tai_che`, `dich_vu`, `phe_lieu`; mỗi mặt hàng kèm `donGiaBan` và tồn khả dụng = `ton − da_giu_cho` (`HoaDonServiceImpl.layDanhMucBanHang`, dòng 180–216).
+  2. Chọn khách hàng, thêm dòng hàng (mặt hàng + số lượng + chiết khấu % dòng). **Đơn giá không gửi từ client**: hệ thống lấy `mat_hang.don_gia_ban` tại thời điểm lập (`tinhDong`, dòng 383–430). Nhập chiết khấu tổng %, phí giao hàng, VAT (mặc định 8%), hạn thanh toán (mặc định hôm nay +15 ngày), ghi chú; chọn thanh toán ngay hoặc để sau.
+  3. Bấm lưu → `POST /api/v1/hoa-don`. Hệ thống kiểm tra quyền kho của người đang đăng nhập, gộp dòng trùng mặt hàng, tính tiền, tạo hóa đơn `HD-...` trạng thái `cho_thanh_toan`, `loai_giao_dich = thu_ban_pallet` nếu có ít nhất một dòng loại `pallet`, ngược lại `thu_ban_linh_kien` (`taoMoi`, dòng 219–261).
+  4. Nếu **không thanh toán ngay**: hệ thống chỉ **giữ chỗ** tồn (`so_luong_da_giu_cho += số lượng`), chưa xuất kho, chưa tạo phiếu xuất (`apDungTonKho` chế độ `GIU_CHO`, dòng 505–508).
+  5. Nếu **thanh toán ngay**: hệ thống trừ tồn ngay (`XUAT`), ghi nhận thanh toán, tạo phiếu xuất kho `PX-...` `da_hoan_thanh`, ghi lịch sử (`taoMoi` dòng 245–253).
+  6. Với hóa đơn chờ thanh toán, **GD/PGD/NVBANHANG** bấm thanh toán → `POST /api/v1/hoa-don/{id}/thanh-toan`. Hệ thống khóa dòng hóa đơn (`findForUpdate`), kiểm tra quyền kho và trạng thái sau khóa, chuyển phần giữ chỗ thành xuất kho (`XUAT_TU_GIU_CHO`), ghi một bản ghi `thanh_toan`, tạo phiếu xuất kho, chuyển hóa đơn `da_thanh_toan` (`thanhToan`, dòng 267–285).
+  7. Sửa hóa đơn khi `cho_thanh_toan`: được đổi khách hàng, danh sách mặt hàng, hạn thanh toán, ghi chú; hệ thống khóa hóa đơn, kiểm tra quyền kho, khi đổi danh sách thì **nhả giữ chỗ cũ → xóa dòng cũ → tính lại → giữ chỗ danh sách mới**. Hóa đơn `da_thanh_toan` chỉ được sửa ghi chú (`capNhat`, dòng 294–347).
+  8. Hủy hóa đơn: **GD/PGD** bấm xóa → `DELETE /api/v1/hoa-don/{id}?lyDo=...`; chỉ hóa đơn `cho_thanh_toan`, bắt buộc lý do; hệ thống khóa hóa đơn, kiểm tra quyền kho, nhả giữ chỗ và chuyển `da_huy`, không xóa cứng (`huy`, dòng 352–369).
 
   **Đường qua báo giá (nếu dùng):**
 
@@ -691,7 +689,7 @@
   | Trường | Kiểu | Bắt buộc | Mặc định | Ghi chú |
   |---|---|---|---|---|
   | `khachHangId` | Long | Có (`@NotNull`) | — | Phải `dang_hop_tac` |
-  | `khoId` | Long | Không | Kho của nhân viên | Service không kiểm tra quyền kho |
+  | `khoId` | Long | Không | Kho của nhân viên | Service kiểm tra quyền kho của người đang đăng nhập (`taoMoi`, dòng 223) |
   | `chiTiet` | List | Có (`@NotEmpty`) | — | Ít nhất 1 dòng; dòng trùng mặt hàng được gộp |
   | `chiTiet[].matHangId` | Long | Có | — | Phải `dang_kinh_doanh`, không `cho_tai_che`/`dich_vu`/`phe_lieu` |
   | `chiTiet[].soLuong` | Integer | Có (`@Min 1`) | — | > 0 |
@@ -717,37 +715,38 @@
 
   ### (d) Công thức số lượng/giá/tồn
 
-  - Giá dòng: `gross = don_gia_ban × so_luong`; `chiet_khau_dong = gross × ty_le_chiet_khau / 100` (làm tròn 2, HALF_UP); `thanh_tien = gross − chiet_khau_dong` (`tinhDong`, dòng 412–420; DB sinh `tien_chiet_khau`, `thanh_tien` tại `V1` dòng 341–344).
-  - `tong_tien_hang = Σ thanh_tien` các dòng sau khi gộp trùng (`tinhDong`, dòng 415).
+  - Giá dòng: `gross = don_gia_ban × so_luong`; `chiet_khau_dong = gross × ty_le_chiet_khau / 100` (làm tròn 2, HALF_UP); `thanh_tien = gross − chiet_khau_dong` (`tinhDong`, dòng 418–422; DB sinh `tien_chiet_khau`, `thanh_tien` tại `V1` dòng 341–344).
+  - `tong_tien_hang = Σ thanh_tien` các dòng sau khi gộp trùng (`tinhDong`, dòng 421).
   - `tien_giam_gia_tong = tong_tien_hang × ty_le_giam_gia_tong / 100` (làm tròn 2).
   - `tien_truoc_thue = tong_tien_hang − tien_giam_gia_tong + phi_giao_hang`.
   - `tien_vat = tien_truoc_thue × ty_le_vat / 100` (làm tròn 2).
-  - `tong_thanh_toan = tien_truoc_thue + tien_vat` (`ganTong`, dòng 425–440).
-  - Tồn kho theo chế độ (`apDungTonKho`, dòng 487–516):
+  - `tong_thanh_toan = tien_truoc_thue + tien_vat` (`ganTong`, dòng 432–446).
+  - Tồn kho theo chế độ (`apDungTonKho`, dòng 493–522):
     - giữ chỗ: `da_giu_cho += q`, điều kiện `ton − da_giu_cho >= q`;
     - xuất thẳng: `ton -= q`, điều kiện `ton − da_giu_cho >= q`;
     - xuất từ giữ chỗ: `ton -= q`, `da_giu_cho = max(0, da_giu_cho − q)`, điều kiện `ton >= q`;
     - nhả giữ chỗ: `da_giu_cho = max(0, da_giu_cho − q)`.
-  - Thanh toán: tiền mặt `thoi_lai = tien_khach_dua − tong_thanh_toan`; chuyển khoản/QR ghi nhận đúng `tong_thanh_toan`, tiền thối = 0; bản ghi `thanh_toan.so_tien = tong_thanh_toan` (`ghiNhanThanhToan`, dòng 451–485).
+  - Thanh toán: tiền mặt `thoi_lai = tien_khach_dua − tong_thanh_toan`; chuyển khoản/QR ghi nhận đúng `tong_thanh_toan`, tiền thối = 0; bản ghi `thanh_toan.so_tien = tong_thanh_toan` (`ghiNhanThanhToan`, dòng 457–491).
   - **Không có** chiết khấu theo số tiền tuyệt đối, không có nhiều mức thuế theo dòng, không có tỷ giá, không có giá vốn/COGS.
 
   ### (e) Ràng buộc và kiểm tra
 
-  - Khách hàng phải `dang_hop_tac` (`timKhachHangHopTac`, dòng 442–449).
-  - Mặt hàng phải `dang_kinh_doanh`; chặn `cho_tai_che`, `dich_vu`, `phe_lieu`; số lượng >= 1; chiết khấu 0–100; VAT 0–100; phí giao hàng >= 0; hóa đơn ít nhất 1 dòng (`tinhDong` dòng 398–410; DTO).
-  - Tồn khả dụng phải đủ khi giữ chỗ/xuất; nếu chưa có dòng `ton_kho` cho mặt hàng tại kho thì báo "chưa có tồn kho" (`apDungTonKho`, dòng 493–495).
-  - Không sửa/hủy hóa đơn `da_thanh_toan` (trừ ghi chú); không sửa/hủy hóa đơn `da_huy`; hóa đơn `da_chot_so = true` bị chặn mọi thay đổi (`kiemTraChoPhepSua`, dòng 367–374).
+  - Khách hàng phải `dang_hop_tac` (`timKhachHangHopTac`, dòng 448–455).
+  - Mặt hàng phải `dang_kinh_doanh`; chặn `cho_tai_che`, `dich_vu`, `phe_lieu`; số lượng >= 1; chiết khấu 0–100; VAT 0–100; phí giao hàng >= 0; hóa đơn ít nhất 1 dòng (`tinhDong` dòng 383–416; DTO).
+  - Tồn khả dụng phải đủ khi giữ chỗ/xuất; nếu chưa có dòng `ton_kho` cho mặt hàng tại kho thì báo "chưa có tồn kho" (`apDungTonKho`, dòng 499–501).
+  - Không sửa/hủy hóa đơn `da_thanh_toan` (trừ ghi chú); không sửa/hủy hóa đơn `da_huy`; hóa đơn `da_chot_so = true` bị chặn mọi thay đổi (`kiemTraChoPhepSua`, dòng 373–380).
   - Hủy chỉ khi `cho_thanh_toan`, bắt buộc lý do, chỉ GD/PGD (`huy`; controller dòng 63–64).
-  - Role bán hàng: `GD`, `PGD`, `NVBANHANG` (`HoaDonController` dòng 23). **Service không gọi `PhanQuyenKho`** khi lập/sửa/hủy/thanh toán, nên có thể truyền `khoId` bất kỳ.
+  - Role bán hàng: `GD`, `PGD`, `NVBANHANG` (`HoaDonController` dòng 23). Service kiểm tra `PhanQuyenKho` khi lập/sửa/hủy/thanh toán, nên `khoId` phải thuộc kho được giao (GD/PGD được mọi kho).
   - DB: `hoa_don.trang_thai` gồm `nhap/cho_thanh_toan/cho_duyet/da_thanh_toan/qua_han/da_huy` (`V3`); `chi_tiet_hoa_don.so_luong > 0`, đơn giá >= 0, chiết khấu 0–100; `thanh_toan` có trạng thái `dang_cho/da_thanh_toan/het_han` (`V1` dòng 460–470).
-  - `qua_han` **không được lưu**: chỉ là cờ tính khi đọc, khi hóa đơn `cho_thanh_toan` và `han_thanh_toan < hôm nay` (`laQuaHan`, dòng 594–598).
+  - `qua_han` **không được lưu**: chỉ là cờ tính khi đọc, khi hóa đơn `cho_thanh_toan` và `han_thanh_toan < hôm nay` (`laQuaHan`, dòng 600–604).
 
   ### (f) Ngoại lệ đã xử lý
 
   - Thiếu tồn khi giữ chỗ/xuất: chặn, rollback toàn bộ hóa đơn.
-  - Hai người bán cùng mặt hàng: khóa bi quan từng dòng `ton_kho` theo thứ tự id mặt hàng để tránh deadlock (`apDungTonKho`, dòng 487–490).
+  - Hai người bán cùng mặt hàng: khóa bi quan từng dòng `ton_kho` theo thứ tự id mặt hàng để tránh deadlock (`apDungTonKho`, dòng 493–496).
+  - Hai yêu cầu thanh toán/sửa/hủy cùng một hóa đơn: khóa bi quan dòng hóa đơn (`findForUpdate`), yêu cầu sau đọc lại trạng thái sau khóa nên không thanh toán lặp (`HoaDonRepository` dòng 38–41; `thanhToan` dòng 269–274).
   - Thanh toán tiền mặt thiếu: chặn; thừa: cho phép và tính tiền thối. Chuyển khoản/QR: bỏ qua `tienKhachDua`, ghi đúng tổng.
-  - Hóa đơn tổng = 0: chặn thanh toán (`ghiNhanThanhToan`, dòng 456–459).
+  - Hóa đơn tổng = 0: chặn thanh toán (`ghiNhanThanhToan`, dòng 462–465).
   - Sửa danh sách hàng khi chờ thanh toán: nhả giữ chỗ cũ trước, nếu danh sách mới thiếu tồn thì rollback, hóa đơn cũ được khôi phục.
   - Hủy hóa đơn chờ thanh toán: nhả giữ chỗ; hóa đơn đã thanh toán không hủy được.
   - Quá hạn: chỉ hiển thị cờ `quaHan`/`soNgayQuaHan`, **không tự chuyển trạng thái**, không có nhắc nợ tự động.
@@ -801,11 +800,11 @@
 
   ### (a) Các bước theo thứ tự
 
-  1. **GD/PGD/NVBANHANG** mở màn hình **Bán phế liệu**. Danh mục trả về kho của nhân viên đang đăng nhập, tồn khả dụng của `PE-GO-15` theo kg (`ton − da_giu_cho`), đơn giá gợi ý = `mat_hang.don_gia_ban`, danh sách khách hàng `dang_hop_tac` (`BanPheLieuService.layDanhMuc`, dòng 60–74).
+  1. **GD/PGD/NVBANHANG** mở màn hình **Bán phế liệu**. Danh mục trả về kho của nhân viên đang đăng nhập, tồn khả dụng của `PE-GO-15` theo kg (`ton − da_giu_cho`), đơn giá gợi ý = `mat_hang.don_gia_ban`, danh sách khách hàng `dang_hop_tac` (`BanPheLieuService.layDanhMuc`, dòng 62–75).
   2. Chọn khách hàng, nhập **số kg** (> 0), đơn giá/kg (bỏ trống = giá bán hiện hành; nếu nhập phải > 0), VAT (bỏ trống = 8%), hạn thanh toán (bỏ trống = hôm nay +15 ngày), ghi chú; chọn **thanh toán ngay** hoặc **lập hóa đơn chờ thanh toán** (`BanPheLieu.jsx` dòng 169–236).
-  3. Bấm bán → `POST /api/v1/ban-phe-lieu`. Hệ thống tạo hóa đơn `HD-...` loại `thu_ban_phe_lieu`, trạng thái `cho_thanh_toan`, một dòng `PE-GO-15` với `soLuong = soKg`, `donGia = giá/kg`, không chiết khấu, không phí giao hàng (`ban`, dòng 76–141).
-  4. Nếu thanh toán ngay: trừ tồn kho ngay, ghi nhận thanh toán, tạo phiếu xuất kho `PX-...` `da_hoan_thanh`; hóa đơn chuyển `da_thanh_toan` (`ban`, dòng 120–131; `ghiNhanThanhToan`, dòng 143–167).
-  5. Nếu chờ thanh toán: chỉ **giữ chỗ** số kg (`so_luong_da_giu_cho += kg`), chưa xuất kho (dòng 132–136). Thanh toán sau thực hiện qua màn hình hóa đơn dùng chung → `HoaDonServiceImpl.thanhToan`, hệ thống xuất kho từ phần giữ chỗ và tạo phiếu xuất.
+  3. Bấm bán → `POST /api/v1/ban-phe-lieu`. Hệ thống kiểm tra quyền kho của người đang đăng nhập, tạo hóa đơn `HD-...` loại `thu_ban_phe_lieu`, trạng thái `cho_thanh_toan`, một dòng `PE-GO-15` với `soLuong = soKg`, `donGia = giá/kg`, không chiết khấu, không phí giao hàng (`ban`, dòng 78–143).
+  4. Nếu thanh toán ngay: trừ tồn kho ngay, ghi nhận thanh toán, tạo phiếu xuất kho `PX-...` `da_hoan_thanh`; hóa đơn chuyển `da_thanh_toan` (`ban`, dòng 122–133; `ghiNhanThanhToan`, dòng 145–169).
+  5. Nếu chờ thanh toán: chỉ **giữ chỗ** số kg (`so_luong_da_giu_cho += kg`), chưa xuất kho (dòng 134–138). Thanh toán sau thực hiện qua màn hình hóa đơn dùng chung → `HoaDonServiceImpl.thanhToan`, hệ thống xuất kho từ phần giữ chỗ và tạo phiếu xuất.
   6. Hủy hóa đơn chờ thanh toán thực hiện qua màn hình hóa đơn dùng chung (`HoaDonServiceImpl.huy`): nhả giữ chỗ, chuyển `da_huy`, bắt buộc lý do, chỉ GD/PGD.
   7. **Không có** cân điện tử, nhập nhiều lần cân, trừ độ ẩm/tạp chất, bán theo lô, xuất kho theo lô, hoặc hóa đơn mua bán phế liệu với nhà cung cấp.
 
@@ -828,7 +827,7 @@
   | Trường | Kiểu | Bắt buộc | Mặc định | Ghi chú |
   |---|---|---|---|---|
   | `khachHangId` | Long | Có (`@NotNull`) | — | Phải `dang_hop_tac` |
-  | `khoId` | Long | Không | Kho của nhân viên | Service không kiểm tra quyền kho |
+  | `khoId` | Long | Không | Kho của nhân viên | Service kiểm tra quyền kho của người đang đăng nhập (`ban`, dòng 86) |
   | `soKg` | Integer | Có (`@NotNull`, `@Positive`) | — | > 0; lưu nguyên kg |
   | `donGiaKg` | BigDecimal | Không | `mat_hang.don_gia_ban` của `PE-GO-15` | Nếu nhập phải > 0 |
   | `tyLeVat` | BigDecimal | Không | 8 | 0–100 |
@@ -840,31 +839,31 @@
 
   ### (d) Công thức số lượng/giá/tồn
 
-  - `tong_tien_hang = don_gia_kg × so_kg`, làm tròn 2 (`ban`, dòng 87–93).
-  - `tien_vat = tong_tien_hang × ty_le_vat / 100`, làm tròn 2; `tong_thanh_toan = tong_tien_hang + tien_vat` (`QuyTacDichVuThaoDo.tinhVat`, dòng 49–52; `ban`, dòng 94–95).
-  - Không có chiết khấu, phí giao hàng, giảm giá tổng; các cột này ghi 0 (`ban`, dòng 110–113).
+  - `tong_tien_hang = don_gia_kg × so_kg`, làm tròn 2 (`ban`, dòng 89–95).
+  - `tien_vat = tong_tien_hang × ty_le_vat / 100`, làm tròn 2; `tong_thanh_toan = tong_tien_hang + tien_vat` (`QuyTacDichVuThaoDo.tinhVat`, dòng 49–52; `ban`, dòng 96–97).
+  - Không có chiết khấu, phí giao hàng, giảm giá tổng; các cột này ghi 0 (`ban`, dòng 112–115).
   - Tồn:
-    - thanh toán ngay: `ton_kho(PE-GO-15) -= so_kg` (dòng 121–122);
-    - chờ thanh toán: `da_giu_cho += so_kg` (dòng 133–134); khi thanh toán sau: `ton -= kg`, `da_giu_cho = max(0, da_giu_cho − kg)`.
-  - Thanh toán tiền mặt: `thoi_lai = tien_khach_dua − tong`; chuyển khoản/QR: ghi nhận đúng tổng, tiền thối 0 (`ghiNhanThanhToan`, dòng 143–167).
+    - thanh toán ngay: `ton_kho(PE-GO-15) -= so_kg` (dòng 123–124);
+    - chờ thanh toán: `da_giu_cho += so_kg` (dòng 135–136); khi thanh toán sau: `ton -= kg`, `da_giu_cho = max(0, da_giu_cho − kg)`.
+  - Thanh toán tiền mặt: `thoi_lai = tien_khach_dua − tong`; chuyển khoản/QR: ghi nhận đúng tổng, tiền thối 0 (`ghiNhanThanhToan`, dòng 145–169).
   - Không có giá vốn của phế liệu, không có lãi gộp trên hóa đơn.
 
   ### (e) Ràng buộc và kiểm tra
 
-  - Khách hàng phải `dang_hop_tac` (`ban`, dòng 79–83).
-  - `soKg > 0`; đơn giá > 0 (sau khi lấy giá mặc định); VAT 0–100 (`BanPheLieuRequest`; `ban`, dòng 87–90).
-  - Tồn khả dụng `ton − da_giu_cho >= soKg`, nếu không chặn; kho phải có dòng tồn phế liệu (`ban`, dòng 97–103).
-  - Phương thức thanh toán chỉ 3 giá trị; tiền mặt phải đủ (`ghiNhanThanhToan`, dòng 143–156).
-  - Role `GD/PGD/NVBANHANG` (`BanPheLieuController` dòng 18). **Service không kiểm tra `PhanQuyenKho`**, nên `khoId` tùy ý.
+  - Khách hàng phải `dang_hop_tac` (`ban`, dòng 82–84).
+  - `soKg > 0`; đơn giá > 0 (sau khi lấy giá mặc định); VAT 0–100 (`BanPheLieuRequest`; `ban`, dòng 89–92).
+  - Tồn khả dụng `ton − da_giu_cho >= soKg`, nếu không chặn; kho phải có dòng tồn phế liệu (`ban`, dòng 99–105).
+  - Phương thức thanh toán chỉ 3 giá trị; tiền mặt phải đủ (`ghiNhanThanhToan`, dòng 145–158).
+  - Role `GD/PGD/NVBANHANG` (`BanPheLieuController` dòng 18). Service kiểm tra `PhanQuyenKho` khi bán (`ban`, dòng 86), nên `khoId` phải thuộc kho được giao (GD/PGD được mọi kho).
   - Hủy hóa đơn chờ thanh toán dùng quy tắc chung: chỉ GD/PGD, bắt buộc lý do, nhả giữ chỗ (`HoaDonServiceImpl.huy`).
-  - Hóa đơn đã thanh toán chỉ sửa ghi chú; nếu gửi danh sách dòng mới sẽ bị chặn vì `phe_lieu` không được phép ở `tinhDong` (`HoaDonServiceImpl.capNhat` dòng 288–342; `tinhDong` dòng 404–409).
+  - Hóa đơn đã thanh toán chỉ sửa ghi chú; nếu gửi danh sách dòng mới sẽ bị chặn vì `phe_lieu` không được phép ở `tinhDong` (`HoaDonServiceImpl.capNhat` dòng 294–347; `tinhDong` dòng 410–415).
   - DB: `chi_tiet_hoa_don.so_luong > 0`; `thanh_toan.so_tien > 0`; `hoa_don.tong_thanh_toan >= 0` (`V1`).
 
   ### (f) Ngoại lệ đã xử lý
 
-  - Không có tồn phế liệu tại kho: báo "Kho ... chưa có phế liệu" (dòng 97–98).
+  - Không có tồn phế liệu tại kho: báo "Kho ... chưa có phế liệu" (dòng 99–100).
   - Bán vượt tồn khả dụng: chặn, rollback.
-  - Chưa có đơn giá (cả giá mặt hàng và giá nhập đều null/<=0): báo "Chưa có đơn giá phế liệu..." (dòng 88–90).
+  - Chưa có đơn giá (cả giá mặt hàng và giá nhập đều null/<=0): báo "Chưa có đơn giá phế liệu..." (dòng 90–92).
   - Thanh toán tiền mặt thiếu: chặn; thừa: tính tiền thối.
   - Hủy hóa đơn chờ thanh toán: nhả giữ chỗ; hóa đơn đã thanh toán không hủy được.
   - **Không có** bán một phần rồi hủy phần còn lại, không có trả hàng, không có điều chỉnh kg sau khi lập, không có chuyển kho phế liệu.
@@ -1093,17 +1092,17 @@
   ### (a) Các bước theo thứ tự
 
   1. **Lập hóa đơn:** hóa đơn bán pallet/linh kiện, bán phế liệu, dịch vụ tháo dỡ đều được tạo ở trạng thái `cho_thanh_toan` (trừ hóa đơn mua phế liệu của khách tạo thẳng `da_thanh_toan`). Mã `HD-...` sinh từ `getMaChungTu("HD","HD-")`.
-  2. **Xem danh sách/chi tiết:** `GET /api/v1/hoa-don` lọc tùy chọn theo trạng thái; `GET /api/v1/hoa-don/{id}` trả dòng hàng, lịch sử, thông tin đối tác, cờ quá hạn. **Không lọc theo kho và không kiểm tra quyền trên từng hóa đơn** (`HoaDonServiceImpl.layDanhSach` dòng 85–92; `layChiTiet` dòng 94–174).
-  3. **Sửa hóa đơn chờ thanh toán:** đổi khách hàng, danh sách mặt hàng, hạn thanh toán, ghi chú. Khi đổi danh sách, hệ thống nhả giữ chỗ cũ, xóa dòng cũ, tính lại tiền, giữ chỗ danh sách mới; ghi lịch sử từng trường (`capNhat`, dòng 288–342).
+  2. **Xem danh sách/chi tiết:** `GET /api/v1/hoa-don` lọc tùy chọn theo trạng thái; `GET /api/v1/hoa-don/{id}` trả dòng hàng, lịch sử, thông tin đối tác, cờ quá hạn. **API đọc không lọc theo kho và không kiểm tra quyền trên từng hóa đơn** (`HoaDonServiceImpl.layDanhSach` dòng 89–96; `layChiTiet` dòng 98–178).
+  3. **Sửa hóa đơn chờ thanh toán:** đổi khách hàng, danh sách mặt hàng, hạn thanh toán, ghi chú. Hệ thống khóa hóa đơn, kiểm tra quyền kho; khi đổi danh sách, nhả giữ chỗ cũ, xóa dòng cũ, tính lại tiền, giữ chỗ danh sách mới; ghi lịch sử từng trường (`capNhat`, dòng 294–347).
   4. **Thanh toán:** `POST /api/v1/hoa-don/{id}/thanh-toan` với phương thức `tien_mat`/`chuyen_khoan`/`qr_code`.
-    - Kiểm tra hóa đơn `cho_thanh_toan`, chưa chốt sổ, chưa hủy.
+    - Khóa dòng hóa đơn (`findForUpdate`), kiểm tra quyền kho và kiểm tra hóa đơn `cho_thanh_toan`, chưa chốt sổ, chưa hủy sau khi khóa.
     - Chuyển phần giữ chỗ thành xuất kho (`XUAT_TU_GIU_CHO`), trừ tồn thật.
     - Ghi **một** bản ghi `thanh_toan` với `so_tien = tong_thanh_toan`, trạng thái `thanh_cong`.
     - Tạo phiếu xuất kho `PX-...` nếu hóa đơn có dòng hàng không phải `dich_vu`.
-    - Chuyển hóa đơn `da_thanh_toan`, lưu `ngay_thanh_toan`, phương thức, tiền khách đưa, tiền thối; ghi lịch sử (`thanhToan`, dòng 262–281; `ghiNhanThanhToan`, dòng 451–485).
-  5. **Hủy hóa đơn chờ thanh toán:** GD/PGD bấm xóa, nhập lý do; hệ thống nhả giữ chỗ, chuyển `da_huy`, ghi lịch sử. Hóa đơn đã thanh toán không hủy được (`huy`, dòng 344–363).
-  6. **Quá hạn:** hệ thống chỉ tính cờ `quaHan = (trangThai = cho_thanh_toan && hanThanhToan < hôm nay)` khi đọc; **không tự đổi trạng thái**, không gửi nhắc nợ, không khóa bán hàng (`laQuaHan`, dòng 594–598).
-  7. **Chốt sổ:** cột `da_chot_so` tồn tại; nếu `true` thì mọi sửa/hủy/thanh toán bị chặn (`kiemTraChoPhepSua`, dòng 367–374). **Không có service/controller nào đặt `da_chot_so = true`** trong code; chỉ có thể do thao tác DB bên ngoài.
+    - Chuyển hóa đơn `da_thanh_toan`, lưu `ngay_thanh_toan`, phương thức, tiền khách đưa, tiền thối; ghi lịch sử (`thanhToan`, dòng 267–285; `ghiNhanThanhToan`, dòng 457–491).
+  5. **Hủy hóa đơn chờ thanh toán:** GD/PGD bấm xóa, nhập lý do; hệ thống khóa hóa đơn, kiểm tra quyền kho, nhả giữ chỗ, chuyển `da_huy`, ghi lịch sử. Hóa đơn đã thanh toán không hủy được (`huy`, dòng 352–369).
+  6. **Quá hạn:** hệ thống chỉ tính cờ `quaHan = (trangThai = cho_thanh_toan && hanThanhToan < hôm nay)` khi đọc; **không tự đổi trạng thái**, không gửi nhắc nợ, không khóa bán hàng (`laQuaHan`, dòng 600–604).
+  7. **Chốt sổ:** cột `da_chot_so` tồn tại; nếu `true` thì mọi sửa/hủy/thanh toán bị chặn (`kiemTraChoPhepSua`, dòng 373–380). **Không có service/controller nào đặt `da_chot_so = true`** trong code; chỉ có thể do thao tác DB bên ngoài.
   8. **Báo cáo doanh thu:** chỉ cộng hóa đơn `da_thanh_toan` có `loai_giao_dich LIKE 'thu%'`, theo `ngay_thanh_toan` (`TaiChinhRepository.tongDoanhThu`, dòng 21–23). Hóa đơn chi `chi%` được cộng riêng vào chi phí (`tongChiHoaDon`, dòng 29–31; `TaiChinhService.baoCaoLoiNhuan` dòng 221–225).
 
   ### (b) Chứng từ/record tạo ra và trạng thái
@@ -1148,13 +1147,14 @@
   - Không sửa/hủy hóa đơn `da_huy` hoặc `da_chot_so`; hóa đơn `da_thanh_toan` chỉ sửa ghi chú; hủy chỉ khi `cho_thanh_toan`.
   - Thanh toán chỉ khi `cho_thanh_toan`; tổng > 0; phương thức hợp lệ; tiền mặt đủ.
   - Không có thanh toán một phần, không có nhiều lần thanh toán, không có hoàn tiền.
-  - Quyền: `GD/PGD/NVBANHANG` cho toàn bộ API hóa đơn; hủy chỉ GD/PGD (`HoaDonController` dòng 23, 63–64). Service không kiểm tra kho/đối tượng.
+  - Quyền: `GD/PGD/NVBANHANG` cho toàn bộ API hóa đơn; hủy chỉ GD/PGD (`HoaDonController` dòng 23, 63–64). Service kiểm tra `PhanQuyenKho` khi lập/sửa/thanh toán/hủy; API đọc danh sách/chi tiết không lọc theo kho.
   - DB: trạng thái hóa đơn theo `V3`; `chi_tiet_hoa_don.so_luong > 0`; `thanh_toan.so_tien > 0`, phương thức/trạng thái theo `V1` dòng 445–458.
-  - **Không có khóa trên bản ghi hóa đơn khi thanh toán** (`HoaDonRepository` không có `findForUpdate`; entity không có `@Version`), và `thanh_toan` không có UNIQUE `hoa_don_id`. Về mặt code không có cơ chế chặn hai yêu cầu thanh toán đồng thời.
+  - **Có khóa bi quan trên bản ghi hóa đơn khi thanh toán/sửa/hủy**: `HoaDonRepository.findForUpdate` dùng `@Lock(PESSIMISTIC_WRITE)` (dòng 38–41); trạng thái được kiểm tra lại sau khi khóa (`thanhToan` dòng 269–274). `thanh_toan` vẫn không có UNIQUE `hoa_don_id`, nhưng hai yêu cầu thanh toán đồng thời bị tuần tự hóa bởi khóa hóa đơn.
 
   ### (f) Ngoại lệ đã xử lý
 
   - Thiếu tồn khi giữ chỗ/xuất: chặn, rollback.
+  - Hai yêu cầu thanh toán/sửa/hủy cùng một hóa đơn: khóa bi quan dòng hóa đơn; yêu cầu sau đọc lại trạng thái sau khóa nên không thanh toán lặp.
   - Hóa đơn tổng = 0: chặn thanh toán.
   - Thanh toán tiền mặt thiếu: chặn; thừa: tính tiền thối.
   - Sửa hóa đơn chờ thanh toán làm thiếu tồn: rollback, dữ liệu cũ được giữ.
@@ -1179,7 +1179,7 @@
   | Đang giữ chỗ | `ton_kho.so_luong_da_giu_cho` | `INTEGER` | Phần đã cam kết cho hóa đơn chờ thanh toán |
   | Tồn tối thiểu | `ton_kho.so_luong_toi_thieu` | `INTEGER` | Có cột nhưng **không có logic nào dùng để cảnh báo/đặt hàng** |
   | Số lượng nhập lô | `lo_hang.so_luong_nhap` | `INTEGER` | Số pallet nhập của lô mua |
-  | Số lượng còn lại của lô | `lo_hang.so_luong_con_lai` | `INTEGER` | Chỉ giảm ở một số bước (xem dưới) |
+  | Số lượng còn lại của lô | `lo_hang.so_luong_con_lai` | `INTEGER` | Chỉ giảm khi duyệt phân loại hoặc xuất kho thủ công có chọn lô (xem dưới) |
   | Số pallet xử lý theo đợt | `phieu_tai_che.so_luong_da_xu_ly` | `INTEGER` | Số pallet của lô đưa vào phân loại trong đợt |
   | Kết quả phân loại | `chi_tiet_tai_che.so_luong` | `INTEGER` | Bán lại / tháo dỡ / kg phế liệu |
   | Kết quả tháo dỡ | `phieu_thao_do.so_thanh_nguyen`, `so_cuc_vuong`, `so_thanh_can_xu_ly`, `so_cuc_can_xu_ly`, `kg_phe_lieu` | `INTEGER` | Số chiếc hoặc kg |
@@ -1195,13 +1195,16 @@
 
   **Không.** Tồn kho có UNIQUE `(mat_hang_id, kho_id)` (`V1` dòng 229). Không có bảng tồn theo lô, không có cột `lo_id` trong `ton_kho`. `chi_tiet_phieu_kho.lo_id` là tùy chọn và chỉ để ghi nguồn lô trên chứng từ.
 
-  `lo_hang.so_luong_con_lai` **không được cập nhật nhất quán** trên mọi đường xuất:
+  `lo_hang.so_luong_con_lai` là **số còn lại theo quy ước của lô**, không phải tồn kho thực tế. Giá trị này chỉ được giảm ở hai luồng:
 
-  - Giảm khi duyệt phiếu phân loại: `lo.setSoLuongConLai(lo.getSoLuongConLai() - n)` (`PhieuTaiCheServiceImpl.duyetPhanLoai`, dòng 280–282).
-  - Giảm khi lập phiếu xuất kho thủ công có chọn lô: `PhieuXuatServiceImpl.ghiChiTietVaTruTon`, dòng 246–255.
-  - **Không giảm** khi bán hàng qua hóa đơn: dòng phiếu xuất do hóa đơn tạo không gán `lo_id` (`HoaDonServiceImpl.taoPhieuXuatKho`, dòng 522–536).
+  - Duyệt phiếu phân loại: `lo.setSoLuongConLai(lo.getSoLuongConLai() - n)` (`PhieuTaiCheServiceImpl.duyetPhanLoai`).
+  - Xuất kho thủ công có chọn lô: `PhieuXuatServiceImpl.ghiChiTietVaTruTon`.
+
+  Giá trị này **không phản ánh tồn sau khi bán, tháo dỡ, đóng pallet**; các luồng đó chỉ cập nhật `ton_kho`. Cụ thể:
+
+  - **Không giảm** khi bán hàng qua hóa đơn: dòng phiếu xuất do hóa đơn tạo không gán `lo_id` (`HoaDonServiceImpl.taoPhieuXuatKho`).
   - **Không giảm** khi tháo dỡ nội bộ, xử lý thêm, đóng pallet, bán phế liệu, dịch vụ khách.
-  - Bị đặt về 0 khi hủy phiếu nhập thủ công (`PhieuNhapServiceImpl.capNhatPhieuNhap`, dòng 192–200) và bị xóa cùng dòng phiếu khi sửa phiếu nhập (`dòng 210–213`).
+  - Bị đặt về 0 khi hủy phiếu nhập thủ công (`PhieuNhapServiceImpl.capNhatPhieuNhap`) và bị xóa cùng dòng phiếu khi sửa phiếu nhập.
 
   Vì vậy `so_luong_con_lai` chỉ đáng tin cho luồng mua → phân loại; sau khi bán qua hóa đơn, số còn lại của lô không phản ánh tồn thực.
 
@@ -1409,11 +1412,11 @@
 
   Quy trình kiểm kê trong code:
 
-  1. `POST /api/v1/kiem-ke/phien` với `TaoPhienKiemKeRequest { khoId, nguoiTaoId, ghiChu }` (`KiemKeController` dòng 26–33; DTO không có validation). `nguoiTaoId` do client gửi, **không lấy từ người đăng nhập** (`KiemKeServiceImpl.taoPhienKiemKe`, dòng 44–50).
+  1. `POST /api/v1/kiem-ke/phien` với `TaoPhienKiemKeRequest { khoId, ghiChu }` (`KiemKeController` dòng 27–35; DTO không có validation). Người tạo lấy từ tài khoản đang đăng nhập và phải có quyền kho (`KiemKeServiceImpl.taoPhienKiemKe`, dòng 41–49).
   2. Mỗi kho chỉ được có một phiên `dang_dien_ra` (`dòng 52–55`).
   3. Snapshot tồn kho: lấy toàn bộ dòng `ton_kho` của kho (`tonKhoRepository.findByKho_Id`), **bỏ qua mặt hàng loại `cho_tai_che`** (`dòng 68–72`). Không lấy `ton_kho_khach`. Mỗi dòng tạo `ChiTietKiemKe` với `tonHeThong = soLuongTonKho`, `tonThucTe = null`, `trangThai = cho_kiem`.
-  4. Nhập `tonThucTe` cho từng dòng: `PUT /api/v1/kiem-ke/chi-tiet/{id}`. Không cho sửa nếu phiên đã hoàn tất; `tonThucTe >= 0`; nếu bằng `tonHeThong` thì `khop`, khác thì `lech`; để trống thì `cho_kiem` (`capNhatChiTiet`, dòng 145–174).
-  5. Chốt: `POST /api/v1/kiem-ke/phien/{id}/hoan-tat?nguoiChotId=...`. `nguoiChotId` do client gửi. Hệ thống:
+  4. Nhập `tonThucTe` cho từng dòng: `PUT /api/v1/kiem-ke/chi-tiet/{id}`. Không cho sửa nếu phiên đã hoàn tất; `tonThucTe >= 0`; nếu bằng `tonHeThong` thì `khop`, khác thì `lech`; để trống thì `cho_kiem`; người kiểm lấy từ tài khoản đang đăng nhập và phải có quyền kho (`capNhatChiTiet`, dòng 146–171).
+  5. Chốt: `POST /api/v1/kiem-ke/phien/{id}/hoan-tat`. Người chốt lấy từ tài khoản đang đăng nhập và phải có quyền kho (`hoanTatKiemKe`, dòng 182–183). Hệ thống:
     - khóa phiên, kiểm tra còn `cho_kiem` thì chặn;
     - với từng dòng `lech`, khóa dòng `ton_kho` tương ứng;
     - nếu `tonThucTe < soLuongDaGiuCho` thì chặn (không được giảm dưới phần đã giữ chỗ);
@@ -1422,16 +1425,16 @@
     - tạo **một** phiếu kho `dieu_chinh_kiem_ke`, `da_hoan_thanh`, `la_he_thong = true`, `nguoiDuyet = nguoiChot`;
     - mỗi dòng lệch tạo một `ChiTietPhieuKho` với `soLuong = |chenhLech|`, ghi chú "Kiểm kê tăng/giảm";
     - chuyển phiên `da_hoan_tat`, lưu `nguoiChot`, `ngayHoanTat`.
-    — `hoanTatKiemKe`, dòng 176–264.
+    — `hoanTatKiemKe`, dòng 175–261.
 
-  **Không có bước phê duyệt riêng cho phiếu điều chỉnh.** Phiếu điều chỉnh được tạo thẳng `da_hoan_thanh`; người chốt kiểm kê được ghi vào `nguoiDuyet`. Không có trạng thái `cho_duyet`, không có kiểm tra người chốt phải là GD/PGD, không có kiểm tra `nguoiChotId` có trùng người đang đăng nhập hay không.
+  **Không có bước phê duyệt riêng cho phiếu điều chỉnh.** Phiếu điều chỉnh được tạo thẳng `da_hoan_thanh`; người chốt kiểm kê được ghi vào `nguoiDuyet`. Không có trạng thái `cho_duyet`, không có kiểm tra người chốt phải là GD/PGD; người chốt lấy từ tài khoản đang đăng nhập và chỉ bị kiểm tra quyền kho.
 
   ### Các đường thay đổi tồn khác (không phải điều chỉnh)
 
-  - **Nhập kho thủ công:** `POST /api/v1/phieu-nhap` cho phép client chọn `trangThai` `cho_xu_ly` hoặc `da_hoan_thanh`; nếu chọn `da_hoan_thanh`, tồn được cộng ngay, không qua duyệt (`PhieuNhapServiceImpl.taoPhieuNhap`, dòng 141–168; `ghiChiTietVaCapNhatTon`, dòng 229–259).
-  - **Xuất kho thủ công:** tương tự, client chọn `da_hoan_thanh` thì trừ tồn ngay; có thể chọn lô và trừ `lo_hang.so_luong_con_lai` (`PhieuXuatServiceImpl.taoPhieuXuat`, dòng 141–174; `ghiChiTietVaTruTon`, dòng 241–255).
-  - **Chuyển kho bằng xếp vị trí:** `PhieuNhapServiceImpl.xepViTri` cho phép chọn kho đích khác kho phiếu; hệ thống trừ kho nguồn, cộng kho đích, chuyển lô sang kho đích, đánh dấu `da_xep_vi_tri` (`dòng 268–347`). **Không tạo phiếu `chuyen_kho`**, không có duyệt, không kiểm tra quyền kho đích.
-  - **Bán hàng/giữ chỗ:** `HoaDonServiceImpl.apDungTonKho` tăng/giảm `da_giu_cho`, trừ `ton_kho` khi xuất (`dòng 487–516`).
+  - **Nhập kho thủ công:** `POST /api/v1/phieu-nhap` cho phép client chọn `trangThai` `cho_xu_ly` hoặc `da_hoan_thanh`; nếu chọn `da_hoan_thanh`, tồn được cộng ngay, không qua duyệt; service kiểm tra quyền kho của người đang đăng nhập (`PhieuNhapServiceImpl.taoPhieuNhap`, dòng 149–187; `ghiChiTietVaCapNhatTon`, dòng 255–288).
+  - **Xuất kho thủ công:** tương tự, client chọn `da_hoan_thanh` thì trừ tồn ngay; có thể chọn lô và trừ `lo_hang.so_luong_con_lai`; service kiểm tra quyền kho của người đang đăng nhập (`PhieuXuatServiceImpl.taoPhieuXuat`, dòng 143–177; `ghiChiTietVaTruTon`, dòng 227–273). Đây là một trong hai luồng duy nhất được phép giảm `so_luong_con_lai` của lô (luồng còn lại là duyệt phân loại).
+  - **Chuyển kho bằng xếp vị trí:** `PhieuNhapServiceImpl.xepViTri` cho phép chọn kho đích khác kho phiếu; hệ thống trừ kho nguồn, cộng kho đích, chuyển lô sang kho đích, đánh dấu `da_xep_vi_tri` (`dòng 298–378`). **Không tạo phiếu `chuyen_kho`**, không có duyệt; người đang đăng nhập phải có quyền ở cả kho nguồn và kho đích.
+  - **Bán hàng/giữ chỗ:** `HoaDonServiceImpl.apDungTonKho` tăng/giảm `da_giu_cho`, trừ `ton_kho` khi xuất (`dòng 493–522`).
   - **Phiếu hệ thống của tái chế:** phân loại, tháo dỡ, xử lý thêm, đóng pallet, mua phế liệu khách đều tạo phiếu `da_hoan_thanh` và gọi trực tiếp `TonKhoNghiepVu`.
 
   ### Các điểm "không có trong code"
@@ -1468,16 +1471,16 @@
   |---|---|---|---|---|---|
   | Đơn mua (`/don-mua`) | Có | Có | Có | Không | `DonMuaController` dòng 21; duyệt/hủy chỉ GD/PGD dòng 53, 65 |
   | Nhà cung cấp | Có | Có | Có | Không | `NhaCungCapController` dòng 18 |
-  | Phiếu nhập/xuất kho | Có | Có | Có | Không | `PhieuNhapController` dòng 25; `PhieuXuatController` dòng 24 |
+  | Phiếu nhập/xuất kho | Có | Có | Có | Không | `PhieuNhapController` dòng 26; `PhieuXuatController` dòng 25; service kiểm tra quyền kho khi tạo/sửa/xếp vị trí |
   | Tái chế — tạo/sửa/xem | Có | Có | Có | Không | `PhieuTaiCheController` dòng 19; `PhieuThaoDoController` dòng 19; `PhieuXuLyThemController` dòng 19; `PhieuDongPalletController` dòng 20 |
   | Tái chế — duyệt | Có | Có | Không | Không | các controller trên, method `duyet` |
   | Định mức — xem | Có | Có | Có | Không | `DinhMucController` dòng 18 |
   | Định mức — tạo/sửa/ngừng/kích hoạt | Có | Có | Không | Không | `DinhMucController` dòng 34–53 |
-  | Kiểm kê | Có | Có | Có | Không | `KiemKeController` dòng 21; không có phân quyền theo method |
+  | Kiểm kê | Có | Có | Có | Không | `KiemKeController` dòng 22; service kiểm tra quyền kho, không có phân quyền theo method |
   | Dịch vụ tháo dỡ khách — tiếp nhận/kết quả/trả hàng/hủy | Có | Có | Có | Không | `PhieuDichVuThaoDoController` dòng 23 |
   | Dịch vụ khách — duyệt/lập hóa đơn/mua phế liệu | Có | Có | Không | Không | `PhieuDichVuThaoDoController` dòng 58, 74, 82 |
-  | Bán hàng/hóa đơn | Có | Có | Không | Có | `HoaDonController` dòng 23; hủy chỉ GD/PGD dòng 64 |
-  | Bán phế liệu | Có | Có | Không | Có | `BanPheLieuController` dòng 18 |
+  | Bán hàng/hóa đơn | Có | Có | Không | Có | `HoaDonController` dòng 23; hủy chỉ GD/PGD dòng 64; service kiểm tra quyền kho khi lập/sửa/thanh toán/hủy |
+  | Bán phế liệu | Có | Có | Không | Có | `BanPheLieuController` dòng 18; service kiểm tra quyền kho khi bán |
   | Báo giá | Có | Có | Không | Có | `BaoGiaBanHangController` dòng 22 |
   | Khách hàng | Có | Có | Không | Có | `KhachHangController` dòng 18 |
   | Tài chính — xem | Có | Có | Không | Có | `TaiChinhController` dòng 26 |
@@ -1492,7 +1495,7 @@
   - `vai_tro_quyen` có seed đầy đủ (`V2` dòng 12–36) nhưng **không được đọc** ở bất kỳ service/controller nào. Quyền thực tế là mã vai trò hard-code trong `@PreAuthorize`.
   - `phe_duyet` có entity/repository nhưng **không có service/controller/UI** nào tạo, duyệt hoặc đọc yêu cầu phê duyệt.
   - `cap_duyet` chỉ được đọc trong `ThongBaoServiceImpl` để chọn người nhận thông báo (`dòng 53–54`); không dùng để quyết định luồng duyệt.
-  - Không có cấu hình quyền theo module/action, không có quyền theo bản ghi, không có phân tách nhiệm vụ (người lập ≠ người duyệt) ngoài việc controller yêu cầu GD/PGD cho một số action.
+  - Không có cấu hình quyền theo module/action, không có quyền theo bản ghi ở API đọc (các API ghi kiểm tra kho qua `PhanQuyenKho`), không có phân tách nhiệm vụ (người lập ≠ người duyệt) ngoài việc controller yêu cầu GD/PGD cho một số action.
 
   ### Phạm vi kho — nơi nào có, nơi nào không
 
@@ -1507,26 +1510,28 @@
   | `PhieuDongPalletServiceImpl` | xem chi tiết, dự kiến, tạo, sửa/hủy (`dòng 92, 116, 174, 410`) | Duyệt không gọi |
   | `PhieuDichVuThaoDoServiceImpl` | xem chi tiết, tiếp nhận, ghi kết quả, trả hàng, hủy (`dòng 73, 102, 132, 192, 222`) | Duyệt không gọi |
   | `DichVuThaoDoTaiChinhService` | lập hóa đơn, mua phế liệu (`dòng 68, 124`) | — |
+  | `PhieuNhapServiceImpl` | tạo, sửa, xếp vị trí (kho nguồn và kho đích) (`dòng 161, 196, 302, 347`) | Có |
+  | `PhieuXuatServiceImpl` | tạo, sửa (`dòng 154, 187`) | Có |
+  | `KiemKeServiceImpl` | tạo phiên, cập nhật dòng, chốt phiên (`dòng 49, 157, 183`) | Có |
+  | `HoaDonServiceImpl` | lập, sửa, thanh toán, hủy (`dòng 223, 270, 297, 358`) | API đọc không kiểm tra |
+  | `BanPheLieuService` | bán phế liệu (`dòng 86`) | Có |
 
   **Không gọi `PhanQuyenKho`:**
 
-  - `HoaDonServiceImpl` (bán hàng): `xacDinhKho` chỉ lấy `khoId` client gửi hoặc kho của nhân viên (`dòng 618–622`). Nhân viên bán hàng có thể truyền `khoId` bất kỳ.
-  - `BanPheLieuService`: tương tự (`xacDinhKho`, dòng 180–184).
-  - `KiemKeServiceImpl`: tạo phiên với `khoId` và `nguoiTaoId` client gửi; chốt với `nguoiChotId` client gửi; không kiểm tra kho được gán.
-  - `PhieuNhapServiceImpl` / `PhieuXuatServiceImpl`: tạo/sửa/xuất/nhập theo `khoId` client gửi; `xepViTri` chuyển sang kho đích bất kỳ.
   - `BaoGiaBanHangService`, `MatHangServiceImpl`, `TonKhoServiceImpl`, `NhaCungCapService`, `KhachHangService`, `TaiChinhService`: không giới hạn theo kho.
+  - API đọc `HoaDonServiceImpl.layDanhSach`/`layChiTiet`, `PhieuNhapServiceImpl.layDanhSach`/`layChiTiet`, `PhieuXuatServiceImpl.layDanhSach`/`layChiTiet`, `KiemKeServiceImpl.layDanhSachChiTiet`/`layThongKe`: không lọc và không kiểm tra kho.
 
-  **Hệ quả:** `NVKHO` có thể xem/tạo phiếu nhập/xuất/kiểm kê cho kho khác nếu truyền `khoId`; `NVBANHANG` có thể lập hóa đơn cho kho khác. Các action duyệt chỉ GD/PGD, mà GD/PGD luôn được `PhanQuyenKho` coi là quản lý, nên việc không kiểm tra lại kho ở bước duyệt **không tạo khác biệt thực tế** với vai trò hiện tại; nhưng bản thân code không kiểm tra.
+  **Hệ quả:** các luồng ghi của phiếu nhập/xuất, kiểm kê, hóa đơn và bán phế liệu đều giới hạn theo kho được gán: `NVKHO`/`NVBANHANG` không thao tác được kho khác, `GD/PGD` được mọi kho. API đọc danh sách/chi tiết hóa đơn, phiếu kho, kiểm kê **không lọc theo kho**, nên nhân viên vẫn xem được bản ghi của kho khác nếu biết id hoặc bỏ trống `khoId`. Các action duyệt chỉ GD/PGD, mà GD/PGD luôn được `PhanQuyenKho` coi là quản lý, nên việc không kiểm tra lại kho ở bước duyệt **không tạo khác biệt thực tế** với vai trò hiện tại; nhưng bản thân code không kiểm tra.
 
   ### Các điểm "không có trong code"
 
   - Không có quản lý người dùng/ vai trò động; vai trò là cột trên nhân viên, không có bảng gán nhiều vai trò.
   - Không có kiểm tra `vai_tro_quyen` khi gọi API.
   - Không có phê duyệt theo cấp/ngưỡng tiền, không có `phe_duyet`.
-  - Không có giới hạn dữ liệu theo người tạo (row-level security): `NVBANHANG` xem được mọi hóa đơn, `NVKHO` xem được mọi phiếu kho/kiểm kê nếu biết id hoặc bỏ trống `khoId`.
+  - Không có giới hạn dữ liệu theo người tạo (row-level security) ở API đọc: `NVBANHANG` xem được mọi hóa đơn, `NVKHO` xem được mọi phiếu kho/kiểm kê nếu biết id hoặc bỏ trống `khoId`.
   - Không có audit log chi tiết thay đổi trường; `lich_su_hoa_don` chỉ ghi một số sự kiện của hóa đơn, các module khác không có lịch sử sửa.
   - Không có chặn tự duyệt: GD/PGD có thể tạo và duyệt cùng một phiếu; không có kiểm tra người lập khác người duyệt.
-  - Không có chặn nhân viên kho tự chốt kiểm kê; `nguoiChotId` do client chọn, không gắn với tài khoản đang đăng nhập.
+  - Không có chặn nhân viên kho tự chốt kiểm kê; người chốt lấy từ tài khoản đang đăng nhập, chỉ kiểm tra quyền kho.
 
   ---
 
@@ -1537,7 +1542,7 @@
   | 1 | Mua pallet gỗ cũ theo lô | `don_mua`, `phieu_kho` nhập, `lo_hang` | NCC, mặt hàng `cho_tai_che`, số lượng, đơn giá | `ton_kho +=`; tạo lô `cho_tai_che` có `don_gia_nhap` | Không | Xác nhận đơn: GD/PGD; nhận hàng: GD/PGD/NVKHO |
   | 2 | Mua pallet thường và vật tư mới | `don_mua` hoặc `phieu_kho` nhập thủ công, `lo_hang` | NCC/mặt hàng `pallet`/`linh_kien`, số lượng, đơn giá | `ton_kho +=`; tạo lô `ban_thanh_pham`; nhập thủ công giá lô NULL | Không | Đơn mua: GD/PGD; phiếu nhập thủ công: không duyệt |
   | 3 | Nhận hàng, kiểm tra, phân loại | `phieu_tai_che`, phiếu xuất/nhập hệ thống, `chi_tiet_tai_che` | Lô, số pallet xử lý, 3 nhóm bán lại/tháo dỡ/loại bỏ, kg phế liệu | `PL-CPL-05 -=`; `PL-DC-07`/`PL-CTD-06`/`PE-GO-15 +=`; giảm `lo_hang.so_luong_con_lai` | Không | GD/PGD |
-  | 4 | Chuyển kho và kiểm kê | `phieu_kho` nhập/xuất, `phien_kiem_ke`, `phieu_kho dieu_chinh_kiem_ke` | Kho, vị trí, số lượng thực tế | Chuyển kho: trừ nguồn/cộng đích; kiểm kê: đặt tồn = thực tế | Không | Không có duyệt riêng; người chốt do client chọn |
+  | 4 | Chuyển kho và kiểm kê | `phieu_kho` nhập/xuất, `phien_kiem_ke`, `phieu_kho dieu_chinh_kiem_ke` | Kho, vị trí, số lượng thực tế | Chuyển kho: trừ nguồn/cộng đích; kiểm kê: đặt tồn = thực tế | Không | Không có duyệt riêng; người chốt là người đăng nhập, kiểm tra quyền kho |
   | 5 | Tháo dỡ pallet cũ nội bộ | `phieu_thao_do`, phiếu xuất/nhập hệ thống | Phiếu tái chế, số pallet, 4 loại linh kiện, kg phế liệu | `PL-CTD-06 -=`; `LK-*`/`PE-GO-15 +=` | Không | GD/PGD |
   | 6 | Phân loại linh kiện thu hồi | `phieu_xu_ly_them`, phiếu xuất/nhập hệ thống | Kho, loại nguồn thanh/cục, số dùng lại, số bỏ, kg, lý do | `LK-TX-11`/`LK-CX-12 -=`; `LK-TN-09`/`LK-CV-10`/`PE-GO-15 +=` | Không | GD/PGD |
   | 7 | Lắp ráp pallet tái chế | `dinh_muc`, `phieu_dong_pallet`, phiếu xuất/nhập hệ thống | Định mức, kho, số pallet sản xuất, số thực tế từng vật tư, lý do lệch | Trừ vật tư thực tế; cộng `PL-TC-08` đúng số sản xuất | Không | GD/PGD |
@@ -1610,7 +1615,7 @@
   - Không có engine phê duyệt; `phe_duyet` không được dùng.
   - Không có duyệt nhiều cấp/ngưỡng tiền; `cap_duyet` chỉ dùng cho thông báo.
   - Không có kiểm tra `vai_tro_quyen`; quyền hard-code theo mã vai trò.
-  - Không có row-level security: hóa đơn/phiếu kho/kiểm kê không giới hạn theo người tạo hay kho ở nhiều API.
+  - Không có row-level security ở API đọc: hóa đơn/phiếu kho/kiểm kê không giới hạn theo người tạo hay kho; các API ghi kiểm tra kho qua `PhanQuyenKho`.
   - Không có tách nhiệm vụ người lập/người duyệt.
   - Không có audit log đầy đủ thay đổi trường.
 
@@ -1621,6 +1626,41 @@
   - Không có báo cáo công nợ phải thu/phải trả.
   - Không có báo cáo thuế đầu vào; báo cáo thuế hiện tại chỉ dựa trên hóa đơn bán.
   - Không có đối chiếu ngân hàng, không có webhook thanh toán được dùng (bảng `ma_qr_thanh_toan`/`webhook_ngan_hang_log` tồn tại nhưng không có luồng tạo/xử lý trong code).
+
+  ---
+
+  ## Phụ lục: Các mục đã thay đổi
+
+  - (Header, nhánh `taiche` / commit `00283b1` (2026-11-07) → nhánh `fixing` / commit `5d0dbe4` (2026-11-11))
+  - (0.4 — lô hàng, chỉ nêu `chi_tiet_phieu_kho.lo_id` là tùy chọn → thêm giới hạn `so_luong_con_lai` chỉ giảm khi duyệt phân loại hoặc xuất kho thủ công có chọn lô; không phản ánh tồn sau bán/tháo dỡ/đóng pallet)
+  - (QT2 — nhập kho thủ công, không kiểm tra quyền kho → kiểm tra quyền kho theo người đang đăng nhập khi tạo/sửa; bảng `khoId` và các dòng 161, 196 được cập nhật)
+  - (QT2 — trùng mặt hàng, không bị chặn → bị chặn với lỗi gộp dòng (`kiemTraChiTiet`, dòng 128–145))
+  - (QT2 — số dòng tham chiếu, `ghiChiTietVaCapNhatTon` 229–259 → 255–288; lô 234–245 → 262–273; sửa phiếu 210–220 → 229–239; hủy phiếu 192–203 → 208–223)
+  - (QT4 — kiểm kê, người tạo/người kiểm/người chốt do client gửi → lấy từ tài khoản đang đăng nhập và kiểm tra quyền kho (`KiemKeServiceImpl` dòng 49, 157, 183); bỏ `nguoiTaoId`, `nguoiKiemId`, `nguoiChotId`)
+  - (QT4 — hoàn tất kiểm kê, query param `nguoiChotId` bắt buộc → không còn query param; người chốt lấy từ tài khoản đăng nhập, kiểm tra quyền kho)
+  - (QT4 — xếp vị trí/chuyển kho, không kiểm tra quyền kho đích → kiểm tra quyền ở cả kho nguồn và kho đích; cập nhật dòng `xepViTri` 270–321 → 298–378)
+  - (QT4 — kho đích chưa có dòng tồn, báo lỗi → `TonKhoNghiepVu.cong` tạo dòng tồn mới; cập nhật dòng kiểm kê tạo tồn 221–233 → 218–230)
+  - (QT4 — số dòng tham chiếu còn lại, `capNhatChiTiet` 150–155 → 149–154; `hoanTatKiemKe` 190–193 → 187–190, 235–238 → 232–235)
+  - (4.6 — kiểm kê, request `{ khoId, nguoiTaoId, ghiChu }` / `nguoiChotId` query param → `{ khoId, ghiChu }`, người tạo/kiểm/chốt lấy từ tài khoản đăng nhập; service kiểm tra quyền kho)
+  - (4.6 — nhập/xuất kho thủ công và xếp vị trí, không kiểm tra quyền kho → kiểm tra quyền kho; cập nhật số dòng tham chiếu)
+  - (4.6 — bán hàng/giữ chỗ, cập nhật dòng `apDungTonKho` 487–516 → 493–522)
+  - (4.7 — bảng quyền phiếu nhập/xuất, kiểm kê, bán hàng, bán phế liệu, thêm service kiểm tra quyền kho; cập nhật dòng controller)
+  - (4.7 — bảng `PhanQuyenKho`, thêm `PhieuNhapServiceImpl`, `PhieuXuatServiceImpl`, `KiemKeServiceImpl`, `HoaDonServiceImpl`, `BanPheLieuService`)
+  - (4.7 — "Không gọi `PhanQuyenKho`", bỏ các service ghi đã kiểm tra → chỉ còn API đọc danh sách/chi tiết)
+  - (4.7 — hệ quả, `NVKHO`/`NVBANHANG` thao tác được kho khác → chỉ thao tác kho được gán; API đọc vẫn không lọc theo kho)
+  - (4.7 — quyền theo bản ghi/row-level security, "không có ... ở nhiều API" → "không có ... ở API đọc"; các API ghi kiểm tra kho qua `PhanQuyenKho`)
+  - (4.7 — tự chốt kiểm kê, `nguoiChotId` do client chọn → người chốt lấy từ tài khoản đăng nhập, chỉ kiểm tra quyền kho)
+  - (QT8 — lập/sửa/thanh toán/hủy hóa đơn, không kiểm tra quyền kho → kiểm tra `PhanQuyenKho`; thanh toán/sửa/hủy khóa hóa đơn `findForUpdate` và kiểm tra trạng thái sau khóa)
+  - (QT8 — request `khoId`, "Service không kiểm tra quyền kho" → kiểm tra quyền kho dòng 223; cập nhật số dòng tham chiếu các bước và công thức)
+  - (QT8 — ngoại lệ, thêm khóa bi quan chống hai yêu cầu thanh toán/sửa/hủy đồng thời; cập nhật dòng `ghiNhanThanhToan` 456–459 → 462–465)
+  - (QT10 — bán phế liệu, không kiểm tra quyền kho → kiểm tra `PhanQuyenKho` dòng 86; cập nhật request `khoId` và số dòng tham chiếu)
+  - (QT13 — API đọc, làm rõ không lọc theo kho và không kiểm tra quyền trên từng hóa đơn; cập nhật số dòng tham chiếu)
+  - (QT13 — thanh toán/sửa/hủy, thêm khóa hóa đơn `findForUpdate`, kiểm tra quyền kho và trạng thái sau khóa; cập nhật số dòng tham chiếu)
+  - (QT13 — ràng buộc khóa, "không có khóa ... không có cơ chế chặn hai yêu cầu thanh toán đồng thời" → có khóa bi quan và kiểm tra trạng thái sau khóa; thêm ngoại lệ chống thanh toán lặp)
+  - (4.8 — dòng 4, "người chốt do client chọn" → "người chốt là người đăng nhập, kiểm tra quyền kho")
+  - (4.9 — phê duyệt và phân quyền, "không có row-level security ... ở nhiều API" → "ở API đọc"; các API ghi kiểm tra kho qua `PhanQuyenKho`)
+  - (4.9 — phê duyệt và phân quyền, "`nguoiChotId` do client chọn" → người chốt lấy từ tài khoản đăng nhập, chỉ kiểm tra quyền kho)
+  - (5 — `so_luong_con_lai`, "cập nhật không nhất quán trên mọi đường xuất" → "chỉ giảm khi duyệt phân loại hoặc xuất kho thủ công có chọn lô"; bảng trường và bảng tháo dỡ cập nhật theo)
 
   ---
 

@@ -11,7 +11,7 @@ public interface PhieuXuatService {
     ThongKePhieuXuatResponse layThongKe(Long khoId);
     Page<PhieuXuatResponse> layDanhSach(String keyword, String trangThai, LocalDateTime tuNgay, LocalDateTime denNgay, Long khoId, Pageable pageable);
     PhieuXuatResponse layChiTiet(Long id);
-    PhieuXuatResponse taoPhieuXuat(TaoPhieuXuatRequest request);
-    PhieuXuatResponse capNhatPhieuXuat(Long id, TaoPhieuXuatRequest request);
+    PhieuXuatResponse taoPhieuXuat(TaoPhieuXuatRequest request, String tenDangNhap);
+    PhieuXuatResponse capNhatPhieuXuat(Long id, TaoPhieuXuatRequest request, String tenDangNhap);
     byte[] xuatExcel(String keyword, String trangThai, LocalDateTime tuNgay, LocalDateTime denNgay, Long khoId);
 }

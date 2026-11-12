@@ -3,7 +3,10 @@ package com.pallet.backend.repository;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,4 +34,9 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Long> {
     /** Gọi hàm fn_lay_ma_chung_tu trong V1 (an toàn đồng thời). Phải gọi trong @Transactional (không readOnly). */
     @Query(value = "SELECT fn_lay_ma_chung_tu(:loai, :tienTo)", nativeQuery = true)
     String layMaChungTu(@Param("loai") String loai, @Param("tienTo") String tienTo);
+
+    /** Khóa bi quan dòng hóa đơn để tuần tự hóa thanh toán/sửa/hủy. Phải gọi trong @Transactional. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT h FROM HoaDon h WHERE h.id = :id")
+    Optional<HoaDon> findForUpdate(@Param("id") Long id);
 }

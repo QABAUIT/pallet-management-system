@@ -32,6 +32,7 @@ import com.pallet.backend.repository.PhieuKhoRepository;
 import com.pallet.backend.repository.ThanhToanRepository;
 import com.pallet.backend.repository.TonKhoRepository;
 import com.pallet.backend.service.HoaDonService;
+import com.pallet.backend.service.PhanQuyenKho;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,6 +80,7 @@ public class HoaDonServiceImpl implements HoaDonService {
     private final PhieuKhoRepository phieuKhoRepository;
     private final ChiTietPhieuKhoRepository chiTietPhieuKhoRepository;
     private final com.pallet.backend.service.ThongBaoTriggerService thongBaoTrigger;
+    private final PhanQuyenKho phanQuyenKho;
 
     // ======================= ĐỌC =======================
 
@@ -218,6 +220,7 @@ public class HoaDonServiceImpl implements HoaDonService {
         NhanVien nguoiLap = timNhanVien(tenDangNhap);
         KhachHang kh = timKhachHangHopTac(req.getKhachHangId());
         Kho kho = xacDinhKho(req.getKhoId(), nguoiLap);
+        phanQuyenKho.kiemTra(nguoiLap, kho);
         KetQuaTinh kq = tinhDong(req.getChiTiet());
 
         HoaDon hd = HoaDon.builder()
@@ -263,7 +266,8 @@ public class HoaDonServiceImpl implements HoaDonService {
     @Transactional
     public void thanhToan(Long id, ThanhToanHoaDonRequest req, String tenDangNhap) {
         NhanVien nv = timNhanVien(tenDangNhap);
-        HoaDon hd = timHoaDon(id);
+        HoaDon hd = timHoaDonForUpdate(id);
+        phanQuyenKho.kiemTra(nv, khoCuaHoaDon(hd));
         kiemTraChoPhepSua(hd);
         if (!CHO_THANH_TOAN.equals(hd.getTrangThai())) {
             throw new BusinessException("Hóa đơn không ở trạng thái chờ thanh toán");
@@ -289,7 +293,8 @@ public class HoaDonServiceImpl implements HoaDonService {
     @Transactional
     public void capNhat(Long id, CapNhatHoaDonRequest req, String tenDangNhap) {
         NhanVien nv = timNhanVien(tenDangNhap);
-        HoaDon hd = timHoaDon(id);
+        HoaDon hd = timHoaDonForUpdate(id);
+        phanQuyenKho.kiemTra(nv, khoCuaHoaDon(hd));
         kiemTraChoPhepSua(hd);
         boolean choTT = CHO_THANH_TOAN.equals(hd.getTrangThai());
 
@@ -349,7 +354,8 @@ public class HoaDonServiceImpl implements HoaDonService {
         if (lyDo == null || lyDo.isBlank()) {
             throw new BusinessException("Vui lòng nhập lý do xóa hóa đơn");
         }
-        HoaDon hd = timHoaDon(id);
+        HoaDon hd = timHoaDonForUpdate(id);
+        phanQuyenKho.kiemTra(nv, khoCuaHoaDon(hd));
         kiemTraChoPhepSua(hd);
         if (!CHO_THANH_TOAN.equals(hd.getTrangThai())) {
             throw new BusinessException("Chỉ xóa được hóa đơn đang chờ thanh toán");
@@ -608,6 +614,17 @@ public class HoaDonServiceImpl implements HoaDonService {
 
     private HoaDon timHoaDon(Long id) {
         return hoaDonRepository.findById(id).orElseThrow(() -> ResourceNotFoundException.of("Hóa đơn", id));
+    }
+
+    /** Khóa dòng hóa đơn trước khi kiểm tra trạng thái để tránh hai giao dịch xử lý cùng lúc. */
+    private HoaDon timHoaDonForUpdate(Long id) {
+        return hoaDonRepository.findForUpdate(id).orElseThrow(() -> ResourceNotFoundException.of("Hóa đơn", id));
+    }
+
+    /** Hóa đơn cũ có thể chưa gắn kho; khi đó dùng kho của người lập để kiểm tra quyền. */
+    private Kho khoCuaHoaDon(HoaDon hd) {
+        if (hd.getKho() != null) return hd.getKho();
+        return hd.getNhanVienLap() != null ? hd.getNhanVienLap().getKho() : null;
     }
 
     private NhanVien timNhanVien(String tenDangNhap) {
