@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -24,13 +25,14 @@ public class KiemKeController {
     private final KiemKeService kiemKeService;
 
     @PostMapping("/phien")
-public ResponseEntity<Map<String, Object>> taoPhienKiemKe(@Valid @RequestBody TaoPhienKiemKeRequest request) {
-    PhienKiemKe p = kiemKeService.taoPhienKiemKe(request);
-    return ResponseEntity.ok(Map.of(
-            "id", p.getId(),
-            "maPhien", p.getMaPhien(),
-            "trangThai", p.getTrangThai()));
-}
+    public ResponseEntity<Map<String, Object>> taoPhienKiemKe(@Valid @RequestBody TaoPhienKiemKeRequest request,
+                                                              Principal principal) {
+        PhienKiemKe p = kiemKeService.taoPhienKiemKe(request, principal.getName());
+        return ResponseEntity.ok(Map.of(
+                "id", p.getId(),
+                "maPhien", p.getMaPhien(),
+                "trangThai", p.getTrangThai()));
+    }
 
     @GetMapping("/phien/{id}/chi-tiet")
     public ResponseEntity<List<ChiTietKiemKeResponse>> getChiTietPhien(@PathVariable Long id) {
@@ -43,14 +45,16 @@ public ResponseEntity<Map<String, Object>> taoPhienKiemKe(@Valid @RequestBody Ta
     }
 
     @PutMapping("/chi-tiet/{chiTietId}")
-    public ResponseEntity<?> capNhatChiTiet(@PathVariable Long chiTietId, @RequestBody CapNhatChiTietKiemKeRequest request) {
-        kiemKeService.capNhatChiTiet(chiTietId, request);
+    public ResponseEntity<?> capNhatChiTiet(@PathVariable Long chiTietId,
+                                            @RequestBody CapNhatChiTietKiemKeRequest request,
+                                            Principal principal) {
+        kiemKeService.capNhatChiTiet(chiTietId, request, principal.getName());
         return ResponseEntity.ok(Map.of("message", "Cập nhật thành công"));
     }
 
     @PostMapping("/phien/{id}/hoan-tat")
-    public ResponseEntity<?> hoanTatKiemKe(@PathVariable Long id, @RequestParam Long nguoiChotId) {
-        kiemKeService.hoanTatKiemKe(id, nguoiChotId);
+    public ResponseEntity<?> hoanTatKiemKe(@PathVariable Long id, Principal principal) {
+        kiemKeService.hoanTatKiemKe(id, principal.getName());
         return ResponseEntity.ok(Map.of("message", "Chốt phiên kiểm kê thành công!"));
     }
 }

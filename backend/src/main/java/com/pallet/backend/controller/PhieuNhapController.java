@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 @RestController
@@ -57,13 +58,16 @@ public class PhieuNhapController {
     }
 
     @PostMapping
-    public ResponseEntity<PhieuNhapResponse> taoPhieuNhap(@Valid @RequestBody TaoPhieuNhapRequest request) {
-        return ResponseEntity.ok(phieuNhapService.taoPhieuNhap(request));
+    public ResponseEntity<PhieuNhapResponse> taoPhieuNhap(@Valid @RequestBody TaoPhieuNhapRequest request,
+                                                          Principal principal) {
+        return ResponseEntity.ok(phieuNhapService.taoPhieuNhap(request, principal.getName()));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PhieuNhapResponse> capNhatPhieuNhap(@PathVariable Long id, @Valid @RequestBody TaoPhieuNhapRequest request) {
-        return ResponseEntity.ok(phieuNhapService.capNhatPhieuNhap(id, request));
+    public ResponseEntity<PhieuNhapResponse> capNhatPhieuNhap(@PathVariable Long id,
+                                                              @Valid @RequestBody TaoPhieuNhapRequest request,
+                                                              Principal principal) {
+        return ResponseEntity.ok(phieuNhapService.capNhatPhieuNhap(id, request, principal.getName()));
     }
 
     @GetMapping("/export")
@@ -86,8 +90,9 @@ public class PhieuNhapController {
     }
 
     @PostMapping("/{id}/xep-vi-tri")
-    public ResponseEntity<?> xepViTri(@PathVariable Long id, @RequestBody XepViTriRequest request) {
-        phieuNhapService.xepViTri(id, request);
+    public ResponseEntity<?> xepViTri(@PathVariable Long id, @RequestBody XepViTriRequest request,
+                                      Principal principal) {
+        phieuNhapService.xepViTri(id, request, principal.getName());
         return ResponseEntity.ok(java.util.Map.of("message", "Xếp vị trí lưu trữ thành công"));
     }
 }

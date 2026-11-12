@@ -14,7 +14,6 @@ import OtherTypeFilter from "../../components/common/OtherTypeFilter";
 import AppTable from "../../components/common/AppTable";
 import Pagination from "../../components/common/Pagination";
 import { kiemKeApi } from "../../api/kiemKeApi";
-import { useAuth } from "../../store/AuthContext";
 import { fmtNumber } from "../../utils/format";
 import { notifyError, notifySuccess } from "../../utils/notify";
 import { KIEM_KE_TRANG_THAI, resolveStatus } from "../../utils/statusTag";
@@ -43,7 +42,6 @@ const savePhienId = (id) => {
 };
 
 export default function Stocktaking() {
-  const { user } = useAuth();
   const [phienId, setPhienId] = useState(readPhienId);
   const [rows, setRows] = useState([]);
   const [stats, setStats] = useState(null);
@@ -127,7 +125,7 @@ export default function Stocktaking() {
     }
     setFinishing(true);
     try {
-      await kiemKeApi.hoanTat(phienId, user?.nhanVienId);
+      await kiemKeApi.hoanTat(phienId);
       notifySuccess("Chốt phiên kiểm kê thành công");
       savePhienId(null);
       setPhienId(null);

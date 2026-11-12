@@ -6,5 +6,4 @@ import lombok.Data;
 public class CapNhatChiTietKiemKeRequest {
     private Integer tonThucTe;
     private String ghiChuGiaiTrinh;
-    private Long nguoiKiemId;
 }

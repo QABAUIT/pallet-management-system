@@ -12,9 +12,9 @@ export const kiemKeApi = {
 
   // BE trả lỗi dạng { error: "..." } (không phải ApiResponse) nên apiClient chỉ đọc được
   // chữ "Không kết nối được máy chủ". Ở đây thay bằng thông báo đúng nghĩa.
-  hoanTat: (phienId, nguoiChotId) =>
+  hoanTat: (phienId) =>
     apiClient
-      .post(`${BASE}/phien/${phienId}/hoan-tat`, null, { params: { nguoiChotId } })
+      .post(`${BASE}/phien/${phienId}/hoan-tat`)
       .then(unwrap)
       .catch((err) => {
         if (err?.status === 400) {

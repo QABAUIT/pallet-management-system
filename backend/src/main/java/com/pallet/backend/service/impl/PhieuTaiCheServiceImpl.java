@@ -203,6 +203,13 @@ public class PhieuTaiCheServiceImpl implements PhieuTaiCheService {
 
     // ======================= DUYỆT PHÂN LOẠI =======================
 
+    /**
+     * Duyệt phiếu phân loại.
+     *
+     * <p>Đây là một trong hai luồng được phép giảm {@code LoHang.soLuongConLai}. Số còn lại của lô
+     * không phản ánh tồn sau khi bán, tháo dỡ hoặc đóng pallet; tồn thực tế được cập nhật qua
+     * {@code TonKhoNghiepVu} vào {@code ton_kho}.</p>
+     */
     @Override
     @Transactional
     public PhieuTaiCheResponse duyetPhanLoai(Long id, String tenDangNhap) {
@@ -277,6 +284,8 @@ public class PhieuTaiCheServiceImpl implements PhieuTaiCheService {
         }
         chiTietTaiCheRepository.saveAll(ketQua);
 
+        // Chỉ giảm soLuongConLai ở bước duyệt phân loại (luồng còn lại là xuất kho thủ công có chọn lô).
+        // Không phản ánh tồn sau khi bán, tháo dỡ hoặc đóng pallet; tồn thực tế nằm ở ton_kho.
         lo.setSoLuongConLai(lo.getSoLuongConLai() - n);
         if (lo.getSoLuongConLai() == 0) lo.setTrangThai("da_het");
         loHangRepository.save(lo);

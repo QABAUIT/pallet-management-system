@@ -9,9 +9,9 @@ import com.pallet.backend.entity.PhienKiemKe;
 import java.util.List;
 
 public interface KiemKeService {
-    PhienKiemKe taoPhienKiemKe(TaoPhienKiemKeRequest request);
+    PhienKiemKe taoPhienKiemKe(TaoPhienKiemKeRequest request, String tenDangNhap);
     List<ChiTietKiemKeResponse> layDanhSachChiTiet(Long phienKiemKeId);
     ThongKeKiemKeResponse layThongKe(Long phienKiemKeId);
-    void capNhatChiTiet(Long chiTietId, CapNhatChiTietKiemKeRequest request);
-    void hoanTatKiemKe(Long phienKiemKeId, Long nguoiChotId);
+    void capNhatChiTiet(Long chiTietId, CapNhatChiTietKiemKeRequest request, String tenDangNhap);
+    void hoanTatKiemKe(Long phienKiemKeId, String tenDangNhap);
 }

@@ -12,8 +12,8 @@ public interface PhieuNhapService {
     ThongKePhieuNhapResponse layThongKe(Long khoId);
     Page<PhieuNhapResponse> layDanhSach(String keyword, String trangThai, LocalDateTime tuNgay, LocalDateTime denNgay, Long khoId, Pageable pageable);
     PhieuNhapResponse layChiTiet(Long id);
-    PhieuNhapResponse taoPhieuNhap(TaoPhieuNhapRequest request);
-    PhieuNhapResponse capNhatPhieuNhap(Long id, TaoPhieuNhapRequest request);
+    PhieuNhapResponse taoPhieuNhap(TaoPhieuNhapRequest request, String tenDangNhap);
+    PhieuNhapResponse capNhatPhieuNhap(Long id, TaoPhieuNhapRequest request, String tenDangNhap);
     byte[] xuatExcel(String keyword, String trangThai, LocalDateTime tuNgay, LocalDateTime denNgay, Long khoId);
-    void xepViTri(Long id, XepViTriRequest request);
+    void xepViTri(Long id, XepViTriRequest request, String tenDangNhap);
 }

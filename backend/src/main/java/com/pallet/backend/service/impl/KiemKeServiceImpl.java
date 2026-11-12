@@ -8,6 +8,7 @@ import com.pallet.backend.entity.*;
 import com.pallet.backend.exception.BusinessException;
 import com.pallet.backend.repository.*;
 import com.pallet.backend.service.KiemKeService;
+import com.pallet.backend.service.PhanQuyenKho;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,21 +34,19 @@ public class KiemKeServiceImpl implements KiemKeService {
     private final KhoRepository khoRepository;
     private final NhanVienRepository nhanVienRepository;
     private final PhieuKhoRepository phieuKhoRepository;
+    private final PhanQuyenKho phanQuyenKho;
 
     @Override
     @Transactional
-    public PhienKiemKe taoPhienKiemKe(TaoPhienKiemKeRequest request) {
+    public PhienKiemKe taoPhienKiemKe(TaoPhienKiemKeRequest request, String tenDangNhap) {
         if (request.getKhoId() == null) {
             throw new BusinessException("Thiếu thông tin kho kiểm kê");
-        }
-        if (request.getNguoiTaoId() == null) {
-            throw new BusinessException("Thiếu thông tin người tạo phiên kiểm kê");
         }
 
         Kho kho = khoRepository.findById(request.getKhoId())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy kho"));
-        NhanVien nguoiTao = nhanVienRepository.findById(request.getNguoiTaoId())
-                .orElseThrow(() -> new BusinessException("Không tìm thấy nhân viên"));
+        NhanVien nguoiTao = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiTao, kho);
 
         // Mỗi kho chỉ được có 1 phiên đang diễn ra để tránh 2 phiên cùng chốt sổ.
         if (phienKiemKeRepository.existsByKho_IdAndTrangThai(kho.getId(), DANG_DIEN_RA)) {
@@ -144,7 +143,7 @@ public class KiemKeServiceImpl implements KiemKeService {
 
     @Override
     @Transactional
-    public void capNhatChiTiet(Long chiTietId, CapNhatChiTietKiemKeRequest request) {
+    public void capNhatChiTiet(Long chiTietId, CapNhatChiTietKiemKeRequest request, String tenDangNhap) {
         ChiTietKiemKe ct = chiTietKiemKeRepository.findById(chiTietId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy dòng kiểm kê"));
         if (!DANG_DIEN_RA.equals(ct.getPhienKiemKe().getTrangThai())) {
@@ -154,13 +153,11 @@ public class KiemKeServiceImpl implements KiemKeService {
             throw new BusinessException("Tồn thực tế không được âm");
         }
 
+        NhanVien nguoiKiem = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiKiem, ct.getPhienKiemKe().getKho());
         ct.setTonThucTe(request.getTonThucTe());
         ct.setGhiChuGiaiTrinh(request.getGhiChuGiaiTrinh());
-
-        if (request.getNguoiKiemId() != null) {
-            NhanVien nv = nhanVienRepository.findById(request.getNguoiKiemId()).orElse(null);
-            ct.setNguoiKiem(nv);
-        }
+        ct.setNguoiKiem(nguoiKiem);
 
         if (request.getTonThucTe() == null) {
             ct.setTrangThaiKiemKe(CHO_KIEM);
@@ -175,15 +172,15 @@ public class KiemKeServiceImpl implements KiemKeService {
 
     @Override
     @Transactional
-    public void hoanTatKiemKe(Long phienKiemKeId, Long nguoiChotId) {
+    public void hoanTatKiemKe(Long phienKiemKeId, String tenDangNhap) {
         PhienKiemKe phien = phienKiemKeRepository.findForUpdate(phienKiemKeId)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy phiên kiểm kê"));
         if (!DANG_DIEN_RA.equals(phien.getTrangThai())) {
             throw new BusinessException("Phiên kiểm kê này đã được chốt trước đó");
         }
 
-        NhanVien nguoiChot = nhanVienRepository.findById(nguoiChotId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy nhân viên chốt kiểm kê"));
+        NhanVien nguoiChot = timNhanVien(tenDangNhap);
+        phanQuyenKho.kiemTra(nguoiChot, phien.getKho());
 
         List<ChiTietKiemKe> dsChiTiet = chiTietKiemKeRepository.findByPhienKiemKe_Id(phien.getId());
 
@@ -261,5 +258,10 @@ public class KiemKeServiceImpl implements KiemKeService {
         phien.setNguoiChot(nguoiChot);
         phien.setNgayHoanTat(LocalDate.now());
         phienKiemKeRepository.save(phien);
+    }
+
+    private NhanVien timNhanVien(String tenDangNhap) {
+        return nhanVienRepository.findByTenDangNhap(tenDangNhap)
+                .orElseThrow(() -> new BusinessException("Không xác định được người dùng đang đăng nhập"));
     }
 }
